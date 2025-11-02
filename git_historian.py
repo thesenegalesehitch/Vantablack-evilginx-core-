@@ -85,8 +85,7 @@ class GitHistorian:
     def generate_history(self):
         print("[*] Initializing Project VANTABLACK Git Forensics...")
         self.run_cmd("git init")
-        self.run_cmd('git config user.name "Alex"')
-        self.run_cmd('git config user.email "alex@internal.cyber"')
+        
         
         current_date = self.start_date
         
