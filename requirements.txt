@@ -1,0 +1,6 @@
+rich
+pyyaml
+requests
+fastapi
+uvicorn
+psutil

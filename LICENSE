@@ -1,0 +1,21 @@
+VANTABLACK INDUSTRIAL LICENSE & ETHICAL GOVERNANCE AGREEMENT (V3.0)
+
+Copyright (c) 2026 PROJECT VANTABLACK
+
+---
+
+### 1. INDUSTRIAL DISCLAIMER (SYSTEM OVERRIDE)
+The designer formally disclaims any responsibility related to the industrial automation of this tool. The integration of nervous systems (API Listeners), exfiltration scripts, and automatic resilience mechanisms is provided for experimental and authorized audit purposes only.
+
+### 2. AUTOMATION AND PERSISTENCE CLAUSE
+The end-user assumes full criminal and civil liability related to the massive storage of data (cookies, credentials) in the `hitch_vault.db` and their exfiltration via API. The designer is in no way responsible for data breaches or unauthorized access resulting from the use of this infrastructure.
+
+### 3. TECHNICAL FORCE MAJEURE
+No warranty is provided regarding the stability or stealth of the tool. Failures, detections by EDR/XDR solutions, or blocks by third-party services are risks accepted by the user.
+
+### 4. PROFESSIONAL USE ONLY
+This tool is designed exclusively for Red Team professionals and security auditors operating under an explicit written contract. Any other use is strictly prohibited by the designer.
+
+---
+
+[Standard MIT License text continues...]

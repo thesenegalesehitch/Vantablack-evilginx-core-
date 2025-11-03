@@ -1,0 +1,100 @@
+[
+    {
+        "scenario": "M365_O365_Auth_Interception",
+        "target": "login.microsoftonline.com",
+        "tls_fingerprint_ja3": "771,4866-4865-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,0-23-65281-10-11-35-16-5-13-18-51-45-43-27-21,29-23-24,0",
+        "ttfb_ms": 145,
+        "http_header_anomalies": [
+            "X-Forwarded-For spoofing",
+            "Unexpected 'Server: nginx' header on MS target"
+        ]
+    },
+    {
+        "scenario": "Instagram_Session_Hijack",
+        "target": "www.instagram.com",
+        "tls_fingerprint_ja3": "771,4865-4866-4867-49195-49196,0-5-10-11-13-35-23-65281,29-23-24,0",
+        "ttfb_ms": 88,
+        "http_header_anomalies": [
+            "Missing 'cross-origin-opener-policy'",
+            "Forced 'Cache-Control: no-store'"
+        ]
+    },
+    {
+        "scenario": "LinkedIn_2FA_Bypass",
+        "target": "www.linkedin.com",
+        "tls_fingerprint_ja3": "771,49195-49199-49196-49200-52393-52392,0-23-65281-10-11-35-16,29-23-24,0",
+        "ttfb_ms": 210,
+        "http_header_anomalies": [
+            "X-Phish: Evilginx-V3",
+            "Modified JS script checksum"
+        ]
+    },
+    {
+        "scenario": "M365_Modern_Auth_Flow",
+        "target": "login.microsoftonline.com",
+        "tls_fingerprint_ja3": "771,4866-4865-4867,0-23-65281-10,29,0",
+        "ttfb_ms": 120,
+        "http_header_anomalies": [
+            "Inconsistent 'Set-Cookie' domain",
+            "Stripped 'Strict-Transport-Security'"
+        ]
+    },
+    {
+        "scenario": "Instagram_Mobile_Phish",
+        "target": "i.instagram.com",
+        "tls_fingerprint_ja3": "771,4865-4866-4867,0-5-10-11,29,0",
+        "ttfb_ms": 65,
+        "http_header_anomalies": [
+            "User-Agent mismatch with client-side profile"
+        ]
+    },
+    {
+        "scenario": "LinkedIn_Desktop_Interception",
+        "target": "www.linkedin.com",
+        "tls_fingerprint_ja3": "771,49195-49199,0-23-65281,29-23,0",
+        "ttfb_ms": 180,
+        "http_header_anomalies": [
+            "Proxy-Connection header presence",
+            "Redirect-Loop detection"
+        ]
+    },
+    {
+        "scenario": "Dropbox_Cloud_Exfil",
+        "target": "www.dropbox.com",
+        "tls_fingerprint_ja3": "771,4866-4865,0-23-65281-10,29-23-24,0",
+        "ttfb_ms": 95,
+        "http_header_anomalies": [
+            "Session-Cookie override",
+            "Content-Security-Policy bypass script injection"
+        ]
+    },
+    {
+        "scenario": "PayPal_Fintech_MITM",
+        "target": "www.paypal.com",
+        "tls_fingerprint_ja3": "771,4866-4865-4867,0-23-65281,29,0",
+        "ttfb_ms": 135,
+        "http_header_anomalies": [
+            "Suspicious 'Transfer-Encoding: chunked' on auth form"
+        ]
+    },
+    {
+        "scenario": "M365_Admin_Portal_Access",
+        "target": "admin.microsoft.com",
+        "tls_fingerprint_ja3": "771,4866-4865-4867-49195,0-23-65281-10-11,29-23-24,0",
+        "ttfb_ms": 195,
+        "http_header_anomalies": [
+            "WAF Bypass attempt headers",
+            "Malformed Origin header"
+        ]
+    },
+    {
+        "scenario": "Generic_SOCKS5_Rotation_Trace",
+        "target": "multiple",
+        "tls_fingerprint_ja3": "various",
+        "ttfb_ms": 350,
+        "http_header_anomalies": [
+            "IP leakage in X-Forwarded-For",
+            "High latency jitter"
+        ]
+    }
+]

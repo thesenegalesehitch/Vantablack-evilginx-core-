@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  vanta-nervous-system:
+    build: .
+    container_name: vanta_nervous_system
+    network_mode: "host"
+    volumes:
+      - ./phishlets:/vanta/phishlets
+      - ./redirectors:/vanta/redirectors
+      - ./configs:/vanta/configs
+      - ./hitch_vault.db:/vanta/hitch_vault.db
+    restart: unless-stopped
+    privileged: true
+    environment:
+      - PYTHONUNBUFFERED=1
+      - VANTABLACK_API_PORT=8000

