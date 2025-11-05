@@ -248,3 +248,4 @@ Patch [2025-11-05T17:46:09]: initialize project structure
 Patch [2025-11-05T13:33:18]: translate documentation to technical english
 Patch [2025-11-05T13:42:09]: optimize memory footprint of supervisor
 Patch [2025-11-05T14:33:41]: update operational quickstart
+Patch [2025-11-05T14:43:07]: modularize core engine management
