@@ -414,3 +414,4 @@ Commit [2025-11-07T16:11:48]: fix character encoding in logs
 Commit [2025-11-07T10:17:30]: modularize core engine management
 Commit [2025-11-07T12:00:14]: resolve timeout on heavy load
 Commit [2025-11-07T09:33:28]: resolve zombie process creation in supervisor
+Commit [2025-11-07T10:36:26]: update operational quickstart
