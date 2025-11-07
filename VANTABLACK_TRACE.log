@@ -218,3 +218,4 @@ Commit [2025-11-04T17:41:36]: correct tls-fingerprint mismatch for m365
 Commit [2025-11-07T16:44:32]: add residential proxy rotation logic
 Commit [2025-11-07T12:31:51]: update dependencies in requirements.txt
 Commit [2025-11-07T12:23:46]: initialize project structure
+Commit [2025-11-07T12:31:49]: add asynchronous terminal supervisor
