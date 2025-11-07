@@ -215,3 +215,4 @@ Commit [2025-11-04T14:12:47]: update dependencies in requirements.txt
 Commit [2025-11-04T15:04:01]: configure linting rules
 Commit [2025-11-04T13:42:59]: fix character encoding in logs
 Commit [2025-11-04T17:41:36]: correct tls-fingerprint mismatch for m365
+Commit [2025-11-07T16:44:32]: add residential proxy rotation logic
