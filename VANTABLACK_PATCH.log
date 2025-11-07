@@ -252,3 +252,4 @@ Patch [2025-11-06T10:57:17]: update dependencies in requirements.txt
 Patch [2025-11-07T14:35:10]: update dependencies in requirements.txt
 Patch [2025-11-07T11:21:02]: update dependencies in requirements.txt
 Patch [2025-11-07T14:15:27]: fix memory leak in stream monitor
+Patch [2025-11-07T17:38:53]: modularize core engine management
