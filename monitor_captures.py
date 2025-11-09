@@ -18,28 +18,28 @@ def get_latest_captures():
         return []
 
 def generate_table() -> Table:
-    table = Table(title="[bold yellow]TABLEAU DE BORD VANTABLACK - CAPTURES EN TEMPS RÉEL[/bold yellow]")
-    table.add_column("Heure", style="cyan")
-    table.add_column("Cible (Phishlet)", style="green")
-    table.add_column("Données Capturées", style="white", overflow="fold")
+    table = Table(title="[bold grey50]VANTABLACK DASHBOARD - REAL-TIME CAPTURES[/bold grey50]", border_style="grey37")
+    table.add_column("Time", style="cyan")
+    table.add_column("Target (Phishlet)", style="green")
+    table.add_column("Captured Data", style="white", overflow="fold")
     
     captures = get_latest_captures()
     for ts, source, data in captures:
-        # Masquage basique pour l'affichage terminal
+        # Subtle masking for terminal display
         short_data = data[:100] + "..." if len(data) > 100 else data
         table.add_row(ts, source, short_data)
     
     return table
 
 def main():
-    console.print("[bold green]Lancement du Moniteur de Captures... (CTRL+C pour quitter)[/]\n")
+    console.print("[bold grey37]Launching Capture Monitor... (CTRL+C to exit)[/]\n")
     with Live(generate_table(), refresh_per_second=1) as live:
         try:
             while True:
                 time.sleep(1)
                 live.update(generate_table())
         except KeyboardInterrupt:
-            pass
+            console.print("\n[dim grey37]Monitoring suspended.[/]")
 
 if __name__ == "__main__":
     main()

