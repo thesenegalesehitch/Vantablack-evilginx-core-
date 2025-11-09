@@ -124,6 +124,12 @@ class VantaUltimate:
 
 [bold grey50]VANTABLACK: INDUSTRIAL ORCHESTRATOR | V3.0.0[/]
 [italic grey39]Through the Looking Glass of Security[/]
+
+[bold grey37] █████  ██      ███████ ██   ██ [/]
+[bold grey37]██   ██ ██      ██       ██ ██  [/]
+[bold grey37]███████ ██      █████     ███   [/]
+[bold grey37]██   ██ ██      ██       ██ ██  [/]
+[bold grey37]██   ██ ███████ ███████ ██   ██ [/]
         """
         console.print(Align.center(banner_text))
 
@@ -258,7 +264,10 @@ class VantaUltimate:
                 if not self.health_check(silent=True):
                     if not self.auto_repair(): continue
                 
-                self.start_process("EVILGINX", [f"{self.bin_path}/evilginx", "-p", "./phishlets", "-developer"])
+                self.start_process("EVILGINX", [
+                    f"{self.bin_path}/evilginx", "-p", "./phishlets", "-developer",
+                    "-webhook-url", "http://127.0.0.1:8000/capture"
+                ])
                 self.start_process("GOPHISH", [f"{self.bin_path}/gophish", "--config", "./configs/config.json"])
                 
                 console.print(Panel(

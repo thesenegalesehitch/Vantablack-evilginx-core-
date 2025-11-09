@@ -19,7 +19,10 @@ def main():
     orchestrator.supervisor.start()
     
     # Start default engines (Evilginx/Gophish)
-    orchestrator.start_engine("EVILGINX", ["./bin/evilginx", "-p", "./phishlets", "-developer"])
+    orchestrator.start_engine("EVILGINX", [
+        "./bin/evilginx", "-p", "./phishlets", "-developer",
+        "-webhook-url", "http://127.0.0.1:8000/capture"
+    ])
     orchestrator.start_engine("GOPHISH", ["./bin/gophish", "--config", "./configs/config.json"])
 
     try:

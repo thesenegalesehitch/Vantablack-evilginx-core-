@@ -4,7 +4,13 @@ services:
   vanta-nervous-system:
     build: .
     container_name: vanta_nervous_system
-    network_mode: "host"
+    networks:
+      - vanta-internal
+    ports:
+      - "80:80"
+      - "443:443"
+      - "3333:3333"
+      - "8000:8000"
     volumes:
       - ./phishlets:/vanta/phishlets
       - ./redirectors:/vanta/redirectors
@@ -15,3 +21,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - VANTABLACK_API_PORT=8000
+
+networks:
+  vanta-internal:
+    driver: bridge
