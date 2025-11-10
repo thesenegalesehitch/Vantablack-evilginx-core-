@@ -489,3 +489,4 @@ Patch [2025-11-05T13:39:05]: implement modular orchestrator logic
 Patch [2025-11-05T15:07:30]: refine security policy and test plan
 Patch [2025-11-05T17:55:34]: update operational quickstart
 Patch [2025-11-10T09:08:37]: modularize core engine management
+Patch [2025-11-10T17:36:28]: correct regex for sensitive data masking
