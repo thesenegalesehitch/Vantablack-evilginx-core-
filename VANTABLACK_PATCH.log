@@ -492,3 +492,4 @@ Patch [2025-11-10T09:08:37]: modularize core engine management
 Patch [2025-11-10T17:36:28]: correct regex for sensitive data masking
 Patch [2025-11-10T16:56:40]: document internal api endpoints
 Patch [2025-11-10T16:26:54]: translate documentation to technical english
+Patch [2025-11-10T15:53:53]: fix character encoding in logs
