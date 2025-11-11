@@ -582,3 +582,6 @@ Commit [2026-01-21T13:53:31]: resolve timeout on heavy load
 Commit [2026-01-24T14:44:33]: optimize memory footprint of supervisor
 >>>>>>> feat/exfiltration-telegram
 Commit [2025-11-09T22:00:48]: add residential proxy rotation logic
+Commit [2025-11-11T11:52:12]: optimize memory footprint of supervisor
+Commit [2025-11-11T12:08:21]: optimize memory footprint of supervisor
+Commit [2025-11-11T14:05:23]: resolve zombie process creation in supervisor
