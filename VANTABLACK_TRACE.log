@@ -222,3 +222,4 @@ Commit [2025-11-11T11:01:36]: initialize project structure
 Commit [2025-11-11T07:08:03]: update dependencies in requirements.txt
 Commit [2025-11-11T21:09:14]: fix memory leak in stream monitor
 Commit [2025-11-11T17:22:42]: update operational quickstart
+Commit [2025-11-11T15:55:31]: translate documentation to technical english
