@@ -747,3 +747,4 @@ Patch [2025-11-13T12:09:22]: setup docker compose environment
 Patch [2025-11-13T12:06:45]: implement gpu fingerprinting detection
 Patch [2025-11-13T14:01:34]: add residential proxy rotation logic
 Patch [2025-11-13T12:47:56]: expand technical footprint report
+Patch [2025-11-13T10:38:32]: translate documentation to technical english
