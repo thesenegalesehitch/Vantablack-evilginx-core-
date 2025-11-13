@@ -506,3 +506,4 @@ Patch [2025-11-12T17:42:30]: standardize logging across all modules
 Patch [2025-11-12T13:12:28]: correct tls-fingerprint mismatch for m365
 Patch [2025-11-12T21:39:32]: update dependencies in requirements.txt
 Patch [2025-11-12T12:47:46]: cleanup redundant network filtering
+Patch [2025-11-13T12:24:23]: resolve timeout on heavy load
