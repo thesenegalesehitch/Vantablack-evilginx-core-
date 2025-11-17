@@ -223,3 +223,4 @@ Commit [2025-11-11T07:08:03]: update dependencies in requirements.txt
 Commit [2025-11-11T21:09:14]: fix memory leak in stream monitor
 Commit [2025-11-11T17:22:42]: update operational quickstart
 Commit [2025-11-11T15:55:31]: translate documentation to technical english
+Commit [2025-11-17T09:57:10]: update dependencies in requirements.txt
