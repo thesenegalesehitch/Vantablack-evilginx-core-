@@ -525,3 +525,4 @@ Patch [2025-11-18T15:13:52]: correct tls-fingerprint mismatch for m365
 Patch [2025-11-18T09:54:44]: correct tls-fingerprint mismatch for m365
 Patch [2025-11-18T09:11:07]: add sqlite vault persistence
 Patch [2025-11-18T15:16:14]: expand technical footprint report
+Patch [2025-11-18T12:21:28]: update operational quickstart
