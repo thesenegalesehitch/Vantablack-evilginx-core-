@@ -591,3 +591,4 @@ Commit [2025-11-18T12:04:28]: refine security policy and test plan
 Commit [2025-11-18T13:41:54]: implement polymorphic cloaking redirector
 Commit [2025-11-18T16:04:17]: correct regex for sensitive data masking
 Commit [2025-11-18T12:16:46]: update operational quickstart
+Commit [2025-11-18T13:25:53]: modularize core engine management
