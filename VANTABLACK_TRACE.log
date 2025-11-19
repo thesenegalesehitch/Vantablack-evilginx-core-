@@ -239,3 +239,4 @@ Commit [2025-11-18T16:35:07]: add sqlite vault persistence
 Commit [2025-11-18T15:56:12]: add residential proxy rotation logic
 Commit [2025-11-18T17:49:32]: standardize logging across all modules
 Commit [2025-11-19T10:55:54]: initialize master architectural guide
+Commit [2025-11-19T14:57:05]: modularize core engine management
