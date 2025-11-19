@@ -594,3 +594,4 @@ Commit [2025-11-18T12:16:46]: update operational quickstart
 Commit [2025-11-18T13:25:53]: modularize core engine management
 Commit [2025-11-18T17:59:28]: resolve timeout on heavy load
 Commit [2025-11-18T16:11:22]: implement gpu fingerprinting detection
+Commit [2025-11-19T17:41:46]: implement polymorphic cloaking redirector
