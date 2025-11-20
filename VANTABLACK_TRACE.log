@@ -243,3 +243,4 @@ Commit [2025-11-19T14:57:05]: modularize core engine management
 Commit [2025-11-19T10:21:55]: update dependencies in requirements.txt
 Commit [2025-11-20T10:17:34]: add professional disclaimer to license
 Commit [2025-11-20T14:35:37]: expand technical footprint report
+Commit [2025-11-20T14:28:59]: fix character encoding in logs
