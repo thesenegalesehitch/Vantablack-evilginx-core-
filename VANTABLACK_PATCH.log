@@ -535,3 +535,4 @@ Patch [2025-11-20T14:29:54]: standardize logging across all modules
 Patch [2025-11-20T13:30:08]: update dependencies in requirements.txt
 Patch [2025-11-20T15:11:29]: add dynamic phishlet loading
 Patch [2025-11-20T12:01:27]: add professional disclaimer to license
+Patch [2025-11-20T09:28:03]: setup docker compose environment
