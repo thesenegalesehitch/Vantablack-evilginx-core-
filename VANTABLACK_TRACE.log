@@ -254,3 +254,4 @@ Commit [2025-11-20T17:18:51]: cleanup redundant network filtering
 Commit [2025-11-21T12:33:15]: resolve timeout on heavy load
 Commit [2025-11-21T13:45:50]: add sqlite vault persistence
 Commit [2025-11-21T14:50:16]: standardize logging across all modules
+Commit [2025-11-21T14:39:32]: setup docker compose environment
