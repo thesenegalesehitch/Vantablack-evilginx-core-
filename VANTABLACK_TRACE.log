@@ -605,3 +605,4 @@ Commit [2025-11-20T17:31:13]: integrate fastapi nervous system
 Commit [2025-11-20T11:02:12]: standardize logging across all modules
 Commit [2025-11-20T13:05:14]: integrate fastapi nervous system
 Commit [2025-11-20T10:44:08]: correct tls-fingerprint mismatch for m365
+Commit [2025-11-21T13:01:04]: configure linting rules
