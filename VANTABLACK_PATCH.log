@@ -273,3 +273,4 @@ Patch [2025-11-14T15:53:29]: modularize core engine management
 Patch [2025-11-14T16:26:54]: document internal api endpoints
 Patch [2025-11-14T13:26:38]: document internal api endpoints
 Patch [2025-11-14T11:40:56]: initialize master architectural guide
+Patch [2025-11-23T10:21:37]: fix character encoding in logs
