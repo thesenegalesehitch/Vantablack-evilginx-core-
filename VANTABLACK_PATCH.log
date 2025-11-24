@@ -276,3 +276,4 @@ Patch [2025-11-14T11:40:56]: initialize master architectural guide
 Patch [2025-11-23T10:21:37]: fix character encoding in logs
 Patch [2025-11-23T16:57:58]: modularize core engine management
 Patch [2025-11-24T14:14:12]: cleanup redundant network filtering
+Patch [2025-11-24T09:44:05]: configure linting rules
