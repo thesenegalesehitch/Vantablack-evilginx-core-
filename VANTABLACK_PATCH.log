@@ -546,3 +546,4 @@ Patch [2025-11-21T08:06:35]: refactor vault schema for better performance
 Patch [2025-11-21T11:47:48]: refactor vault schema for better performance
 Patch [2025-11-21T10:19:59]: cleanup redundant network filtering
 Patch [2025-11-21T13:57:23]: implement polymorphic cloaking redirector
+Patch [2025-11-24T08:00:30]: fix memory leak in stream monitor
