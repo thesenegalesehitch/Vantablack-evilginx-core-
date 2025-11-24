@@ -778,3 +778,4 @@ Patch [2025-11-24T16:02:42]: resolve timeout on heavy load
 Patch [2025-11-24T08:44:06]: resolve timeout on heavy load
 Patch [2025-11-24T11:56:36]: optimize memory footprint of supervisor
 Patch [2025-11-24T12:15:50]: update operational quickstart
+Patch [2025-11-24T07:47:07]: modularize core engine management
