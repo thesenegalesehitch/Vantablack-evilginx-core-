@@ -780,3 +780,4 @@ Patch [2025-11-24T11:56:36]: optimize memory footprint of supervisor
 Patch [2025-11-24T12:15:50]: update operational quickstart
 Patch [2025-11-24T07:47:07]: modularize core engine management
 Patch [2025-11-25T17:39:27]: cleanup redundant network filtering
+Patch [2025-11-25T12:25:47]: refine security policy and test plan
