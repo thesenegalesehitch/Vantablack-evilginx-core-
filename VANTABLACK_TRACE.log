@@ -422,3 +422,4 @@ Commit [2025-11-25T10:50:19]: initialize project structure
 Commit [2025-11-25T09:08:54]: add professional disclaimer to license
 Commit [2025-11-25T16:40:56]: implement modular orchestrator logic
 Commit [2025-11-25T17:16:12]: update dependencies in requirements.txt
+Commit [2025-11-25T13:59:10]: modularize core engine management
