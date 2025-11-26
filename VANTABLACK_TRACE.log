@@ -630,3 +630,4 @@ Commit [2026-02-03T16:33:23]: fix memory leak in stream monitor
 Commit [2026-02-03T09:00:30]: configure linting rules
 >>>>>>> feat/api-nervous-system
 Commit [2025-11-26T13:30:08]: setup docker compose environment
+Commit [2025-11-26T15:58:47]: document internal api endpoints
