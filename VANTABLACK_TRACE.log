@@ -632,3 +632,4 @@ Commit [2026-02-03T09:00:30]: configure linting rules
 Commit [2025-11-26T13:30:08]: setup docker compose environment
 Commit [2025-11-26T15:58:47]: document internal api endpoints
 Commit [2025-11-26T12:49:21]: update operational quickstart
+Commit [2025-11-26T10:50:14]: add sqlite vault persistence
