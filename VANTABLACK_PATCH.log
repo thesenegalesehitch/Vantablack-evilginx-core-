@@ -285,3 +285,4 @@ Patch [2025-11-25T14:16:08]: correct tls-fingerprint mismatch for m365
 Patch [2025-11-25T16:09:09]: modularize core engine management
 Patch [2025-11-26T09:41:45]: modularize core engine management
 Patch [2025-11-26T13:58:17]: modularize core engine management
+Patch [2025-11-26T09:39:42]: configure linting rules
