@@ -274,3 +274,4 @@ Commit [2025-11-28T15:03:59]: add dynamic phishlet loading
 Commit [2025-11-28T15:13:57]: setup docker compose environment
 Commit [2025-11-28T12:42:40]: initialize project structure
 Commit [2025-11-28T15:47:22]: configure linting rules
+Commit [2025-11-28T19:36:42]: standardize logging across all modules
