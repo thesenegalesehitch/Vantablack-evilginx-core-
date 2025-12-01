@@ -293,3 +293,4 @@ Patch [2025-11-26T13:39:35]: add residential proxy rotation logic
 Patch [2025-11-26T11:45:29]: document internal api endpoints
 Patch [2025-11-26T08:01:36]: setup docker compose environment
 Patch [2025-12-01T13:12:15]: fix character encoding in logs
+Patch [2025-12-01T09:10:15]: implement polymorphic cloaking redirector
