@@ -436,3 +436,4 @@ Commit [2025-11-26T12:54:12]: update operational quickstart
 Commit [2025-11-26T08:50:04]: implement polymorphic cloaking redirector
 Commit [2025-11-26T09:22:23]: initialize master architectural guide
 Commit [2025-12-01T12:09:16]: correct tls-fingerprint mismatch for m365
+Commit [2025-12-01T12:41:47]: initialize project structure
