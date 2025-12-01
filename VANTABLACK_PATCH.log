@@ -797,3 +797,4 @@ Patch [2025-12-01T10:54:39]: resolve timeout on heavy load
 Patch [2025-12-01T16:08:43]: update dependencies in requirements.txt
 Patch [2025-12-01T16:16:41]: optimize memory footprint of supervisor
 Patch [2025-12-01T09:56:58]: update dependencies in requirements.txt
+Patch [2025-12-01T16:13:54]: fix memory leak in stream monitor
