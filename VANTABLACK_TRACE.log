@@ -438,3 +438,4 @@ Commit [2025-11-26T09:22:23]: initialize master architectural guide
 Commit [2025-12-01T12:09:16]: correct tls-fingerprint mismatch for m365
 Commit [2025-12-01T12:41:47]: initialize project structure
 Commit [2025-12-01T07:19:05]: add residential proxy rotation logic
+Commit [2025-12-01T14:32:10]: cleanup redundant network filtering
