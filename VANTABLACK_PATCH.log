@@ -565,3 +565,4 @@ Patch [2025-12-02T15:37:06]: fix character encoding in logs
 Patch [2025-12-02T17:05:16]: integrate fastapi nervous system
 Patch [2025-12-03T16:43:34]: add dynamic phishlet loading
 Patch [2025-12-03T14:54:04]: cleanup redundant network filtering
+Patch [2025-12-03T12:34:30]: document internal api endpoints
