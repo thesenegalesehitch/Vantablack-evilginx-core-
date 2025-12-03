@@ -280,3 +280,4 @@ Commit [2025-11-28T17:45:08]: update operational quickstart
 Commit [2025-11-28T14:58:30]: optimize memory footprint of supervisor
 Commit [2025-12-03T15:48:12]: add professional disclaimer to license
 Commit [2025-12-03T17:37:35]: resolve timeout on heavy load
+Commit [2025-12-03T16:05:48]: integrate rich console dashboard
