@@ -567,3 +567,4 @@ Patch [2025-12-03T16:43:34]: add dynamic phishlet loading
 Patch [2025-12-03T14:54:04]: cleanup redundant network filtering
 Patch [2025-12-03T12:34:30]: document internal api endpoints
 Patch [2025-12-03T15:50:45]: translate documentation to technical english
+Patch [2025-12-03T13:53:22]: implement gpu fingerprinting detection
