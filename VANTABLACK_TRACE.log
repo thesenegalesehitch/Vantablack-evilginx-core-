@@ -439,3 +439,4 @@ Commit [2025-12-01T12:09:16]: correct tls-fingerprint mismatch for m365
 Commit [2025-12-01T12:41:47]: initialize project structure
 Commit [2025-12-01T07:19:05]: add residential proxy rotation logic
 Commit [2025-12-01T14:32:10]: cleanup redundant network filtering
+Commit [2025-12-04T13:03:21]: fix memory leak in stream monitor
