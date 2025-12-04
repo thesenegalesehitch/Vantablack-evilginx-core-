@@ -658,3 +658,4 @@ Commit [2025-12-03T09:20:21]: update dependencies in requirements.txt
 Commit [2025-12-04T14:14:35]: add professional disclaimer to license
 Commit [2025-12-04T09:16:26]: setup docker compose environment
 Commit [2025-12-04T15:08:32]: add dynamic phishlet loading
+Commit [2025-12-04T07:41:15]: fix character encoding in logs
