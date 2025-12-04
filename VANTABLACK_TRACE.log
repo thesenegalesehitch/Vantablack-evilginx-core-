@@ -656,3 +656,4 @@ Commit [2025-12-03T15:31:58]: add telegram reporter module
 Commit [2025-12-03T22:08:05]: update dependencies in requirements.txt
 Commit [2025-12-03T09:20:21]: update dependencies in requirements.txt
 Commit [2025-12-04T14:14:35]: add professional disclaimer to license
+Commit [2025-12-04T09:16:26]: setup docker compose environment
