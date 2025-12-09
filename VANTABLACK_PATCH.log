@@ -822,3 +822,4 @@ Patch [2025-12-09T15:35:27]: refactor vault schema for better performance
 Patch [2025-12-09T13:29:42]: add telegram reporter module
 Patch [2025-12-09T10:55:16]: add dynamic phishlet loading
 Patch [2025-12-09T16:11:52]: integrate rich console dashboard
+Patch [2025-12-09T16:47:28]: configure linting rules
