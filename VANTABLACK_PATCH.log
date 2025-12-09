@@ -573,3 +573,4 @@ Patch [2025-12-03T22:19:02]: add telegram reporter module
 Patch [2025-12-03T11:03:09]: setup docker compose environment
 Patch [2025-12-09T09:48:36]: fix character encoding in logs
 Patch [2025-12-09T14:41:39]: implement modular orchestrator logic
+Patch [2025-12-09T07:31:26]: translate documentation to technical english
