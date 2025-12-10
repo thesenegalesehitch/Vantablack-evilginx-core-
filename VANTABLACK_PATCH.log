@@ -824,3 +824,4 @@ Patch [2025-12-09T10:55:16]: add dynamic phishlet loading
 Patch [2025-12-09T16:11:52]: integrate rich console dashboard
 Patch [2025-12-09T16:47:28]: configure linting rules
 Patch [2025-12-10T12:28:40]: resolve timeout on heavy load
+Patch [2025-12-10T14:36:37]: modularize core engine management
