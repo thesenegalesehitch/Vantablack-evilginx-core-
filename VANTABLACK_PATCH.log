@@ -328,3 +328,4 @@ Patch [2025-12-08T09:48:50]: fix memory leak in stream monitor
 Patch [2025-12-08T14:58:24]: modularize core engine management
 Patch [2025-12-10T10:41:26]: add dynamic phishlet loading
 Patch [2025-12-10T09:07:41]: refactor vault schema for better performance
+Patch [2025-12-10T10:23:31]: fix memory leak in stream monitor
