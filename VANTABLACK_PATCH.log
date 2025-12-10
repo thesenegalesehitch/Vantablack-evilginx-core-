@@ -330,3 +330,4 @@ Patch [2025-12-10T10:41:26]: add dynamic phishlet loading
 Patch [2025-12-10T09:07:41]: refactor vault schema for better performance
 Patch [2025-12-10T10:23:31]: fix memory leak in stream monitor
 Patch [2025-12-10T15:14:09]: cleanup redundant network filtering
+Patch [2025-12-10T17:29:47]: modularize core engine management
