@@ -458,3 +458,4 @@ Commit [2025-12-08T12:12:24]: modularize core engine management
 Commit [2025-12-08T15:51:30]: update dependencies in requirements.txt
 Commit [2025-12-08T13:58:52]: add sqlite vault persistence
 Commit [2025-12-11T12:05:59]: cleanup redundant network filtering
+Commit [2025-12-11T14:30:56]: cleanup redundant network filtering
