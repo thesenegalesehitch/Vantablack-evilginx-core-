@@ -297,3 +297,4 @@ Commit [2025-12-09T08:47:49]: modularize core engine management
 Commit [2025-12-11T15:26:26]: resolve zombie process creation in supervisor
 Commit [2025-12-11T15:45:55]: update dependencies in requirements.txt
 Commit [2025-12-11T17:40:45]: fix memory leak in stream monitor
+Commit [2025-12-11T09:01:58]: correct regex for sensitive data masking
