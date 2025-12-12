@@ -334,3 +334,4 @@ Patch [2025-12-10T17:29:47]: modularize core engine management
 Patch [2025-12-10T15:48:59]: add professional disclaimer to license
 Patch [2025-12-10T08:48:46]: correct regex for sensitive data masking
 Patch [2025-12-12T09:46:29]: update dependencies in requirements.txt
+Patch [2025-12-12T14:21:07]: implement secure process spawning
