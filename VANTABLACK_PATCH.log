@@ -349,3 +349,4 @@ Patch [2025-12-15T10:36:01]: add asynchronous terminal supervisor
 Patch [2025-12-15T09:06:17]: fix memory leak in stream monitor
 Patch [2025-12-15T14:31:12]: optimize memory footprint of supervisor
 Patch [2025-12-15T07:11:21]: add professional disclaimer to license
+Patch [2025-12-15T14:14:00]: update operational quickstart
