@@ -665,3 +665,6 @@ Commit [2025-12-04T10:05:11]: update operational quickstart
 Commit [2025-12-04T16:54:47]: update dependencies in requirements.txt
 Commit [2025-12-04T10:13:38]: cleanup redundant network filtering
 Commit [2025-12-04T10:39:47]: configure linting rules
+Commit [2025-12-18T21:23:39]: configure linting rules
+Commit [2025-12-18T14:36:40]: standardize logging across all modules
+Commit [2025-12-18T10:56:51]: translate documentation to technical english
