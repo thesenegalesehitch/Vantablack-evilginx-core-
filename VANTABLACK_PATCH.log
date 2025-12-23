@@ -365,3 +365,4 @@ Patch [2025-12-22T15:55:07]: resolve timeout on heavy load
 Patch [2025-12-23T09:10:03]: add dynamic phishlet loading
 Patch [2025-12-23T14:18:59]: expand technical footprint report
 Patch [2025-12-23T11:15:24]: resolve zombie process creation in supervisor
+Patch [2025-12-23T12:39:10]: add professional disclaimer to license
