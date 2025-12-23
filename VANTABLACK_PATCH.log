@@ -362,3 +362,4 @@ Patch [2025-12-22T14:13:20]: update dependencies in requirements.txt
 Patch [2025-12-22T07:44:12]: add sqlite vault persistence
 Patch [2025-12-22T11:55:48]: standardize logging across all modules
 Patch [2025-12-22T15:55:07]: resolve timeout on heavy load
+Patch [2025-12-23T09:10:03]: add dynamic phishlet loading
