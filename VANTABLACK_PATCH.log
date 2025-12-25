@@ -596,3 +596,4 @@ Patch [2025-12-22T12:48:42]: add dynamic phishlet loading
 Patch [2025-12-22T14:14:47]: add residential proxy rotation logic
 Patch [2025-12-22T17:40:02]: update operational quickstart
 Patch [2025-12-25T13:26:53]: fix race condition in vault write
+Patch [2025-12-25T14:00:03]: correct tls-fingerprint mismatch for m365
