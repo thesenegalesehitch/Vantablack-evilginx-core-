@@ -598,3 +598,4 @@ Patch [2025-12-22T17:40:02]: update operational quickstart
 Patch [2025-12-25T13:26:53]: fix race condition in vault write
 Patch [2025-12-25T14:00:03]: correct tls-fingerprint mismatch for m365
 Patch [2025-12-25T09:02:07]: refine security policy and test plan
+Patch [2025-12-25T07:52:11]: correct tls-fingerprint mismatch for m365
