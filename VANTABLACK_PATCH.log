@@ -602,3 +602,4 @@ Patch [2025-12-25T07:52:11]: correct tls-fingerprint mismatch for m365
 Patch [2025-12-25T09:23:36]: fix character encoding in logs
 Patch [2025-12-25T07:43:13]: update dependencies in requirements.txt
 Patch [2025-12-25T12:36:10]: translate documentation to technical english
+Patch [2025-12-25T13:17:14]: add sqlite vault persistence
