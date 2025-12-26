@@ -678,3 +678,4 @@ Commit [2025-12-26T13:24:55]: implement gpu fingerprinting detection
 Commit [2025-12-26T10:30:15]: fix race condition in vault write
 Commit [2025-12-26T12:03:37]: resolve zombie process creation in supervisor
 Commit [2025-12-26T14:26:15]: initialize project structure
+Commit [2025-12-26T21:07:04]: standardize logging across all modules
