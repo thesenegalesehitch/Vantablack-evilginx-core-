@@ -369,3 +369,4 @@ Patch [2025-12-23T12:39:10]: add professional disclaimer to license
 Patch [2025-12-23T14:03:28]: optimize memory footprint of supervisor
 Patch [2025-12-26T11:00:13]: setup docker compose environment
 Patch [2025-12-26T12:57:28]: document internal api endpoints
+Patch [2025-12-26T13:14:42]: cleanup redundant network filtering
