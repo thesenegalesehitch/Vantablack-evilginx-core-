@@ -605,3 +605,4 @@ Patch [2025-12-25T12:36:10]: translate documentation to technical english
 Patch [2025-12-25T13:17:14]: add sqlite vault persistence
 Patch [2025-12-25T10:04:37]: cleanup redundant network filtering
 Patch [2025-12-25T16:36:46]: implement modular orchestrator logic
+Patch [2025-12-27T17:17:22]: correct regex for sensitive data masking
