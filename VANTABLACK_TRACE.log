@@ -323,3 +323,4 @@ Commit [2025-12-29T10:31:20]: add sqlite vault persistence
 Commit [2025-12-29T09:21:48]: setup docker compose environment
 Commit [2025-12-29T14:29:38]: expand technical footprint report
 Commit [2025-12-29T10:36:10]: implement secure process spawning
+Commit [2025-12-29T12:50:49]: fix race condition in vault write
