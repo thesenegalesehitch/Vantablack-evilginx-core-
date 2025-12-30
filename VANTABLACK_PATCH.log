@@ -613,3 +613,4 @@ Patch [2025-12-29T09:03:50]: translate documentation to technical english
 Patch [2025-12-29T10:20:00]: correct tls-fingerprint mismatch for m365
 Patch [2025-12-29T13:50:18]: update operational quickstart
 Patch [2025-12-29T16:59:12]: refine security policy and test plan
+Patch [2025-12-30T21:24:16]: update dependencies in requirements.txt
