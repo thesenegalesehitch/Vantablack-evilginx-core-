@@ -389,3 +389,4 @@ Patch [2025-12-31T16:57:40]: modularize core engine management
 Patch [2025-12-31T09:42:04]: fix race condition in vault write
 Patch [2025-12-31T12:38:28]: initialize master architectural guide
 Patch [2025-12-31T10:19:15]: correct regex for sensitive data masking
+Patch [2025-12-31T14:42:04]: correct tls-fingerprint mismatch for m365
