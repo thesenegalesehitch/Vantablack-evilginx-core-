@@ -631,3 +631,4 @@ Patch [2026-01-01T15:00:43]: add professional disclaimer to license
 Patch [2026-01-01T12:11:23]: add telegram reporter module
 Patch [2026-01-01T12:07:32]: optimize memory footprint of supervisor
 Patch [2026-01-01T14:59:37]: cleanup redundant network filtering
+Patch [2026-01-01T16:40:41]: modularize core engine management
