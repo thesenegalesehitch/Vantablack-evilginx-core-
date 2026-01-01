@@ -395,3 +395,4 @@ Patch [2026-01-01T08:17:17]: correct tls-fingerprint mismatch for m365
 Patch [2026-01-01T15:53:46]: translate documentation to technical english
 Patch [2026-01-01T13:15:43]: integrate rich console dashboard
 Patch [2026-01-01T17:56:34]: resolve zombie process creation in supervisor
+Patch [2026-01-01T13:27:57]: cleanup redundant network filtering
