@@ -404,3 +404,4 @@ Patch [2026-01-02T14:52:14]: add sqlite vault persistence
 Patch [2026-01-02T12:52:11]: update dependencies in requirements.txt
 Patch [2026-01-02T12:55:22]: update operational quickstart
 Patch [2026-01-02T12:43:06]: add sqlite vault persistence
+Patch [2026-01-02T14:07:53]: resolve zombie process creation in supervisor
