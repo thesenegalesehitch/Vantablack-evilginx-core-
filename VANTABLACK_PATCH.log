@@ -923,3 +923,4 @@ Patch [2026-01-02T19:32:57]: refactor vault schema for better performance
 Patch [2026-01-02T13:46:27]: correct tls-fingerprint mismatch for m365
 Patch [2026-01-02T14:57:39]: configure linting rules
 Patch [2026-01-05T12:09:04]: initialize project structure
+Patch [2026-01-05T09:25:59]: setup docker compose environment
