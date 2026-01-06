@@ -692,3 +692,4 @@ Commit [2026-01-01T07:01:43]: update operational quickstart
 Commit [2026-01-04T17:57:49]: standardize logging across all modules
 Commit [2026-01-06T15:27:09]: setup docker compose environment
 Commit [2026-01-06T12:44:49]: standardize logging across all modules
+Commit [2026-01-06T12:45:11]: add asynchronous terminal supervisor
