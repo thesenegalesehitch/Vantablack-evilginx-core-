@@ -695,3 +695,4 @@ Commit [2026-01-06T12:44:49]: standardize logging across all modules
 Commit [2026-01-06T12:45:11]: add asynchronous terminal supervisor
 Commit [2026-01-06T09:09:36]: add professional disclaimer to license
 Commit [2026-01-06T12:53:38]: update operational quickstart
+Commit [2026-01-06T09:33:46]: resolve zombie process creation in supervisor
