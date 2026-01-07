@@ -500,3 +500,4 @@ Commit [2025-12-26T15:30:07]: add dynamic phishlet loading
 Commit [2026-01-05T17:37:42]: configure linting rules
 Commit [2026-01-05T15:01:53]: standardize logging across all modules
 Commit [2026-01-05T15:47:07]: initialize project structure
+Commit [2026-01-07T08:07:18]: document internal api endpoints
