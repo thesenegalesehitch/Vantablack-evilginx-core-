@@ -419,3 +419,4 @@ Patch [2026-01-07T13:21:58]: update dependencies in requirements.txt
 Patch [2026-01-07T13:18:59]: refactor vault schema for better performance
 Patch [2026-01-07T17:27:39]: standardize logging across all modules
 Patch [2026-01-07T17:14:34]: document internal api endpoints
+Patch [2026-01-08T15:41:47]: setup docker compose environment
