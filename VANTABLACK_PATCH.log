@@ -930,3 +930,4 @@ Patch [2026-01-05T19:57:00]: modularize core engine management
 Patch [2026-01-05T12:40:42]: fix race condition in vault write
 Patch [2026-01-05T07:34:33]: fix memory leak in stream monitor
 Patch [2026-01-08T16:02:38]: document internal api endpoints
+Patch [2026-01-08T11:46:45]: expand technical footprint report
