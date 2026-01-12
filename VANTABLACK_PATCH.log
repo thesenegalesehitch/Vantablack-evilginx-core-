@@ -428,3 +428,4 @@ Patch [2026-01-08T16:17:37]: refactor vault schema for better performance
 Patch [2026-01-08T13:12:01]: add asynchronous terminal supervisor
 Patch [2026-01-08T13:54:28]: optimize memory footprint of supervisor
 Patch [2026-01-12T22:37:32]: add asynchronous terminal supervisor
+Patch [2026-01-12T13:16:46]: modularize core engine management
