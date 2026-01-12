@@ -525,3 +525,4 @@ Commit [2026-01-12T12:38:21]: configure linting rules
 Commit [2026-01-12T15:09:29]: fix memory leak in stream monitor
 Commit [2026-01-12T10:14:30]: fix memory leak in stream monitor
 Commit [2026-01-12T11:40:52]: fix character encoding in logs
+Commit [2026-01-12T07:20:02]: standardize logging across all modules
