@@ -429,3 +429,4 @@ Patch [2026-01-08T13:12:01]: add asynchronous terminal supervisor
 Patch [2026-01-08T13:54:28]: optimize memory footprint of supervisor
 Patch [2026-01-12T22:37:32]: add asynchronous terminal supervisor
 Patch [2026-01-12T13:16:46]: modularize core engine management
+Patch [2026-01-12T14:41:40]: modularize core engine management
