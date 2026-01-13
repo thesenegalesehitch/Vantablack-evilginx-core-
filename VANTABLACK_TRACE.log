@@ -714,3 +714,11 @@ Commit [2026-01-09T15:25:05]: resolve timeout on heavy load
 Commit [2026-01-09T14:40:09]: standardize logging across all modules
 Commit [2026-01-09T16:22:39]: add professional disclaimer to license
 Commit [2026-01-09T22:50:37]: add dynamic phishlet loading
+Commit [2026-01-13T09:21:45]: correct tls-fingerprint mismatch for m365
+Commit [2026-01-13T17:44:35]: implement secure process spawning
+Commit [2026-01-13T10:10:43]: setup docker compose environment
+Commit [2026-01-13T14:27:20]: integrate rich console dashboard
+Commit [2026-01-13T11:13:35]: correct regex for sensitive data masking
+Commit [2026-01-13T11:57:14]: cleanup redundant network filtering
+Commit [2026-01-13T12:37:01]: integrate rich console dashboard
+Commit [2026-01-13T12:34:48]: translate documentation to technical english
