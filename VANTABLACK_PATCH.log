@@ -445,3 +445,4 @@ Patch [2026-01-15T12:59:57]: update operational quickstart
 Patch [2026-01-15T17:59:42]: modularize core engine management
 Patch [2026-01-15T12:00:26]: update dependencies in requirements.txt
 Patch [2026-01-15T15:16:00]: add sqlite vault persistence
+Patch [2026-01-15T20:34:16]: implement secure process spawning
