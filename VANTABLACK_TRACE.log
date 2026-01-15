@@ -722,3 +722,4 @@ Commit [2026-01-13T11:13:35]: correct regex for sensitive data masking
 Commit [2026-01-13T11:57:14]: cleanup redundant network filtering
 Commit [2026-01-13T12:37:01]: integrate rich console dashboard
 Commit [2026-01-13T12:34:48]: translate documentation to technical english
+Commit [2026-01-15T13:36:54]: implement polymorphic cloaking redirector
