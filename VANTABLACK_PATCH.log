@@ -946,3 +946,4 @@ Patch [2026-01-16T09:01:38]: modularize core engine management
 Patch [2026-01-16T15:34:41]: refactor vault schema for better performance
 Patch [2026-01-16T21:52:01]: add professional disclaimer to license
 Patch [2026-01-16T09:48:24]: cleanup redundant network filtering
+Patch [2026-01-16T07:37:36]: add residential proxy rotation logic
