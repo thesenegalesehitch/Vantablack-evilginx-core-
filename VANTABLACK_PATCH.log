@@ -940,3 +940,4 @@ Patch [2026-01-14T15:29:33]: add dynamic phishlet loading
 Patch [2026-01-14T17:22:23]: initialize project structure
 Patch [2026-01-14T13:55:17]: add telegram reporter module
 Patch [2026-01-16T13:59:08]: initialize project structure
+Patch [2026-01-16T14:35:36]: setup docker compose environment
