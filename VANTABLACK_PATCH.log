@@ -942,3 +942,4 @@ Patch [2026-01-14T13:55:17]: add telegram reporter module
 Patch [2026-01-16T13:59:08]: initialize project structure
 Patch [2026-01-16T14:35:36]: setup docker compose environment
 Patch [2026-01-16T17:40:40]: add residential proxy rotation logic
+Patch [2026-01-16T09:01:38]: modularize core engine management
