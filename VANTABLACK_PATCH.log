@@ -950,3 +950,4 @@ Patch [2026-01-16T07:37:36]: add residential proxy rotation logic
 Patch [2026-01-19T08:39:56]: resolve timeout on heavy load
 Patch [2026-01-19T09:35:32]: resolve timeout on heavy load
 Patch [2026-01-19T14:09:51]: implement modular orchestrator logic
+Patch [2026-01-19T11:25:15]: translate documentation to technical english
