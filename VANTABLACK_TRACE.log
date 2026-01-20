@@ -730,3 +730,4 @@ Commit [2026-01-15T10:59:38]: add professional disclaimer to license
 Commit [2026-01-15T14:53:37]: add sqlite vault persistence
 Commit [2026-01-20T16:09:48]: add dynamic phishlet loading
 Commit [2026-01-20T07:47:23]: setup docker compose environment
+Commit [2026-01-20T11:06:14]: correct tls-fingerprint mismatch for m365
