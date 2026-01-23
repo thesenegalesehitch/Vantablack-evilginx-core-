@@ -962,3 +962,4 @@ Patch [2026-01-21T12:22:40]: update dependencies in requirements.txt
 Patch [2026-01-23T17:20:11]: resolve timeout on heavy load
 Patch [2026-01-23T17:43:04]: optimize memory footprint of supervisor
 Patch [2026-01-23T08:44:36]: initialize project structure
+Patch [2026-01-23T15:19:33]: update operational quickstart
