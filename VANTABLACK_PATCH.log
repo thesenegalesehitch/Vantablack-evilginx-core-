@@ -685,3 +685,4 @@ Patch [2026-01-22T16:45:42]: fix race condition in vault write
 Patch [2026-01-22T17:00:03]: optimize memory footprint of supervisor
 Patch [2026-01-22T13:01:52]: add sqlite vault persistence
 Patch [2026-01-22T13:33:30]: fix race condition in vault write
+Patch [2026-01-23T14:34:45]: update operational quickstart
