@@ -967,3 +967,4 @@ Patch [2026-01-23T17:22:52]: refactor vault schema for better performance
 Patch [2026-01-23T07:59:07]: document internal api endpoints
 Patch [2026-01-23T15:13:55]: refactor vault schema for better performance
 Patch [2026-01-23T09:31:11]: add professional disclaimer to license
+Patch [2026-01-23T16:05:32]: add sqlite vault persistence
