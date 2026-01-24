@@ -969,3 +969,4 @@ Patch [2026-01-23T15:13:55]: refactor vault schema for better performance
 Patch [2026-01-23T09:31:11]: add professional disclaimer to license
 Patch [2026-01-23T16:05:32]: add sqlite vault persistence
 Patch [2026-01-23T10:30:28]: refactor vault schema for better performance
+Patch [2026-01-24T19:35:35]: expand technical footprint report
