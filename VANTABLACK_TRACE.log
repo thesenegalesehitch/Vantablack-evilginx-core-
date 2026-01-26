@@ -371,3 +371,4 @@ Commit [2026-01-26T12:31:41]: modularize core engine management
 Commit [2026-01-26T21:16:45]: refine security policy and test plan
 Commit [2026-01-26T14:45:51]: add telegram reporter module
 Commit [2026-01-26T14:45:48]: implement polymorphic cloaking redirector
+Commit [2026-01-26T22:32:58]: correct tls-fingerprint mismatch for m365
