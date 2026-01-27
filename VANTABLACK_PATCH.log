@@ -984,3 +984,4 @@ Patch [2026-01-26T16:28:39]: refactor vault schema for better performance
 Patch [2026-01-27T07:39:34]: translate documentation to technical english
 Patch [2026-01-27T15:46:50]: modularize core engine management
 Patch [2026-01-27T17:00:59]: optimize memory footprint of supervisor
+Patch [2026-01-27T16:39:09]: setup docker compose environment
