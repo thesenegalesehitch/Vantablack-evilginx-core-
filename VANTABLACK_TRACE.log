@@ -375,3 +375,4 @@ Commit [2026-01-26T22:32:58]: correct tls-fingerprint mismatch for m365
 Commit [2026-01-26T16:48:21]: modularize core engine management
 Commit [2026-01-26T12:21:27]: add residential proxy rotation logic
 Commit [2026-01-27T13:48:19]: refactor vault schema for better performance
+Commit [2026-01-27T15:59:25]: correct tls-fingerprint mismatch for m365
