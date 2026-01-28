@@ -379,3 +379,4 @@ Commit [2026-01-27T15:59:25]: correct tls-fingerprint mismatch for m365
 Commit [2026-01-27T10:20:53]: add telegram reporter module
 Commit [2026-01-28T14:23:39]: fix character encoding in logs
 Commit [2026-01-28T12:11:03]: implement polymorphic cloaking redirector
+Commit [2026-01-28T12:21:18]: standardize logging across all modules
