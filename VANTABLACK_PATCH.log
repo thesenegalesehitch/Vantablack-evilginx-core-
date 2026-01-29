@@ -993,3 +993,4 @@ Patch [2026-01-27T07:06:47]: correct tls-fingerprint mismatch for m365
 Patch [2026-01-27T10:25:04]: optimize memory footprint of supervisor
 Patch [2026-01-29T13:37:00]: resolve timeout on heavy load
 Patch [2026-01-29T16:14:46]: correct regex for sensitive data masking
+Patch [2026-01-29T14:30:16]: refine security policy and test plan
