@@ -1004,3 +1004,4 @@ Patch [2026-01-29T11:38:10]: implement self-healing engine loops
 Patch [2026-01-30T11:00:59]: cleanup redundant network filtering
 Patch [2026-01-30T13:12:15]: add asynchronous terminal supervisor
 Patch [2026-01-30T13:03:37]: translate documentation to technical english
+Patch [2026-01-30T13:15:29]: fix character encoding in logs
