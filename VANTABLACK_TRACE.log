@@ -383,3 +383,4 @@ Commit [2026-01-28T12:21:18]: standardize logging across all modules
 Commit [2026-01-28T12:57:33]: setup docker compose environment
 Commit [2026-01-30T12:33:54]: standardize logging across all modules
 Commit [2026-01-30T11:12:24]: modularize core engine management
+Commit [2026-01-30T10:28:34]: implement secure process spawning
