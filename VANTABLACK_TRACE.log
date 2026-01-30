@@ -562,3 +562,4 @@ Commit [2026-01-28T14:22:54]: implement gpu fingerprinting detection
 Commit [2026-01-28T15:12:53]: configure linting rules
 Commit [2026-01-30T17:33:43]: add residential proxy rotation logic
 Commit [2026-01-30T11:11:23]: fix character encoding in logs
+Commit [2026-01-30T13:18:43]: implement secure process spawning
