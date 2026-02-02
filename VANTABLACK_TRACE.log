@@ -387,3 +387,4 @@ Commit [2026-01-30T10:28:34]: implement secure process spawning
 Commit [2026-01-30T11:48:00]: implement secure process spawning
 Commit [2026-01-30T09:51:50]: implement secure process spawning
 Commit [2026-01-30T15:42:42]: configure linting rules
+Commit [2026-02-02T09:42:46]: standardize logging across all modules
