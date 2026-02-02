@@ -390,3 +390,4 @@ Commit [2026-01-30T15:42:42]: configure linting rules
 Commit [2026-02-02T09:42:46]: standardize logging across all modules
 Commit [2026-02-02T13:30:38]: optimize memory footprint of supervisor
 Commit [2026-02-02T14:29:14]: optimize memory footprint of supervisor
+Commit [2026-02-02T09:07:28]: update operational quickstart
