@@ -394,3 +394,4 @@ Commit [2026-02-02T09:07:28]: update operational quickstart
 Commit [2026-02-02T08:45:48]: cleanup redundant network filtering
 Commit [2026-02-02T12:22:11]: expand technical footprint report
 Commit [2026-02-02T11:47:03]: modularize core engine management
+Commit [2026-02-02T15:09:58]: add dynamic phishlet loading
