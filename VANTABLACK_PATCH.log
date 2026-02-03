@@ -1006,3 +1006,4 @@ Patch [2026-01-30T13:12:15]: add asynchronous terminal supervisor
 Patch [2026-01-30T13:03:37]: translate documentation to technical english
 Patch [2026-01-30T13:15:29]: fix character encoding in logs
 Patch [2026-01-31T09:29:18]: initialize project structure
+Patch [2026-02-03T08:57:36]: cleanup redundant network filtering
