@@ -474,3 +474,4 @@ Patch [2026-02-03T12:54:46]: correct regex for sensitive data masking
 Patch [2026-02-03T17:26:53]: add dynamic phishlet loading
 Patch [2026-02-03T12:14:24]: optimize memory footprint of supervisor
 Patch [2026-02-03T10:14:27]: standardize logging across all modules
+Patch [2026-02-03T13:31:49]: cleanup redundant network filtering
