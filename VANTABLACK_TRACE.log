@@ -566,3 +566,4 @@ Commit [2026-01-30T13:18:43]: implement secure process spawning
 Commit [2026-01-30T07:29:17]: add telegram reporter module
 Commit [2026-02-03T13:48:40]: standardize logging across all modules
 Commit [2026-02-03T16:33:23]: fix memory leak in stream monitor
+Commit [2026-02-03T09:00:30]: configure linting rules
