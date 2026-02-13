@@ -24,7 +24,6 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.menu import Menu
 from rich.table import Table
 from rich.prompt import Prompt, Confirm
 from rich import box
