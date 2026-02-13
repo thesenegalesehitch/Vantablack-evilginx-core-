@@ -1,0 +1,156 @@
+# VANTABLACK Configuration Example
+# ================================
+# Copy this file to hitch_config.yaml and customize
+
+name: "VANTABLACK"
+version: "3.1.0"
+description: "Industrial Phishing Orchestrator - Red Team Edition"
+
+# ===========================================
+# NOTIFICATIONS
+# ===========================================
+
+telegram:
+  enabled: true
+  token: "YOUR_TELEGRAM_BOT_TOKEN"      # Get from @BotFather
+  chat_id: "YOUR_TELEGRAM_CHAT_ID"       # Get from @userinfobot
+
+discord:
+  enabled: false
+  webhook_url: "YOUR_DISCORD_WEBHOOK_URL"
+
+# ===========================================
+# EVASION SETTINGS
+# ===========================================
+
+evasion:
+  # Stealth levels:
+  # 1 = Minimal (testing)
+  # 2 = Low (basic evasion)
+  # 3 = Medium (recommended)
+  # 4 = High (advanced detection)
+  # 5 = Maximum (paranoid mode)
+  stealth_level: 3
+  
+  # Detection techniques
+  sandbox_detect: true        # Detect sandbox environments
+  gpu_fingerprint: true       # GPU fingerprinting
+  battery_check: true        # Battery status detection
+  automation_check: true     # Detect automation tools
+  vm_detect: true            # Virtual machine detection
+  
+  # Browser fingerprinting
+  user_agent_rotation: true
+  canvas_randomization: true
+  webrtc_blocking: false
+
+# ===========================================
+# PROXY SETTINGS
+# ===========================================
+
+proxy:
+  enabled: false
+  rotation: "round-robin"     # Options: round-robin, random, sequential
+  
+  # Proxy sources (one per line)
+  # Format: ip:port or ip:port:username:password
+  list_file: "proxies.txt"
+
+# ===========================================
+# DATABASE
+# ===========================================
+
+database:
+  path: "hitch_vault.db"
+  encryption: true            # Encrypt stored credentials
+  auto_backup: true
+  backup_interval: 3600      # seconds
+
+# ===========================================
+# LOGGING
+# ===========================================
+
+logging:
+  level: "INFO"             # DEBUG, INFO, WARNING, ERROR
+  file: "vanta.log"
+  max_size: 10485760       # 10MB
+  backup_count: 5
+  
+  # What to log
+  log_captures: true
+  log_connections: true
+  log_errors: true
+
+# ===========================================
+# ENGINES
+# ===========================================
+
+engines:
+  evilginx:
+    path: "./bin/evilginx"
+    phishlets_path: "./phishlets"
+    api_port: 5433
+    web_port: 443
+    
+  gophish:
+    path: "./bin/gophish"
+    config: "./configs/config.json"
+    admin_port: 3333
+    phish_port: 80
+
+# ===========================================
+# REDIRECTION
+# ===========================================
+
+redirect:
+  # Where to send users after capture
+  success_url: "https://google.com"
+  failure_url: "https://google.com"
+  
+  # Delay before redirect (seconds)
+  delay: 2
+
+# ===========================================
+# SECURITY
+# ===========================================
+
+security:
+  # Auto-destruct on threat detection
+  auto_kill: false
+  
+  # Kill switch (self-destruct if connection lost)
+  kill_switch: false
+  
+  # Allowed source IPs (empty = all)
+  whitelist_ips: []
+  
+  # Rate limiting
+  max_connections_per_ip: 100
+  rate_limit_window: 60    # seconds
+
+# ===========================================
+# API SERVER
+# ===========================================
+
+api:
+  host: "127.0.0.1"
+  port: 8000
+  cors_enabled: true
+  cors_origins: ["*"]
+  
+  # API Authentication
+  require_auth: false
+  api_key: ""
+
+# ===========================================
+# CAMPAIGN LIMITS
+# ===========================================
+
+limits:
+  max_concurrent_campaigns: 5
+  max_captures_per_campaign: 1000
+  capture_retention_days: 30
+  
+  # Automatic cleanup
+  auto_cleanup: true
+  cleanup_interval: 86400   # 24 hours
