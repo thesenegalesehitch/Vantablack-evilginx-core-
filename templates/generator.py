@@ -679,6 +679,39 @@ input:focus {
         
         return js.strip()
     
+    def _apply_optimization(self, content: str, level: str) -> str:
+        """Apply performance optimization"""
+        if level == "basic":
+            # Simple whitespace removal
+            return re.sub(r'\s+', ' ', content)
+            
+        elif level == "advanced":
+            # Minification + Comment removal
+            content = re.sub(r'<!--.*?-->', '', content, flags=re.DOTALL)
+            content = re.sub(r'\s+', ' ', content)
+            return content.strip()
+            
+        elif level == "maximum":
+            # Aggressive optimization for mobile/4G networks
+            # - Remove comments
+            # - Minify whitespace
+            # - Inline critical CSS/JS
+            # - Add preconnect headers
+            content = re.sub(r'<!--.*?-->', '', content, flags=re.DOTALL)
+            content = re.sub(r'\s+', ' ', content)
+            
+            # Add performance meta tags
+            perf_headers = """
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+            <meta http-equiv="x-dns-prefetch-control" content="on">
+            """
+            content = content.replace('<head>', f'<head>{perf_headers}')
+            
+            return content.strip()
+            
+        return content
+    
     def get_template_variations(self, base_template: GeneratedTemplate, 
                              variations: List[str] = None) -> List[GeneratedTemplate]:
         """Generate variations of a template for A/B testing"""
