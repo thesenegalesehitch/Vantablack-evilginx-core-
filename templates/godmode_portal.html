@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Verification Portal</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h1 {
+            color: #1c1e21;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #606770;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .social-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            transition: opacity 0.2s;
+        }
+        .social-btn:hover {
+            opacity: 0.9;
+        }
+        .fb { background-color: #1877f2; }
+        .twitter { background-color: #000000; } /* X brand color */
+        .insta { background: linear-gradient(45deg, #405de6, #5851db, #833ab4, #c13584, #e1306c, #fd1d1d); }
+        .tiktok { background-color: #000000; border: 1px solid #333; }
+        .google { background-color: #ffffff; color: #757575; border: 1px solid #dadce0; }
+        
+        .logo-placeholder {
+            width: 60px;
+            height: 60px;
+            background-color: #ddd;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-placeholder">🔒</div>
+        <h1>Security Verification</h1>
+        <p>To continue to the secured content, please verify your identity using one of your social accounts.</p>
+        
+        <a href="/auth/facebook" class="social-btn fb">Continue with Facebook</a>
+        <a href="/auth/instagram" class="social-btn insta">Continue with Instagram</a>
+        <a href="/auth/twitter" class="social-btn twitter">Continue with X</a>
+        <a href="/auth/tiktok" class="social-btn tiktok">Continue with TikTok</a>
+        <a href="/auth/google" class="social-btn google">Continue with Google</a>
+        
+        <p style="font-size: 12px; margin-top: 20px;">
+            By continuing, you agree to our Terms of Service and Privacy Policy.
+        </p>
+    </div>
+</body>
+</html>
