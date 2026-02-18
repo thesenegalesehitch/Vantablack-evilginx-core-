@@ -24,12 +24,12 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 
-from ..analysis.reverse_engineer.analyzer import PhishletAnalyzer
-from ..analysis.mutation.mutator import PhishletMutator
-from ..analysis.behavioral.analyzer import BehavioralAnalyzer
-from ..templates.generator import TemplateGenerator
-from ..templates.ab_testing import ABTestManager
-from ..templates.marketplace import TemplateMarketplace
+from analysis.reverse_engineer.analyzer import PhishletAnalyzer
+from analysis.mutation.mutator import PhishletMutator
+from analysis.behavioral.analyzer import BehavioralAnalyzer
+from templates.generator import TemplateGenerator
+from templates.ab_testing import ABTestManager
+from templates.marketplace import TemplateMarketplace
 from .auth_manager import AuthManager
 from .rate_limiter import RateLimiter
 
@@ -559,7 +559,7 @@ async def search_marketplace_templates(
     
     try:
         # Search templates
-        from ..templates.marketplace import TemplateCategory
+        from templates.marketplace import TemplateCategory
         cat = TemplateCategory(category) if category else None
         
         results = app.state.marketplace.search_templates(
