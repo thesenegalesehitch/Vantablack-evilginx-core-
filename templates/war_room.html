@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VANTABLACK WAR ROOM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        body { background-color: #000; color: #00ff00; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
+        .grid-bg {
+            background-image: 
+                linear-gradient(rgba(0, 255, 0, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .blinking { animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+        .scrolling-text { height: 200px; overflow: hidden; position: relative; }
+        .log-entry { margin-bottom: 5px; opacity: 0.8; }
+        .cyber-border { border: 1px solid #00ff00; box-shadow: 0 0 10px #00ff00; }
+        .map-point { position: absolute; width: 8px; height: 8px; background: red; border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(3); opacity: 0; } }
+    </style>
+</head>
+<body class="grid-bg h-screen p-4 flex flex-col">
+
+    <!-- Header -->
+    <header class="flex justify-between items-center mb-6 border-b border-green-500 pb-2">
+        <h1 class="text-3xl font-bold tracking-widest">VANTABLACK <span class="text-xs align-top">v4.0</span></h1>
+        <div class="text-right">
+            <div class="text-xl blinking">SYSTEM: ARMED</div>
+            <div class="text-sm" id="clock">00:00:00 UTC</div>
+        </div>
+    </header>
+
+    <!-- Main Grid -->
+    <div class="flex-1 grid grid-cols-12 gap-4">
+        
+        <!-- Left Column: Stats -->
+        <div class="col-span-3 space-y-4">
+            <div class="cyber-border p-4 bg-black bg-opacity-80">
+                <h2 class="text-xl mb-2 border-b border-green-900">TARGET STATUS</h2>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div>ACTIVE LURES:</div><div class="text-right text-white">14</div>
+                    <div>CLICKS:</div><div class="text-right text-white">892</div>
+                    <div>SESSIONS:</div><div class="text-right text-red-500 font-bold">47</div>
+                    <div>MFA BYPASS:</div><div class="text-right text-red-500 font-bold">12</div>
+                </div>
+            </div>
+            
+            <div class="cyber-border p-4 bg-black bg-opacity-80 h-64">
+                <h2 class="text-xl mb-2 border-b border-green-900">SUCCESS RATE</h2>
+                <canvas id="successChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Center Column: Map -->
+        <div class="col-span-6 cyber-border relative bg-black bg-opacity-90 overflow-hidden flex items-center justify-center">
+            <div class="absolute top-2 left-2 text-xs">GLOBAL THREAT MAP</div>
+            <!-- ASCII World Map Representation for pure geek style -->
+            <pre class="text-[8px] leading-[8px] opacity-30 select-none">
+                ...:::::......                                     ...:::::......
+             ..::''''::..                                       ..::''''::..
+           .::'      '::.                                     .::'      '::.
+          ::'          '::                                   ::'          '::
+         ::              ::                                 ::              ::
+         ::              ::                                 ::              ::
+         '::            ::'                                 '::            ::'
+           '::.      .::'                                     '::.      .::'
+             ''::::::''                                         ''::::::''
+            </pre>
+            <div class="absolute inset-0" id="map-overlay">
+                <!-- JS will inject red dots here -->
+            </div>
+            <div class="absolute bottom-4 left-4 text-green-500 text-xs">
+                Scanning protocols active...<br>
+                Intercepting traffic on port 443...
+            </div>
+        </div>
+
+        <!-- Right Column: Live Logs -->
+        <div class="col-span-3 cyber-border p-4 bg-black bg-opacity-80 flex flex-col">
+            <h2 class="text-xl mb-2 border-b border-green-900">INTERCEPTION LOG</h2>
+            <div id="terminal-log" class="flex-1 overflow-hidden font-mono text-xs space-y-1">
+                <!-- Logs injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-4 text-xs text-center opacity-50 border-t border-green-900 pt-2">
+        VANTABLACK RED TEAM OPERATIONS // AUTHORIZED PERSONNEL ONLY // ACCESS LEVEL 5
+    </footer>
+
+    <script>
+        // Clock
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toISOString().replace('T', ' ').split('.')[0] + ' UTC';
+        }, 1000);
+
+        // Fake Logs
+        const logs = [
+            "[+] New connection from 192.168.1.45 (iOS/Safari)",
+            "[*] Serving template: facebook_login",
+            "[!] User-Agent analysis: Mobile Device detected",
+            "[+] Credentials POST request received",
+            "[SUCCESS] Password captured: **********",
+            "[*] Redirecting to legitimate site...",
+            "[+] Session Cookie intercepted: c_user=1000...",
+            "[*] Bot detected (GoogleBot) - Dropping connection",
+            "[+] New connection from 10.0.0.12 (Windows/Chrome)",
+            "[*] Serving template: o365_modern_auth",
+            "[!] MFA Challenge initiated",
+            "[SUCCESS] OTP Captured: 492103",
+            "[*] Session established."
+        ];
+
+        const terminal = document.getElementById('terminal-log');
+        
+        function addLog() {
+            const log = logs[Math.floor(Math.random() * logs.length)];
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            div.innerHTML = `<span class="text-green-300">[${new Date().toLocaleTimeString()}]</span> ${log}`;
+            terminal.insertBefore(div, terminal.firstChild);
+            if (terminal.children.length > 20) terminal.lastChild.remove();
+        }
+
+        setInterval(addLog, 800);
+
+        // Map Animations
+        const mapOverlay = document.getElementById('map-overlay');
+        function addMapPoint() {
+            const point = document.createElement('div');
+            point.className = 'map-point';
+            point.style.left = Math.random() * 90 + '%';
+            point.style.top = Math.random() * 80 + 10 + '%';
+            mapOverlay.appendChild(point);
+            setTimeout(() => point.remove(), 2000);
+        }
+        setInterval(addMapPoint, 1500);
+
+        // Chart
+        const ctx = document.getElementById('successChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                datasets: [{
+                    label: 'Compromised Hosts',
+                    data: [12, 19, 33, 52, 65, 89],
+                    borderColor: '#00ff00',
+                    tension: 0.4,
+                    pointBackgroundColor: '#ff0000'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: '#003300' }, ticks: { color: '#00ff00' } },
+                    y: { grid: { color: '#003300' }, ticks: { color: '#00ff00' } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
