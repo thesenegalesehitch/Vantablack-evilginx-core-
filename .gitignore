@@ -67,3 +67,4 @@ captures_*.csv
 # Backups
 *.bak
 *.backup
+AUDIT_REPORT_FINAL.html
