@@ -196,25 +196,14 @@ VANTABLACK can leverage a local Large Language Model (LLM) to generate hyper-per
 
 ## ⚡ Performance Profiling
 
-To ensure maximum performance and identify bottlenecks, VANTABLACK includes a profiling script based on `py-spy`.
+VANTABLACK includes a built-in performance profiling middleware that logs the processing time for every API request. This provides real-time insights into the performance of each endpoint.
 
 **How it works:**
-1. Run the target application (e.g., `python3 api/rest_api.py`).
-2. In a separate terminal, run the profiling script.
+- A FastAPI middleware automatically intercepts all incoming requests.
+- It calculates the total processing time in milliseconds.
+- The result is logged to the console with the `[PROFILE]` tag, e.g., `[PROFILE] Request GET /system/status completed in 5.43ms`.
 
-**Usage:**
-```bash
-# Profile the main REST API
-sudo ./profile.sh rest_api
-
-# Profile the God Mode portal
-sudo ./profile.sh godmode
-
-# Profile the proxy engine
-sudo ./profile.sh proxy
-```
-
-This will generate a flame graph (e.g., `profile_1678886400.svg`) in the root directory. You can open this SVG file in a web browser to analyze the performance data.
+This allows for easy identification of slow endpoints and performance bottlenecks.
 
 ---
 
