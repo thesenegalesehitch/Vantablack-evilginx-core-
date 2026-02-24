@@ -13,6 +13,7 @@ import (
 // C2_URL est l'URL du serveur de Command & Control.
 // Cette valeur sera injectée au moment de la compilation.
 var C2_URL = "http://localhost:8000/c2/implant/callback"
+var AgentID = "default_agent"
 
 // Task représente une commande reçue du C2.
 type Task struct {
