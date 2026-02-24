@@ -1,7 +1,7 @@
-# 🚀 VANTABLACK - Industrial Phishing Orchestrator
+# 🚀 VANTABLACK v4.0 - GOD MODE EDITION
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-3.1.0--Polymorph-grey" alt="Version">
+  <img src="https://img.shields.io/badge/Version-4.0.0--GOD_MODE-red" alt="Version">
   <img src="https://img.shields.io/badge/License-MIT--Industrial-black" alt="License">
   <img src="https://img.shields.io/badge/Security-Red--Team--Ready-red" alt="Security">
   <img src="https://img.shields.io/badge/Python-3.9+-blue" alt="Python">
@@ -13,501 +13,161 @@
 ## 📋 Table of Contents
 
 - [Overview](#overview)
-- [Features](#-features)
+- [New in v4.0](#-new-in-v40)
 - [Quick Start](#-quick-start)
+- [The War Room](#-the-war-room)
+- [Social Network Phishing](#-social-network-phishing)
+- [Ghost Protocol](#-ghost-protocol)
+- [Quishing (QR Codes)](#-quishing)
 - [Installation](#-installation)
-- [Usage](#-usage)
-- [Configuration](#-configuration)
-- [Phishlets](#-phishlets)
-- [API Reference](#-api-reference)
-- [Troubleshooting](#-troubleshooting)
-- [Security](#-security)
+- [Disclaimer](#-disclaimer)
 
 ---
 
 ## 🎯 Overview
 
-**VANTABLACK** is an elite, ultra-resilient orchestration platform designed for Red Team professionals. It manages high-performance interception engines (**Evilginx**) and campaign managers (**Gophish**) through a centralized, cloaked nervous system.
+**VANTABLACK** is an elite, ultra-resilient orchestration platform designed for Red Team professionals. It manages high-performance interception engines through a centralized, cloaked nervous system.
+
+Version 4.0 introduces **GOD MODE**, a suite of advanced features designed for maximum impact and total control.
 
 ### What is VANTABLACK?
 
 VANTABLACK is a command-and-control framework that simplifies the deployment and management of phishing campaigns. It provides:
 
-- 🔒 **Secure Credential Capture** via Evilginx proxy
-- 📧 **Email Campaign Management** via Gophish
-- 🤖 **Automated Exfiltration** to Telegram/Discord
+- 🔒 **Secure Credential Capture** via Custom Proxy Engine
+- 🌐 **Social Network Integration** (Twitter/X, Facebook, LinkedIn)
+- 📊 **War Room Dashboard** for Real-time Ops
+- 👻 **Ghost Protocol** for Emergency Evasion
+- 📱 **Quishing** (QR Code Phishing) Generator
 - 🛡️ **Advanced Evasion Techniques** for sandbox detection
-- 📊 **Real-time Monitoring** dashboard
 - 🐳 **Containerized Deployment** with Docker
 
 ---
 
-## ✨ Features
+## ✨ New in v4.0
 
-### Core Features
+### 👑 God Mode
+Unrestricted access to all modules, bypassing standard safety checks for authorized red team operations.
 
-| Feature | Description |
-|---------|-------------|
-| **Nervous System (API)** | Real-time injection of captures via FastAPI into a secure SQLite Vault |
-| **Resilience Supervisor** | Proactive monitoring of resources (CPU/RAM) with auto-restart capabilities |
-| **Polymorphic Cloaking** | Advanced sandbox and bot detection (GPU/Battery fingerprinting) |
-| **Containerized Infrastructure** | One-Click deployment via Docker Compose |
-| **Automated Exfiltration** | Instant data push to Telegram or Discord |
+### 🏢 The War Room
+A Hollywood-style, real-time tactical dashboard. Monitor live captures, map victims geographically, and control campaigns from a single pane of glass.
 
-### Enhanced Features (v3.1)
+### 🕵️ Social Network Phishlets
+Native support for modern social media platforms using the new **VantaProxy** engine.
+- **Twitter / X** (2FA Support)
+- **LinkedIn** (Session Capture)
+- **Facebook** (Mobile & Desktop)
 
-- 🎨 **Interactive CLI Menu** - User-friendly navigation
-- 📊 **Rich Dashboard** - Beautiful real-time monitoring
-- ⚡ **Quick Setup Wizard** - Get started in minutes
-- 🔄 **Auto-Update** - Stay current with latest features
-- 📈 **Campaign Templates** - Pre-built phishing scenarios
-- 🎯 **Multi-Target Support** - Simultaneous campaigns
+### 👻 Ghost Protocol
+Emergency panic button. Instantly wipes logs, kills processes, and sanitizes the environment if compromise is detected.
+
+### 📱 Quishing Generator
+Generate high-fidelity QR codes pointing to your campaigns, bypassing email filters.
 
 ---
 
 ## 🚀 Quick Start
 
-### The Fast Way (30 seconds)
-
+### 1. Setup
 ```bash
-# 1. Clone and setup
+# Clone the repository
 git clone https://github.com/thesenegalesehitch/VANTABLACK.git
 cd VANTABLACK
 
-# 2. Run interactive setup
-python3 vanta.py --setup
-
-# 3. Launch!
-python3 vanta.py
-```
-
-### Docker Way (Recommended)
-
-```bash
-# Start everything with one command
-docker-compose up -d
-
-# View dashboard
-docker-compose logs -f
-```
-
----
-
-## 📦 Installation
-
-### Prerequisites
-
-| Requirement | Version | Notes |
-|------------|---------|-------|
-| Python | 3.9+ | Main runtime |
-| Docker | 20.10+ | Container engine |
-| Docker Compose | 2.0+ | Orchestration |
-| Git | 2.0+ | Version control |
-
-### Step 1: Clone the Repository
-
-```bash
-git clone https://github.com/thesenegalesehitch/VANTABLACK.git
-cd VANTABLACK
-```
-
-### Step 2: Install Dependencies
-
-```bash
-# Python dependencies
-pip3 install -r requirements.txt
-
-# Or with uv (faster)
-uv pip install -r requirements.txt
-```
-
-### Step 3: Configure
-
-```bash
-# Copy example config
-cp hitch_config.yaml.example hitch_config.yaml
-
-# Edit with your settings
-nano hitch_config.yaml
-```
-
-### Step 4: Run the Setup Wizard
-
-```bash
+# Install dependencies
 python3 vanta.py --setup
 ```
 
----
-
-## 💻 Usage
-
-### Interactive Mode (Recommended)
-
-Simply run without arguments for the interactive menu:
-
+### 2. Launch War Room (Dashboard)
 ```bash
-python3 vanta.py
+python3 vanta.py --war-room
 ```
 
-You'll see a beautiful menu like this:
-
-```
-╔══════════════════════════════════════════════════════════╗
-║           VANTABLACK v3.1 - MAIN MENU                   ║
-╠══════════════════════════════════════════════════════════╣
-║  [1] 🚀  Start Campaign      - Launch phishing engines  ║
-║  [2] 📊  View Dashboard      - Real-time monitoring     ║
-║  [3] 🔍  Check Status        - System diagnostics       ║
-║  [4] 📁  Manage Captures     - View/export credentials  ║
-║  [5] ⚙️  Configuration       - Edit settings            ║
-║  [6] 🐳  Docker Control      - Manage containers        ║
-║  [7] 📖  Help                - Documentation            ║
-║  [0] ❌  Exit                - Shutdown gracefully     ║
-╚══════════════════════════════════════════════════════════╝
-```
-
-### Command Line Mode
-
-#### Start with Stealth Level
-
+### 3. Start Social Phishing Proxy
 ```bash
-# Level 1: Basic evasion
-python3 vanta.py --stealth-level 1
-
-# Level 3: Medium evasion (recommended)
-python3 vanta.py --stealth-level 3
-
-# Level 5: Maximum evasion
-python3 vanta.py --stealth-level 5
+# Start Twitter/X Phishlet
+python3 vanta.py --proxy phishlets/twitter.yaml
 ```
 
-#### With Notifications
-
+### 4. Generate QR Code
 ```bash
-# Telegram notifications
-python3 vanta.py --notify telegram
-
-# Discord notifications
-python3 vanta.py --notify discord
-
-# Both
-python3 vanta.py --notify telegram --notify discord
+python3 vanta.py --quishing https://your-phishing-domain.com
 ```
 
-#### With Proxy Rotation
-
+### 5. Emergency Wipe (Ghost Protocol)
 ```bash
-# Use proxy list
-python3 vanta.py --proxy-list proxies.txt
-
-# Random proxy selection
-python3 vanta.py --proxy-list proxies.txt --proxy-random
-```
-
-#### Advanced Options
-
-```bash
-# Full stealth mode
-python3 vanta.py \
-  --stealth-level 5 \
-  --proxy-list proxies.txt \
-  --notify telegram \
-  --auto-kill \
-  --multi-tenant
-
-# Auto-kill on threat detection
-python3 vanta.py --auto-kill
-
-# Multi-domain management
-python3 vanta.py --multi-tenant
+python3 vanta.py --ghost
 ```
 
 ---
 
-## ⚙️ Configuration
+## 🖥 The War Room
 
-### Main Configuration File
+The **War Room** is the heart of VANTABLACK v4.0. It provides:
+- **Live Feed**: Watch credentials roll in real-time.
+- **World Map**: Geolocation of all connections.
+- **System Status**: CPU/RAM/Network monitoring.
+- **Kill Switch**: Instant access to Ghost Protocol.
 
-Edit `hitch_config.yaml`:
+Access it at: `http://localhost:8000/war-room` (or launch via `python3 vanta.py --war-room`)
 
-```yaml
-name: "VANTABLACK"
-version: "3.1.0"
+---
 
-# Telegram notifications
-telegram:
-  enabled: true
-  token: "YOUR_BOT_TOKEN"
-  chat_id: "YOUR_CHAT_ID"
+## 🌐 Social Network Phishing
 
-# Discord notifications
-discord:
-  enabled: false
-  webhook_url: "YOUR_WEBHOOK_URL"
+VANTABLACK v4.0 includes a custom **VantaProxy** engine designed specifically for modern dynamic web apps.
 
-# Evasion settings
-evasion:
-  stealth_level: 3
-  sandbox_detect: true
-  gpu_fingerprint: true
-  battery_check: true
-  automation_check: true
-  vm_detect: true
+**Supported Phishlets:**
+- `phishlets/twitter.yaml`
+- `phishlets/linkedin.yaml` (Coming Soon)
+- `phishlets/facebook.yaml` (Coming Soon)
 
-# Proxy settings
-proxy:
-  enabled: false
-  rotation: "round-robin"  # round-robin, random, sequential
+**How it works:**
+1. The proxy intercepts traffic between the victim and the target (e.g., X.com).
+2. It rewrites links to keep the victim on your domain.
+3. It captures credentials and session tokens (cookies) in real-time.
+4. Data is sent to the War Room.
 
-# Logging
-logging:
-  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
-  file: "vanta.log"
-```
+---
 
-### Environment Variables
+## 👻 Ghost Protocol
 
+**"Burn it down."**
+
+When triggered, Ghost Protocol will:
+1. Kill all Vantablack processes (API, Proxy, Frontend).
+2. Securely wipe local logs and capture files.
+3. Reset network configurations.
+4. Leave no trace.
+
+**Usage:**
 ```bash
-# Export for persistent configuration
-export VANTA_STEALTH_LEVEL=3
-export VANTA_TELEGRAM_TOKEN=your_token
-export VANTA_NOTIFY=telegram
+python3 vanta.py --ghost
 ```
 
 ---
 
-## 🎣 Phishlets
+## 📱 Quishing
 
-VANTABLACK comes with pre-configured phishlets for popular targets:
+QR Code Phishing (Quishing) is the new frontier. Vantablack generates high-res QR codes that:
+- Link to your campaign.
+- Can be embedded in emails or printed.
+- Bypass traditional email security gateways.
 
-| Phishlet | Target | Status |
-|----------|--------|--------|
-| `google` | Google Workspace | ✅ Ready |
-| `microsoft` | Microsoft 365 | ✅ Ready |
-| `facebook` | Facebook | ✅ Ready |
-| `instagram` | Instagram | ✅ Ready |
-| `linkedin` | LinkedIn | ✅ Ready |
-| `twitter` | Twitter/X | ✅ Ready |
-| `amazon` | Amazon | ✅ Ready |
-| `paypal` | PayPal | ✅ Ready |
-| `dropbox` | Dropbox | ✅ Ready |
-| `o365` | Office 365 | ✅ Ready |
-
-### Using Phishlets
-
+**Usage:**
 ```bash
-# Start Evilginx with specific phishlets
-./bin/evilginx -p ./phishlets -developer
-
-# Available phishlets
-ls phishlets/
+python3 vanta.py --quishing <URL>
 ```
 
 ---
 
-## 📊 Monitoring & Dashboard
+## ⚠️ Disclaimer
 
-### Real-time Dashboard
-
-```bash
-# Launch the live monitoring dashboard
-python3 monitor_captures.py
-```
-
-### System Status
-
-```bash
-# Check infrastructure health
-python3 check_status.py
-```
-
-Output:
-```
-┌─────────────────────────────────────────┐
-│     VANTABLACK: SYSTEM DIAGNOSTIC       │
-├────────────────────┬────────────────────┤
-│ Component          │ Status             │
-├────────────────────┼────────────────────┤
-│ Docker Container   │ ✅ Running         │
-│ Vault Database     │ ✅ Accessible      │
-│ Nervous System     │ ✅ Online (8000)   │
-│ Exfiltration Bot  │ ✅ Ready           │
-└────────────────────┴────────────────────┘
-```
-
----
-
-## 🔌 API Reference
-
-### Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/capture` | Receive captured credentials |
-| GET | `/status` | System health check |
-| GET | `/captures` | List all captures |
-| GET | `/captures/{id}` | Get specific capture |
-| DELETE | `/capture/{id}` | Delete capture |
-| POST | `/config/reload` | Reload configuration |
-
-### Example Usage
-
-```bash
-# Check system status
-curl http://localhost:8000/status
-
-# Get all captures
-curl http://localhost:8000/captures
-
-# Delete a capture
-curl -X DELETE http://localhost:8000/capture/123
-```
-
----
-
-## 🐳 Docker Commands
-
-```bash
-# Start all services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop all services
-docker-compose down
-
-# Rebuild and start
-docker-compose up -d --build
-
-# Restart specific service
-docker-compose restart vanta-nervous-system
-
-# View running containers
-docker ps
-
-# View resource usage
-docker stats
-```
-
----
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-#### Issue: "Database locked" error
-```bash
-# Fix permissions
-chmod 755 data/
-chmod 644 hitch_vault.db
-```
-
-#### Issue: "Port already in use"
-```bash
-# Check what's using the port
-lsof -i :8000
-lsof -i :443
-
-# Kill the process
-kill -9 <PID>
-```
-
-#### Issue: "Telegram bot not responding"
-```bash
-# Verify token
-# 1. Open @BotFather on Telegram
-# 2. Use /mybots to verify
-# 3. Check chat_id with @userinfobot
-```
-
-#### Issue: "Evilginx not capturing"
-```bash
-# Check phishlets are loaded
-./bin/evilginx -p ./phishlets -developer
-
-# In Evilginx console:
-phishlets
-config ipv4 <your_ip>
-```
-
----
-
-## 🔐 Security & Ethics
-
-### ⚠️ Important Disclaimer
-
-This tool is intended for **authorized Red Team operations only**. 
-
-- ✅ Legal penetration testing
-- ✅ Authorized security assessments
-- ✅ Educational purposes
-- ❌ Unauthorized access
-- ❌ Illegal activities
-- ❌ Spamming or phishing
-
-### Best Practices
-
-1. **Always get written authorization** before any testing
-2. **Use isolated environments** for testing
-3. **Protect captured data** - encrypt at rest
-4. **Follow engagement rules** - stay within scope
-5. **Clean up after** - remove test data
-
----
-
-## 📁 Project Structure
-
-```
-VANTABLACK/
-├── bin/                    # Compiled binaries
-│   ├── evilginx           # Phishing proxy
-│   └── gophish            # Campaign manager
-├── configs/               # Configuration files
-├── data/                  # Database & data
-├── deployment/            # Docker & deployment
-├── engines/               # Go source code
-├── phishlets/            # Phishing templates
-├── vanta/                 # Python core
-│   ├── core/             # Orchestrator, API, DB
-│   ├── modules/          # Evasion, Exfiltration, Proxy
-│   └── utils/            # Utilities
-├── vanta.py              # Main entry point
-├── check_status.py       # Health check
-├── monitor_captures.py   # Live dashboard
-├── hitch_config.yaml     # Main config
-├── docker-compose.yml   # Container setup
-└── requirements.txt     # Python deps
-```
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'feat: Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-MIT License - See [LICENSE](LICENSE) file for details.
-
----
-
-## 🔗 Links
-
-- 📖 [Documentation](https://github.com/thesenegalesehitch/VANTABLACK/wiki)
-- 🐛 [Issues](https://github.com/thesenegalesehitch/VANTABLACK/issues)
-- 💬 [Discussions](https://github.com/thesenegalesehitch/VANTABLACK/discussions)
+**VANTABLACK is for educational and authorized testing purposes only.**
+Usage of this tool for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state, and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program.
 
 ---
 
 <p align="center">
-  <strong>VANTABLACK: Through the Looking Glass of Security</strong>
-  <br>
-  <sub>Version 3.1.0 | Built for Red Teams</sub>
+  <b>Developed with ❤️ by TheSenegaleseHitch</b>
 </p>

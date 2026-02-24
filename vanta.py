@@ -56,8 +56,10 @@ def setup():
     
     print("\n[+] Setup Complete! You can now run Vantablack.")
 
-def run(war_room=False):
+def run(war_room=False, proxy_phishlet=None):
     print("\n[*] Launching VANTABLACK...")
+    
+    processes = []
     
     # Start Backend
     print("[*] Starting API Server...")
@@ -69,6 +71,17 @@ def run(war_room=False):
         "--port", "8000",
         "--reload"
     ])
+    processes.append(backend_process)
+    
+    # Start Proxy Engine if requested
+    if proxy_phishlet:
+        print(f"\033[93m[*] STARTING PROXY ENGINE (Target: {proxy_phishlet})...\033[0m")
+        proxy_env = os.environ.copy()
+        proxy_env["PHISHLET"] = proxy_phishlet
+        proxy_process = subprocess.Popen([
+            sys.executable, "engine/proxy.py"
+        ], env=proxy_env)
+        processes.append(proxy_process)
     
     if war_room:
         print("\033[92m[*] INITIALIZING WAR ROOM DASHBOARD...\033[0m")
@@ -102,14 +115,15 @@ def run(war_room=False):
         frontend_cmd = ["npm", "start"]
         
     frontend_process = subprocess.Popen(frontend_cmd)
+    processes.append(frontend_process)
     
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
         print("\n[*] Shutting down...")
-        backend_process.terminate()
-        frontend_process.terminate()
+        for p in processes:
+            p.terminate()
         sys.exit(0)
 
 def trigger_ghost_protocol():
@@ -193,6 +207,13 @@ def main():
             
         elif cmd == "--war-room":
             run(war_room=True)
+            
+        elif cmd == "--proxy":
+            if len(sys.argv) < 3:
+                print("Usage: python3 vanta.py --proxy <phishlet_path>")
+                sys.exit(1)
+            phishlet = sys.argv[2]
+            run(proxy_phishlet=phishlet)
             
         elif cmd == "--ghost":
             trigger_ghost_protocol()

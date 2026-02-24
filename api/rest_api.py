@@ -859,5 +859,7 @@ logging.basicConfig(
 )
 
 if __name__ == "__main__":
+    import uvloop
+    uvloop.install()
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

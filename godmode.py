@@ -87,6 +87,8 @@ async def handle_auth(provider: str, request: Request):
 if __name__ == "__main__":
     print_banner()
     try:
+        import uvloop
+        uvloop.install()
         uvicorn.run(app, host="0.0.0.0", port=6666, log_level="error")
     except KeyboardInterrupt:
         print("\n[*] God Mode Deactivated.")
