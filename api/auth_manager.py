@@ -218,7 +218,7 @@ class AuthManager:
             "user_id": user.user_id,
             "username": user.username,
             "role": user.role.value,
-            "permissions": [p.value for p in user.permissions],
+            "permissions": user.permissions,
             "exp": expire,
             "iat": datetime.utcnow(),
             "type": "access_token"
