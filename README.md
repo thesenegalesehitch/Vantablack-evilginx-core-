@@ -161,6 +161,32 @@ python3 vanta.py --quishing <URL>
 
 ---
 
+---
+
+## ⚡ Performance Profiling
+
+To ensure maximum performance and identify bottlenecks, VANTABLACK includes a profiling script based on `py-spy`.
+
+**How it works:**
+1. Run the target application (e.g., `python3 api/rest_api.py`).
+2. In a separate terminal, run the profiling script.
+
+**Usage:**
+```bash
+# Profile the main REST API
+sudo ./profile.sh rest_api
+
+# Profile the God Mode portal
+sudo ./profile.sh godmode
+
+# Profile the proxy engine
+sudo ./profile.sh proxy
+```
+
+This will generate a flame graph (e.g., `profile_1678886400.svg`) in the root directory. You can open this SVG file in a web browser to analyze the performance data.
+
+---
+
 ## ⚠️ Disclaimer
 
 **VANTABLACK is for educational and authorized testing purposes only.**
