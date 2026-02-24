@@ -724,6 +724,31 @@ async def get_campaign_analytics(
 
 
 # User management endpoints
+
+# OSINT endpoints
+@app.post("/osint/scan/emails", response_model=APIResponse)
+async def start_email_scan(
+    domain: str,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user)
+):
+    """Starts a background OSINT scan to find emails for a domain."""
+    await rate_limit_check(current_user["user_id"], "osint_scan")
+    
+    from workers.osint_worker import find_emails_from_domain
+    
+    # Run the OSINT task in the background via Celery
+    find_emails_from_domain.delay(domain)
+    
+    return APIResponse(
+        message="OSINT email scan started in the background.",
+        data={
+            "domain": domain,
+            "scan_type": "emails"
+        }
+    )
+
+
 @app.get("/users/profile")
 async def get_user_profile(current_user: dict = Depends(get_current_user)):
     """Get user profile"""
