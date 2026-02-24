@@ -1,16 +1,17 @@
-.PHONY: help install run-api run-workers run-all
+.PHONY: help install run-api run-workers run-all stop-workers
 
-# Couleurs pour la sortie
+# Colors for output
 GREEN=\033[0;32m
 YELLOW=\033[0;33m
 NC=\033[0m # No Color
 
 help:
 	@echo "${YELLOW}Available commands:${NC}"
-	@echo "  ${GREEN}make install${NC}       - Installe les dépendances Python."
-	@echo "  ${GREEN}make run-api${NC}         - Lance le serveur API FastAPI."
-	@echo "  ${GREEN}make run-workers${NC}    - Lance tous les workers Celery (event, osint, reuse, objective)."
-	@echo "  ${GREEN}make run-all${NC}         - Lance l'API et tous les workers en parallèle."
+	@echo "  ${GREEN}make install${NC}       - Install Python dependencies."
+	@echo "  ${GREEN}make run-api${NC}         - Run the FastAPI API server."
+	@echo "  ${GREEN}make run-workers${NC}    - Run all Celery workers (event, osint, reuse, objective, ghost)."
+	@echo "  ${GREEN}make run-all${NC}         - Run the API and all workers in parallel."
+	@echo "  ${GREEN}make stop-workers${NC}   - Stop all running Celery workers."
 
 install:
 	@echo "${YELLOW}--- Installing dependencies ---${NC}"
