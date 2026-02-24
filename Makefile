@@ -27,6 +27,7 @@ run-workers:
 	@celery -A workers.osint_worker worker --loglevel=info -n osint_worker@%h &
 	@celery -A workers.credential_reuse_worker worker --loglevel=info -n reuse_worker@%h &
 	@celery -A workers.objective_worker worker --loglevel=info -n objective_worker@%h &
+	@celery -A workers.ghost_protocol_worker worker --loglevel=info -n ghost_worker@%h &
 	@echo "${GREEN}All workers started in the background.${NC}"
 	@wait
 
