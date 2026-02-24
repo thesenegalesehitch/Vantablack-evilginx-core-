@@ -399,28 +399,37 @@ class AuthManager:
             return None
     
     async def verify_api_key(self, api_key: str) -> Optional[Dict[str, Any]]:
-        """Verify API key and return user info"""
+        """Verify API key against Redis and return user info"""
         key_hash = self._hash_api_key(api_key)
         
-        api_key_obj = None
-        for key in self.api_keys.values():
-            if key.key_hash == key_hash and key.is_active:
-                api_key_obj = key
-                break
+        key_id = await self.redis.get(f"apikey:by_hash:{key_hash}")
+        if not key_id:
+            return None
+            
+        api_key_data = await self.redis.hgetall(f"apikey:{key_id}")
+        if not api_key_data:
+            return None
+
+        api_key_obj = APIKey.from_dict(api_key_data)
         
-        if not api_key_obj:
+        if not api_key_obj.is_active:
             return None
         
-        # Check if expired
+        # Check if expired (redundant if Redis TTL is set, but good for safety)
         if api_key_obj.expires_at and api_key_obj.expires_at < datetime.now():
             return None
         
-        user = self.users.get(api_key_obj.user_id)
-        if not user or not user.is_active:
+        user_data = await self.redis.hgetall(f"user:{api_key_obj.user_id}")
+        if not user_data:
+            return None
+            
+        user = User.from_dict(user_data)
+        if not user.is_active:
             return None
         
-        # Update last used
+        # Update last used in Redis
         api_key_obj.last_used = datetime.now()
+        await self.redis.hset(f"apikey:{key_id}", "last_used", api_key_obj.last_used.isoformat())
         
         return {
             "user_id": user.user_id,
@@ -435,10 +444,12 @@ class AuthManager:
     async def create_api_key(self, user_id: str, name: str, 
                            permissions: List[Permission] = None,
                            expires_in_days: int = None) -> str:
-        """Create API key for user"""
-        user = self.users.get(user_id)
-        if not user:
+        """Create API key for user and store in Redis"""
+        user_data = await self.redis.hgetall(f"user:{user_id}")
+        if not user_data:
             raise ValueError("User not found")
+        
+        user = User.from_dict(user_data)
         
         # Generate API key
         api_key = self._generate_api_key()
@@ -467,33 +478,38 @@ class AuthManager:
             is_active=True
         )
         
-        self.api_keys[key_id] = api_key_obj
         user.api_keys.append(key_id)
+        
+        # Save to Redis
+        async with self.redis.pipeline(transaction=True) as pipe:
+            await pipe.hset(f"apikey:{key_id}", mapping=api_key_obj.to_dict())
+            await pipe.set(f"apikey:by_hash:{key_hash}", key_id)
+            await pipe.hset(f"user:{user_id}", "api_keys", json.dumps(user.api_keys))
+            if expires_at:
+                await pipe.expireat(f"apikey:{key_id}", expires_at)
+            await pipe.execute()
         
         logging.info(f"API key created: {name} for user {user_id}")
         
         return api_key
     
     async def revoke_api_key(self, user_id: str, key_id: str) -> bool:
-        """Revoke API key"""
-        user = self.users.get(user_id)
-        if not user:
+        """Revoke API key in Redis"""
+        api_key_data = await self.redis.hgetall(f"apikey:{key_id}")
+        if not api_key_data or api_key_data.get("user_id") != user_id:
             return False
-        
-        if key_id not in self.api_keys:
-            return False
-        
-        api_key_obj = self.api_keys[key_id]
-        if api_key_obj.user_id != user_id:
-            return False
-        
+
         # Deactivate API key
-        api_key_obj.is_active = False
+        await self.redis.hset(f"apikey:{key_id}", "is_active", "False")
         
-        # Remove from user
-        if key_id in user.api_keys:
-            user.api_keys.remove(key_id)
-        
+        # Optionally, remove from user's list of keys (for cleanliness)
+        user_data = await self.redis.hgetall(f"user:{user_id}")
+        if user_data:
+            user = User.from_dict(user_data)
+            if key_id in user.api_keys:
+                user.api_keys.remove(key_id)
+                await self.redis.hset(f"user:{user_id}", "api_keys", json.dumps(user.api_keys))
+
         logging.info(f"API key revoked: {key_id} for user {user_id}")
         return True
     
