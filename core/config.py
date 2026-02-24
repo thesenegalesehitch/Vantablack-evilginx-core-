@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     OLLAMA_API_URL: str = "http://localhost:11434/api/generate"
     DEFAULT_LLM_MODEL: str = "llama3"
 
+    # --- C2 --- 
+    C2_DEFAULT_ENCRYPTION_KEY: str = "_THIS_IS_A_DEFAULT_32_BYTE_KEY_"
+
     class Config:
         # Permet de charger les variables depuis un fichier .env (si présent)
         env_file = ".env"
