@@ -937,7 +937,7 @@ async def queue_c2_task(
         data={"agent_id": task.agent_id, "task_id": task_id}
     )
 
-@app.post("/c2/objective/set", response_model=APIResponse)
+@app.post("/c2/objective/set", response_model=APIResponse, dependencies=[require_scope("c2:write")])
 async def set_c2_objective(
     objective: C2Objective,
     current_user: dict = Depends(get_current_user)
