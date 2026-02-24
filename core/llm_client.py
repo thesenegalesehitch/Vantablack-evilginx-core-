@@ -2,30 +2,30 @@ import httpx
 import json
 import logging
 from typing import Dict, Any
+from .config import settings
 
 logger = logging.getLogger("LLMClient")
 
-OLLAMA_API_URL = "http://localhost:11434/api/generate"
-
-async def generate_text(prompt: str, model: str = "llama3") -> str:
+async def generate_text(prompt: str, model: str = None) -> str:
     """
     Generates text using a local LLM via Ollama.
 
     Args:
         prompt: The input prompt for the model.
-        model: The name of the Ollama model to use (e.g., 'llama3', 'mistral').
+        model: The name of the Ollama model to use. Defaults to settings.DEFAULT_LLM_MODEL.
 
     Returns:
         The generated text, or an error message.
     """
+    target_model = model or settings.DEFAULT_LLM_MODEL
     try:
         async with httpx.AsyncClient(timeout=120.0) as client:
             payload = {
-                "model": model,
+                "model": target_model,
                 "prompt": prompt,
                 "stream": False  # We want the full response at once
             }
-            response = await client.post(OLLAMA_API_URL, json=payload)
+            response = await client.post(settings.OLLAMA_API_URL, json=payload)
             response.raise_for_status()
 
             response_data = response.json()
