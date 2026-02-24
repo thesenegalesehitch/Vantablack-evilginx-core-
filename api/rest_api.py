@@ -194,6 +194,13 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(
         )
     return user
 
+def require_scope(required_scope: str):
+    async def scope_checker(user: dict = Depends(get_current_user)):
+        # The user object from AuthManager already contains the permissions/scopes
+        if required_scope not in user.get("permissions", []):
+            raise HTTPException(status_code=403, detail=f"Forbidden: Requires {required_scope} scope.")
+    return Depends(scope_checker)
+
 
 async def rate_limit_check(user_id: str, endpoint: str):
     """Check rate limits"""
@@ -910,7 +917,7 @@ class C2Objective(BaseModel):
 class EncryptedPayload(BaseModel):
     data: str
 
-@app.post("/c2/task/queue", response_model=APIResponse)
+@app.post("/c2/task/queue", response_model=APIResponse, dependencies=[require_scope("c2:write")])
 async def queue_c2_task(
     task: C2Task,
     current_user: dict = Depends(get_current_user)
