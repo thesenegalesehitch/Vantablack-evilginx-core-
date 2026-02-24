@@ -175,11 +175,13 @@ class AuthManager:
     """Authentication and authorization manager"""
     
     def __init__(self, secret_key: str = None, redis_url: str = "redis://localhost"):
+        from ..config import settings # TODO: Move to top-level import
+
         self.secret_key = secret_key or secrets.token_urlsafe(32)
         self.algorithm = "HS256"
         self.token_expiry = timedelta(hours=24)
         self.session_expiry = timedelta(days=7)
-        self.redis = redis.from_url(redis_url, decode_responses=True)
+        self.redis = redis.from_url(settings.REDIS_URL, decode_responses=True)
         
         # Role permissions mapping
         self.role_permissions = {
