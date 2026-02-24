@@ -850,15 +850,11 @@ class InfraRequest(BaseModel):
     template_name: str
     vars: Dict[str, Any] = {}
 
-@app.post("/infrastructure/deploy", response_model=APIResponse)
+@app.post("/infrastructure/deploy", response_model=APIResponse, dependencies=[require_scope("system:admin")])
 async def deploy_infrastructure(
     request: InfraRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """Deploys infrastructure using a Terraform template."""
-    # Admin check
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
 
     # Initialize and plan
     init_success = await app.state.infra_manager.initialize_template(request.template_name)
@@ -879,14 +875,11 @@ async def deploy_infrastructure(
         data={"plan_output": plan_output, "apply_output": apply_output}
     )
 
-@app.post("/infrastructure/destroy", response_model=APIResponse)
+@app.post("/infrastructure/destroy", response_model=APIResponse, dependencies=[require_scope("system:admin")])
 async def destroy_infrastructure(
     request: InfraRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """Destroys infrastructure managed by Terraform."""
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
 
     # Initialize and destroy
     init_success = await app.state.infra_manager.initialize_template(request.template_name)
