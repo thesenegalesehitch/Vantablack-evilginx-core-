@@ -27,39 +27,27 @@ from fastapi.concurrency import run_in_threadpool
 class UserRole(Enum):
     """User roles"""
     ADMIN = "admin"
-    RED_TEAM = "red_team"
-    ANALYST = "analyst"
+    OPERATOR = "operator"
     VIEWER = "viewer"
 
 
-class Permission(Enum):
-    """System permissions"""
-    # Template permissions
-    TEMPLATE_CREATE = "template_create"
-    TEMPLATE_READ = "template_read"
-    TEMPLATE_UPDATE = "template_update"
-    TEMPLATE_DELETE = "template_delete"
-    
-    # Campaign permissions
-    CAMPAIGN_CREATE = "campaign_create"
-    CAMPAIGN_READ = "campaign_read"
-    CAMPAIGN_UPDATE = "campaign_update"
-    CAMPAIGN_DELETE = "campaign_delete"
-    CAMPAIGN_EXECUTE = "campaign_execute"
-    
-    # Analysis permissions
-    ANALYSIS_RUN = "analysis_run"
-    ANALYSIS_READ = "analysis_read"
-    
-    # Marketplace permissions
-    MARKETPLACE_READ = "marketplace_read"
-    MARKETPLACE_SUBMIT = "marketplace_submit"
-    MARKETPLACE_MODERATE = "marketplace_moderate"
-    
-    # System permissions
-    SYSTEM_ADMIN = "system_admin"
-    USER_MANAGE = "user_manage"
-    SYSTEM_MONITOR = "system_monitor"
+# Define scopes for granular permissions
+SCOPES = {
+    "system:admin": "Full administrative access to the system.",
+    "c2:read": "Read access to C2 data and tasks.",
+    "c2:write": "Write access to C2 tasks.",
+    "phishing:read": "Read access to phishing campaigns and templates.",
+    "phishing:write": "Create and manage phishing campaigns.",
+    "objectives:read": "Read access to objectives.",
+    "objectives:write": "Create and manage objectives.",
+}
+
+# Map roles to their allowed scopes
+ROLES_PERMISSIONS = {
+    UserRole.ADMIN: [s for s in SCOPES.keys()],
+    UserRole.OPERATOR: ["c2:read", "c2:write", "phishing:read", "phishing:write", "objectives:read", "objectives:write"],
+    UserRole.VIEWER: ["c2:read", "phishing:read", "objectives:read"],
+}
 
 
 @dataclass
@@ -70,7 +58,7 @@ class User:
     email: str
     password_hash: str
     role: UserRole
-    permissions: List[Permission]
+    permissions: List[str]
     is_active: bool
     created_at: datetime
     last_login: Optional[datetime]
@@ -80,7 +68,7 @@ class User:
     def to_dict(self) -> Dict[str, Any]:
         d = asdict(self)
         d["role"] = self.role.value
-        d["permissions"] = [p.value for p in self.permissions]
+        d["permissions"] = self.permissions
         d["created_at"] = self.created_at.isoformat()
         d["last_login"] = self.last_login.isoformat() if self.last_login else None
         return d
@@ -93,7 +81,7 @@ class User:
             email=data["email"],
             password_hash=data["password_hash"],
             role=UserRole(data["role"]),
-            permissions=[Permission(p) for p in data["permissions"]],
+            permissions=data["permissions"],
             is_active=data["is_active"],
             created_at=datetime.fromisoformat(data["created_at"]),
             last_login=datetime.fromisoformat(data["last_login"]) if data["last_login"] else None,
@@ -142,7 +130,7 @@ class APIKey:
     user_id: str
     key_hash: str
     name: str
-    permissions: List[Permission]
+    permissions: List[str]
     created_at: datetime
     expires_at: Optional[datetime]
     last_used: Optional[datetime]
@@ -150,7 +138,7 @@ class APIKey:
 
     def to_dict(self) -> Dict[str, Any]:
         d = asdict(self)
-        d["permissions"] = [p.value for p in self.permissions]
+        d["permissions"] = self.permissions
         d["created_at"] = self.created_at.isoformat()
         d["expires_at"] = self.expires_at.isoformat() if self.expires_at else None
         d["last_used"] = self.last_used.isoformat() if self.last_used else None
@@ -163,7 +151,7 @@ class APIKey:
             user_id=data["user_id"],
             key_hash=data["key_hash"],
             name=data["name"],
-            permissions=[Permission(p) for p in data["permissions"]],
+            permissions=data["permissions"],
             created_at=datetime.fromisoformat(data["created_at"]),
             expires_at=datetime.fromisoformat(data["expires_at"]) if data["expires_at"] else None,
             last_used=datetime.fromisoformat(data["last_used"]) if data["last_used"] else None,
@@ -184,24 +172,7 @@ class AuthManager:
         self.redis = redis.from_url(settings.REDIS_URL, decode_responses=True)
         
         # Role permissions mapping
-        self.role_permissions = {
-            UserRole.ADMIN: list(Permission),
-            UserRole.RED_TEAM: [
-                Permission.TEMPLATE_CREATE, Permission.TEMPLATE_READ, Permission.TEMPLATE_UPDATE,
-                Permission.CAMPAIGN_CREATE, Permission.CAMPAIGN_READ, Permission.CAMPAIGN_UPDATE, Permission.CAMPAIGN_EXECUTE,
-                Permission.ANALYSIS_RUN, Permission.ANALYSIS_READ,
-                Permission.MARKETPLACE_READ, Permission.MARKETPLACE_SUBMIT
-            ],
-            UserRole.ANALYST: [
-                Permission.TEMPLATE_READ, Permission.CAMPAIGN_READ,
-                Permission.ANALYSIS_RUN, Permission.ANALYSIS_READ,
-                Permission.MARKETPLACE_READ
-            ],
-            UserRole.VIEWER: [
-                Permission.TEMPLATE_READ, Permission.CAMPAIGN_READ,
-                Permission.ANALYSIS_READ, Permission.MARKETPLACE_READ
-            ]
-        }
+        self.role_permissions = ROLES_PERMISSIONS
     
     async def _initialize_default_admin(self):
         """Initialize default admin user in Redis"""
