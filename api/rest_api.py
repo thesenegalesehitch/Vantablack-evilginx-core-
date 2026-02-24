@@ -180,6 +180,25 @@ async def profile_requests(request: Request, call_next):
 # Security
 security = HTTPBearer()
 
+async def get_current_user(token: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    try:
+        payload = jwt.decode(token.credentials, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+        # In a real app, fetch user from DB and check roles/scopes
+        # For now, we'll use a mock user structure
+        user = {"id": user_id, "role": payload.get("role", "viewer"), "scopes": payload.get("scopes", [])}
+        return user
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+
+def require_scope(required_scope: str):
+    async def scope_checker(current_user: dict = Depends(get_current_user)):
+        if required_scope not in current_user["scopes"]:
+            raise HTTPException(status_code=403, detail=f"Forbidden: Requires {required_scope} scope.")
+    return Depends(scope_checker)
+
 
 # Dependencies
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)):
