@@ -16,6 +16,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, validator
+
+class SpearPhishingRequest(BaseModel):
+    name: str
+    position: str
+    company: str
+    activity: Optional[str] = None
 from typing import Dict, List, Any, Optional, Union
 from datetime import datetime, timedelta
 import uuid
@@ -746,6 +752,25 @@ async def start_email_scan(
             "domain": domain,
             "scan_type": "emails"
         }
+    )
+
+
+@app.post("/osint/generate/spear-phishing-email", response_model=APIResponse)
+async def generate_spear_phishing_email_endpoint(
+    request: SpearPhishingRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Triggers the generation of a personalized spear phishing email."""
+    await rate_limit_check(current_user["user_id"], "osint_generate_email")
+    
+    from workers.osint_worker import generate_spear_phishing_email
+    
+    target_info = request.dict()
+    generate_spear_phishing_email.delay(target_info)
+    
+    return APIResponse(
+        message="Spear phishing email generation started in the background.",
+        data=target_info
     )
 
 

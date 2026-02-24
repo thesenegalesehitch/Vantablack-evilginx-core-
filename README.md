@@ -163,6 +163,20 @@ python3 vanta.py --quishing <URL>
 
 ---
 
+## 🧠 AI-Powered Spear Phishing (Optional Setup)
+
+VANTABLACK can leverage a local Large Language Model (LLM) to generate hyper-personalized spear phishing emails. This is powered by [Ollama](https://ollama.ai/).
+
+**Setup:**
+1. Install Ollama on your system: `curl -fsSL https://ollama.com/install.sh | sh`
+2. Pull a model. We recommend a fast and creative model like `llama3` or `mistral`.
+   ```bash
+   ollama pull llama3
+   ```
+3. Ensure the Ollama server is running. VANTABLACK will connect to it automatically.
+
+---
+
 ## ⚡ Performance Profiling
 
 To ensure maximum performance and identify bottlenecks, VANTABLACK includes a profiling script based on `py-spy`.
