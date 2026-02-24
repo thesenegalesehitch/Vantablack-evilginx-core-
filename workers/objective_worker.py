@@ -1,6 +1,8 @@
 from core.event_bus import app, publish_event
+from core.config import settings
 import logging
 import json
+import redis
 
 logger = logging.getLogger("ObjectiveWorker")
 
@@ -29,8 +31,7 @@ def execute_objective(agent_id: str, objective: str):
 
     # We need to access Redis directly to queue tasks, so we create a client.
     # In a real app, this would be better handled.
-    from redis import Redis
-    redis_client = Redis.from_url("redis://localhost:6379/0", decode_responses=True)
+    redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
 
     for command in commands:
         task_id = f"task_obj_{command.replace(' ', '_')}"
