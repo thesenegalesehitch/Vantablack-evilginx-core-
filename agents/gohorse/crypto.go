@@ -9,7 +9,7 @@ import (
 	"io"
 )
 
-// Encrypt chiffre les données en utilisant AES-GCM.
+// Encrypt encrypts data using AES-GCM.
 func Encrypt(plaintext []byte, key []byte) (string, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -30,7 +30,7 @@ func Encrypt(plaintext []byte, key []byte) (string, error) {
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-// Decrypt déchiffre les données chiffrées avec AES-GCM.
+// Decrypt decrypts data encrypted with AES-GCM.
 func Decrypt(ciphertext string, key []byte) ([]byte, error) {
 	data, err := base64.StdEncoding.DecodeString(ciphertext)
 	if err != nil {

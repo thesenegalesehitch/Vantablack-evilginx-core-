@@ -21,7 +21,7 @@ selenium==4.16.0
 playwright==1.40.0
 
 # Security & Crypto
-cryptography==41.0.8
+cryptography==42.0.5
 passlib[bcrypt]==1.7.4
 python-jose[cryptography]==3.3.0
 python-multipart==0.0.6

