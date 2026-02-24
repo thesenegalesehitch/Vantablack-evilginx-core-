@@ -1047,12 +1047,9 @@ async def get_system_status(current_user: dict = Depends(get_current_user)):
     )
 
 
-@app.post("/system/ghost-protocol", response_model=APIResponse, status_code=202)
-async def trigger_ghost_protocol(current_user: dict = Depends(get_current_user)):
+@app.post("/system/ghost-protocol", response_model=APIResponse, status_code=202, dependencies=[require_scope("system:admin")])
+async def trigger_ghost_protocol():
     """Triggers the Ghost Protocol, a self-destruct and sanitization sequence."""
-    if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Forbidden: Admin access required for this action.")
-
     from workers.ghost_protocol_worker import initiate_ghost_protocol
     
     # Trigger the protocol in the background
