@@ -111,6 +111,8 @@ class APIResponse(BaseModel):
 
 
 # Lifespan management
+from .infrastructure_manager import InfrastructureManager
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan management"""
@@ -126,6 +128,7 @@ async def lifespan(app: FastAPI):
     app.state.marketplace = TemplateMarketplace()
     app.state.auth_manager = AuthManager()
     app.state.rate_limiter = RateLimiter()
+    app.state.infra_manager = InfrastructureManager()
     
     logging.info("VANTABLACK API ready")
     
@@ -816,6 +819,65 @@ async def update_user_profile(
 
 
 # System endpoints
+
+# Infrastructure Endpoints
+class InfraRequest(BaseModel):
+    template_name: str
+    vars: Dict[str, Any] = {}
+
+@app.post("/infrastructure/deploy", response_model=APIResponse)
+async def deploy_infrastructure(
+    request: InfraRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Deploys infrastructure using a Terraform template."""
+    # Admin check
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    # Initialize and plan
+    init_success = await app.state.infra_manager.initialize_template(request.template_name)
+    if not init_success:
+        raise HTTPException(status_code=500, detail="Terraform initialization failed.")
+
+    plan_success, plan_output = await app.state.infra_manager.plan_deployment(request.template_name, request.vars)
+    if not plan_success:
+        raise HTTPException(status_code=500, detail=f"Terraform plan failed: {plan_output}")
+
+    # Apply
+    apply_success, apply_output = await app.state.infra_manager.apply_deployment(request.template_name)
+    if not apply_success:
+        raise HTTPException(status_code=500, detail=f"Terraform apply failed: {apply_output}")
+
+    return APIResponse(
+        message="Infrastructure deployment successful.",
+        data={"plan_output": plan_output, "apply_output": apply_output}
+    )
+
+@app.post("/infrastructure/destroy", response_model=APIResponse)
+async def destroy_infrastructure(
+    request: InfraRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Destroys infrastructure managed by Terraform."""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    # Initialize and destroy
+    init_success = await app.state.infra_manager.initialize_template(request.template_name)
+    if not init_success:
+        raise HTTPException(status_code=500, detail="Terraform initialization failed.")
+
+    destroy_success, destroy_output = await app.state.infra_manager.destroy_deployment(request.template_name, request.vars)
+    if not destroy_success:
+        raise HTTPException(status_code=500, detail=f"Terraform destroy failed: {destroy_output}")
+
+    return APIResponse(
+        message="Infrastructure destruction successful.",
+        data={"destroy_output": destroy_output}
+    )
+
+
 @app.get("/system/status")
 async def get_system_status(current_user: dict = Depends(get_current_user)):
     """Get system status"""

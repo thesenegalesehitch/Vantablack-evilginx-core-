@@ -59,6 +59,23 @@ Native support for modern social media platforms using the new **VantaProxy** en
 - **Facebook** (Mobile & Desktop)
 
 ### 👻 Ghost Protocol
+
+---
+
+## ☁️ Dynamic Infrastructure (Optional Setup)
+
+VANTABLACK can manage its own attack infrastructure using Terraform. This allows for the automated deployment and destruction of servers, making your campaigns highly resilient and difficult to trace.
+
+**Setup:**
+1. **Install Terraform**: Follow the official instructions at [terraform.io](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli).
+2. **Configure Cloud Credentials**: Set up credentials for your chosen cloud provider. For example, for DigitalOcean:
+   ```bash
+   export DIGITALOCEAN_TOKEN="your_do_api_token"
+   ```
+   VANTABLACK will automatically use these environment variables.
+
+---
+
 Emergency panic button. Instantly wipes logs, kills processes, and sanitizes the environment if compromise is detected.
 
 ### 📱 Quishing Generator
