@@ -15,11 +15,12 @@ import bcrypt
 import secrets
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from enum import Enum
 import logging
 import hashlib
 import json
+import redis.asyncio as redis
 from fastapi.concurrency import run_in_threadpool
 
 
@@ -76,6 +77,30 @@ class User:
     api_keys: List[str]
     sessions: List[str]
 
+    def to_dict(self) -> Dict[str, Any]:
+        d = asdict(self)
+        d["role"] = self.role.value
+        d["permissions"] = [p.value for p in self.permissions]
+        d["created_at"] = self.created_at.isoformat()
+        d["last_login"] = self.last_login.isoformat() if self.last_login else None
+        return d
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "User":
+        return cls(
+            user_id=data["user_id"],
+            username=data["username"],
+            email=data["email"],
+            password_hash=data["password_hash"],
+            role=UserRole(data["role"]),
+            permissions=[Permission(p) for p in data["permissions"]],
+            is_active=data["is_active"],
+            created_at=datetime.fromisoformat(data["created_at"]),
+            last_login=datetime.fromisoformat(data["last_login"]) if data["last_login"] else None,
+            api_keys=data["api_keys"],
+            sessions=data["sessions"]
+        )
+
 
 @dataclass
 class Session:
@@ -88,6 +113,26 @@ class Session:
     ip_address: str
     user_agent: str
     is_active: bool
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = asdict(self)
+        d["created_at"] = self.created_at.isoformat()
+        d["expires_at"] = self.expires_at.isoformat()
+        d["last_activity"] = self.last_activity.isoformat()
+        return d
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Session":
+        return cls(
+            session_id=data["session_id"],
+            user_id=data["user_id"],
+            created_at=datetime.fromisoformat(data["created_at"]),
+            expires_at=datetime.fromisoformat(data["expires_at"]),
+            last_activity=datetime.fromisoformat(data["last_activity"]),
+            ip_address=data["ip_address"],
+            user_agent=data["user_agent"],
+            is_active=data["is_active"]
+        )
 
 
 @dataclass
@@ -103,20 +148,38 @@ class APIKey:
     last_used: Optional[datetime]
     is_active: bool
 
+    def to_dict(self) -> Dict[str, Any]:
+        d = asdict(self)
+        d["permissions"] = [p.value for p in self.permissions]
+        d["created_at"] = self.created_at.isoformat()
+        d["expires_at"] = self.expires_at.isoformat() if self.expires_at else None
+        d["last_used"] = self.last_used.isoformat() if self.last_used else None
+        return d
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "APIKey":
+        return cls(
+            key_id=data["key_id"],
+            user_id=data["user_id"],
+            key_hash=data["key_hash"],
+            name=data["name"],
+            permissions=[Permission(p) for p in data["permissions"]],
+            created_at=datetime.fromisoformat(data["created_at"]),
+            expires_at=datetime.fromisoformat(data["expires_at"]) if data["expires_at"] else None,
+            last_used=datetime.fromisoformat(data["last_used"]) if data["last_used"] else None,
+            is_active=data["is_active"]
+        )
+
 
 class AuthManager:
     """Authentication and authorization manager"""
     
-    def __init__(self, secret_key: str = None):
+    def __init__(self, secret_key: str = None, redis_url: str = "redis://localhost"):
         self.secret_key = secret_key or secrets.token_urlsafe(32)
         self.algorithm = "HS256"
         self.token_expiry = timedelta(hours=24)
         self.session_expiry = timedelta(days=7)
-        
-        # In-memory storage (in production, use database)
-        self.users: Dict[str, User] = {}
-        self.sessions: Dict[str, Session] = {}
-        self.api_keys: Dict[str, APIKey] = {}
+        self.redis = redis.from_url(redis_url, decode_responses=True)
         
         # Role permissions mapping
         self.role_permissions = {
@@ -139,9 +202,9 @@ class AuthManager:
         }
     
     async def _initialize_default_admin(self):
-        """Initialize default admin user"""
+        """Initialize default admin user in Redis"""
         admin_user_id = "admin_default"
-        if admin_user_id not in self.users:
+        if not await self.redis.exists(f"user:{admin_user_id}"):
             admin_password = await self._hash_password("admin123")  # Change in production
             admin_user = User(
                 user_id=admin_user_id,
@@ -156,7 +219,11 @@ class AuthManager:
                 api_keys=[],
                 sessions=[]
             )
-            self.users[admin_user_id] = admin_user
+            async with self.redis.pipeline(transaction=True) as pipe:
+                await pipe.hset(f"user:{admin_user_id}", mapping=admin_user.to_dict())
+                await pipe.set(f"user:by_username:{admin_user.username}", admin_user_id)
+                await pipe.set(f"user:by_email:{admin_user.email}", admin_user_id)
+                await pipe.execute()
     
     async def _hash_password(self, password: str) -> str:
         """Hash password using bcrypt in a thread pool"""
@@ -196,12 +263,13 @@ class AuthManager:
     
     async def create_user(self, username: str, email: str, password: str, 
                          role: UserRole = UserRole.RED_TEAM) -> str:
-        """Create new user"""
+        """Create new user in Redis"""
         await self._initialize_default_admin()
+        
         # Check if user already exists
-        for user in self.users.values():
-            if user.username == username or user.email == email:
-                raise ValueError("User with this username or email already exists")
+        if await self.redis.exists(f"user:by_username:{username}") or \
+           await self.redis.exists(f"user:by_email:{email}"):
+            raise ValueError("User with this username or email already exists")
         
         # Create user
         user_id = f"user_{secrets.token_urlsafe(16)}"
@@ -221,7 +289,11 @@ class AuthManager:
             sessions=[]
         )
         
-        self.users[user_id] = user
+        async with self.redis.pipeline(transaction=True) as pipe:
+            await pipe.hset(f"user:{user_id}", mapping=user.to_dict())
+            await pipe.set(f"user:by_username:{user.username}", user_id)
+            await pipe.set(f"user:by_email:{user.email}", user_id)
+            await pipe.execute()
         
         logging.info(f"User created: {username} ({user_id})")
         return user_id
@@ -229,17 +301,20 @@ class AuthManager:
     async def authenticate_user(self, username: str, password: str, 
                               ip_address: str = "127.0.0.1",
                               user_agent: str = "Unknown") -> Optional[Dict[str, Any]]:
-        """Authenticate user with username/password"""
+        """Authenticate user with username/password against Redis"""
         await self._initialize_default_admin()
-        # Find user
-        user = None
-        for u in self.users.values():
-            if u.username == username:
-                user = u
-                break
         
-        if not user:
+        # Find user ID by username
+        user_id = await self.redis.get(f"user:by_username:{username}")
+        if not user_id:
             return None
+        
+        # Get user data
+        user_data = await self.redis.hgetall(f"user:{user_id}")
+        if not user_data:
+            return None
+        
+        user = User.from_dict(user_data)
         
         if not user.is_active:
             return None
@@ -263,8 +338,15 @@ class AuthManager:
             is_active=True
         )
         
-        self.sessions[session_id] = session
         user.sessions.append(session_id)
+        
+        # Save session and updated user data to Redis
+        async with self.redis.pipeline(transaction=True) as pipe:
+            await pipe.hset(f"session:{session_id}", mapping=session.to_dict())
+            await pipe.hset(f"user:{user_id}", "last_login", user.last_login.isoformat())
+            await pipe.hset(f"user:{user_id}", "sessions", json.dumps(user.sessions))
+            await pipe.expire(f"session:{session_id}", self.session_expiry)
+            await pipe.execute()
         
         # Generate JWT token
         token = self._generate_jwt_token(user)
@@ -283,7 +365,7 @@ class AuthManager:
         }
     
     async def verify_token(self, token: str) -> Optional[Dict[str, Any]]:
-        """Verify JWT token and return user info"""
+        """Verify JWT token and return user info from Redis"""
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
             
@@ -291,8 +373,12 @@ class AuthManager:
             if not user_id:
                 return None
             
-            user = self.users.get(user_id)
-            if not user or not user.is_active:
+            user_data = await self.redis.hgetall(f"user:{user_id}")
+            if not user_data:
+                return None
+            
+            user = User.from_dict(user_data)
+            if not user.is_active:
                 return None
             
             return {
