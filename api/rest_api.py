@@ -38,6 +38,7 @@ from templates.ab_testing import ABTestManager
 from templates.marketplace import TemplateMarketplace
 from .auth_manager import AuthManager
 from .rate_limiter import RateLimiter
+from .config import settings
 
 
 # Pydantic models
