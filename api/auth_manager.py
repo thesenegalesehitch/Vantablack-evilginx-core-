@@ -20,6 +20,7 @@ from enum import Enum
 import logging
 import hashlib
 import json
+from fastapi.concurrency import run_in_threadpool
 
 
 class UserRole(Enum):
@@ -136,15 +137,12 @@ class AuthManager:
                 Permission.ANALYSIS_READ, Permission.MARKETPLACE_READ
             ]
         }
-        
-        # Initialize default admin user
-        self._initialize_default_admin()
     
-    def _initialize_default_admin(self):
+    async def _initialize_default_admin(self):
         """Initialize default admin user"""
         admin_user_id = "admin_default"
         if admin_user_id not in self.users:
-            admin_password = self._hash_password("admin123")  # Change in production
+            admin_password = await self._hash_password("admin123")  # Change in production
             admin_user = User(
                 user_id=admin_user_id,
                 username="admin",
@@ -160,14 +158,14 @@ class AuthManager:
             )
             self.users[admin_user_id] = admin_user
     
-    def _hash_password(self, password: str) -> str:
-        """Hash password using bcrypt"""
-        salt = bcrypt.gensalt()
-        return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
-    
-    def _verify_password(self, password: str, password_hash: str) -> bool:
-        """Verify password against hash"""
-        return bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))
+    async def _hash_password(self, password: str) -> str:
+        """Hash password using bcrypt in a thread pool"""
+        salt = await run_in_threadpool(bcrypt.gensalt)
+        return await run_in_threadpool(bcrypt.hashpw, password.encode('utf-8'), salt).decode('utf-8')
+
+    async def _verify_password(self, password: str, password_hash: str) -> bool:
+        """Verify password against hash in a thread pool"""
+        return await run_in_threadpool(bcrypt.checkpw, password.encode('utf-8'), password_hash.encode('utf-8'))
     
     def _generate_jwt_token(self, user: User, expires_delta: timedelta = None) -> str:
         """Generate JWT token for user"""
@@ -199,6 +197,7 @@ class AuthManager:
     async def create_user(self, username: str, email: str, password: str, 
                          role: UserRole = UserRole.RED_TEAM) -> str:
         """Create new user"""
+        await self._initialize_default_admin()
         # Check if user already exists
         for user in self.users.values():
             if user.username == username or user.email == email:
@@ -206,7 +205,7 @@ class AuthManager:
         
         # Create user
         user_id = f"user_{secrets.token_urlsafe(16)}"
-        password_hash = self._hash_password(password)
+        password_hash = await self._hash_password(password)
         
         user = User(
             user_id=user_id,
@@ -231,6 +230,7 @@ class AuthManager:
                               ip_address: str = "127.0.0.1",
                               user_agent: str = "Unknown") -> Optional[Dict[str, Any]]:
         """Authenticate user with username/password"""
+        await self._initialize_default_admin()
         # Find user
         user = None
         for u in self.users.values():
@@ -244,7 +244,7 @@ class AuthManager:
         if not user.is_active:
             return None
         
-        if not self._verify_password(password, user.password_hash):
+        if not await self._verify_password(password, user.password_hash):
             return None
         
         # Update last login
