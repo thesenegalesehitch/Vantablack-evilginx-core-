@@ -355,7 +355,11 @@ def interactive_menu():
             show_system_info()
         elif choice == "15":
             print(T("godmode_start"))
-            subprocess.Popen([sys.executable, "godmode.py"])
+            bin_gm = os.path.join(os.getcwd(), "bin", "godmode")
+            if os.path.exists(bin_gm):
+                subprocess.Popen([bin_gm])
+            else:
+                subprocess.Popen([sys.executable, "godmode.py"])
             print(T("godmode_done"))
         elif choice == "0":
             print(T("stopping_services"))
