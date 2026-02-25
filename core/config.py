@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     PUBLIC_BASE_URL: str = "http://localhost:8000"
     CORS_ALLOW_ORIGINS: List[str] = ["*"]
 
+    # --- OPSEC ---
+    OPSEC_ENABLE: bool = False
+    OPSEC_BLOCKLIST_UA: List[str] = []
+    OPSEC_REPUTATION_ENDPOINT: str = ""
+    OPSEC_REPUTATION_API_KEY: str = ""
+
     class Config:
         # Permet de charger les variables depuis un fichier .env (si présent)
         env_file = ".env"
