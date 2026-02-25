@@ -69,6 +69,10 @@ Examples:
         generate_parser.add_argument('--output', help='Output file path')
         generate_parser.add_argument('--count', type=int, default=1,
                                    help='Number of templates to generate')
+        generate_parser.add_argument('--source-url', default='',
+                                   help='Mirror source URL for fidelity (optional)')
+        generate_parser.add_argument('--form-action', default='',
+                                   help='Override form action URL (optional)')
         
         # Optimize command
         optimize_parser = subparsers.add_parser('optimize', help='Optimize templates')
@@ -206,7 +210,10 @@ Examples:
                     responsive=args.responsive,
                     optimization_level=args.optimization,
                     compliance_checks=['gdpr', 'accessibility'],
-                    custom_variables={}
+                    custom_variables=(
+                        {"source_url": args.source_url, "form_action": args.form_action}
+                        if args.source_url or args.form_action else {}
+                    )
                 )
                 
                 template = self.generator.generate_template(config)
