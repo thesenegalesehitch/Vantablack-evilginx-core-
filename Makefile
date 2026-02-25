@@ -17,6 +17,9 @@ help:
 	@echo "  ${GREEN}make sysinfo${NC}        - Show system info using Go (if built)."
 	@echo "  ${GREEN}make godmode${NC}        - Run God Mode orchestrator in Go."
 	@echo "  ${GREEN}make healthcheck${NC}    - Check API health using Go."
+	@echo "  ${GREEN}make plan-redirector${NC} - Terraform plan AWS redirector."
+	@echo "  ${GREEN}make deploy-redirector${NC} - Terraform apply AWS redirector."
+	@echo "  ${GREEN}make destroy-redirector${NC} - Terraform destroy AWS redirector."
 
 install:
 	@echo "${YELLOW}--- Installing dependencies ---${NC}"
@@ -66,3 +69,15 @@ godmode:
 
 healthcheck:
 	@./bin/healthcheck
+
+plan-redirector:
+	@cd infra/terraform/aws_redirector && terraform init && terraform plan
+
+deploy-redirector:
+	@cd infra/terraform/aws_redirector && terraform init && terraform apply -auto-approve
+
+destroy-redirector:
+	@cd infra/terraform/aws_redirector && terraform destroy -auto-approve
+
+wg-peer-template:
+	@cat infra/wireguard/peer_template.conf
