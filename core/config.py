@@ -1,4 +1,5 @@
 from pydantic import BaseSettings
+from typing import List
 
 class Settings(BaseSettings):
     """Centralized application configuration."""
@@ -15,6 +16,13 @@ class Settings(BaseSettings):
 
     # --- C2 --- 
     C2_DEFAULT_ENCRYPTION_KEY: str = "_THIS_IS_A_DEFAULT_32_BYTE_KEY_"
+
+    # --- Network / TLS ---
+    ENABLE_TLS: bool = False
+    TLS_CERT_PATH: str = ""
+    TLS_KEY_PATH: str = ""
+    PUBLIC_BASE_URL: str = "http://localhost:8000"
+    CORS_ALLOW_ORIGINS: List[str] = ["*"]
 
     class Config:
         # Permet de charger les variables depuis un fichier .env (si présent)

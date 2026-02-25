@@ -10,7 +10,7 @@ FastAPI-based REST API for VANTABLACK operations:
 - System monitoring
 """
 
-from fastapi import FastAPI, HTTPException, Depends, Security, status, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Depends, Security, status, BackgroundTasks, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -28,6 +28,8 @@ import uuid
 import json
 import asyncio
 import logging
+import time
+import secrets
 from contextlib import asynccontextmanager
 
 from analysis.reverse_engineer.analyzer import PhishletAnalyzer
@@ -38,7 +40,7 @@ from templates.ab_testing import ABTestManager
 from templates.marketplace import TemplateMarketplace
 from .auth_manager import AuthManager
 from .rate_limiter import RateLimiter
-from .config import settings
+from core.config import settings
 
 
 # Pydantic models
@@ -152,7 +154,7 @@ app = FastAPI(
 # Add middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=settings.CORS_ALLOW_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -261,7 +263,7 @@ async def generate_template(
     
     try:
         # Generate template
-        from ..templates.generator import TemplateConfig
+        from templates.generator import TemplateConfig
         config = TemplateConfig(
             target_platform=request.platform,
             template_type=request.template_type,
@@ -512,7 +514,7 @@ async def optimize_template(
     
     try:
         # Create optimization campaign
-        from ..templates.optimizer import OptimizationConfig
+        from templates.optimizer import OptimizationConfig
         config = OptimizationConfig(
             optimization_goal=request.optimization_goal,
             target_improvement=request.target_improvement,
