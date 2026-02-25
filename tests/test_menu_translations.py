@@ -19,5 +19,6 @@ def test_required_keys_present():
             "proxy_started","enter_platform","enter_type","running_templates","templates_done",
             "running_phishlets","phishlets_done","auto_setup","setup_done","system_info_header",
             "os_name","os_version","python_version","node_version","cpu_cores","mem_total"
+            ,"godmode_start","godmode_done"
         ]:
             assert key in d
