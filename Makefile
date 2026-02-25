@@ -15,7 +15,7 @@ help:
 
 install:
 	@echo "${YELLOW}--- Installing dependencies ---${NC}"
-	@pip install -r requirements-v4.txt
+	@python3 -m pip install -r requirements-v4.txt
 	@echo "${GREEN}Installation complete.${NC}"
 
 run-api:

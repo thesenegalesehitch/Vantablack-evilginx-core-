@@ -19,6 +19,7 @@ from datetime import datetime
 import time
 
 from .generator import TemplateGenerator, TemplateConfig
+from core.banner import print_alex_banner
 from .ab_testing import ABTestManager, ABTestConfig
 from .optimizer import TemplateOptimizer, OptimizationConfig
 from .marketplace import TemplateMarketplace, TemplateCategory, TemplateStatus
@@ -619,6 +620,7 @@ Examples:
 
 def main():
     """Main entry point"""
+    print_alex_banner()
     cli = TemplateCLI()
     return cli.run()
 
