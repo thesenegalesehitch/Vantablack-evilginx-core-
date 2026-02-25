@@ -15,6 +15,8 @@ help:
 	@echo "  ${GREEN}make build-go${NC}       - Build Go utilities (banner, sysinfo)."
 	@echo "  ${GREEN}make banner${NC}         - Show ALEX banner using Go (if built)."
 	@echo "  ${GREEN}make sysinfo${NC}        - Show system info using Go (if built)."
+	@echo "  ${GREEN}make godmode${NC}        - Run God Mode orchestrator in Go."
+	@echo "  ${GREEN}make healthcheck${NC}    - Check API health using Go."
 
 install:
 	@echo "${YELLOW}--- Installing dependencies ---${NC}"
@@ -49,6 +51,8 @@ build-go:
 	@mkdir -p bin
 	@go build -o bin/alex-banner ./cmd/alex-banner
 	@go build -o bin/sysinfo ./cmd/sysinfo
+	@go build -o bin/godmode ./cmd/godmode
+	@go build -o bin/healthcheck ./cmd/healthcheck
 	@echo "${GREEN}Go utilities built in ./bin${NC}"
 
 banner:
@@ -56,3 +60,9 @@ banner:
 
 sysinfo:
 	@./bin/sysinfo
+
+godmode:
+	@./bin/godmode
+
+healthcheck:
+	@./bin/healthcheck

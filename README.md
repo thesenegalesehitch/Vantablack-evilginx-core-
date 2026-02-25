@@ -232,6 +232,8 @@ Fonctionnalités du menu :
 - Utilisation:
   - `make banner` pour afficher ALEX en ultra-rapide
   - `make sysinfo` pour infos système
+  - `make godmode` pour orchestrer God Mode en Go
+  - `make healthcheck` pour tester la santé API
 - Le menu utilise automatiquement `./bin/alex-banner` et `./bin/sysinfo` si présents.
 
 ---
