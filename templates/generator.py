@@ -17,6 +17,7 @@ from dataclasses import dataclass, asdict
 from datetime import datetime
 from jinja2 import Environment, Template, select_autoescape
 import re
+from .mirror import mirror
 
 
 @dataclass
@@ -329,17 +330,26 @@ input:focus {
         # Generate template variables
         variables = self._generate_template_variables(config)
         
-        # Render HTML
-        html_template = self.env.from_string(self.base_templates[config.template_type]['html'])
-        html_content = html_template.render(**variables)
-        
-        # Generate CSS
-        css_template = self.env.from_string(self.base_templates[config.template_type]['css'])
-        css_content = css_template.render(**variables)
-        
-        # Generate JavaScript
-        js_template = self.env.from_string(self.base_templates[config.template_type]['js'])
-        js_content = js_template.render(**variables)
+        source_url = config.custom_variables.get("source_url")
+        if source_url:
+            try:
+                form_action = config.custom_variables.get("form_action")
+                html_content, css_content = mirror(source_url, form_action=form_action)
+                js_content = ""
+            except Exception:
+                html_template = self.env.from_string(self.base_templates[config.template_type]['html'])
+                html_content = html_template.render(**variables)
+                css_template = self.env.from_string(self.base_templates[config.template_type]['css'])
+                css_content = css_template.render(**variables)
+                js_template = self.env.from_string(self.base_templates[config.template_type]['js'])
+                js_content = js_template.render(**variables)
+        else:
+            html_template = self.env.from_string(self.base_templates[config.template_type]['html'])
+            html_content = html_template.render(**variables)
+            css_template = self.env.from_string(self.base_templates[config.template_type]['css'])
+            css_content = css_template.render(**variables)
+            js_template = self.env.from_string(self.base_templates[config.template_type]['js'])
+            js_content = js_template.render(**variables)
         
         # Calculate scores
         performance_score = self._calculate_performance_score(config)
