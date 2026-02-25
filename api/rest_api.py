@@ -41,6 +41,7 @@ from templates.marketplace import TemplateMarketplace
 from .auth_manager import AuthManager
 from .rate_limiter import RateLimiter
 from core.config import settings
+from core.opsec import should_block
 
 
 # Pydantic models
@@ -115,6 +116,7 @@ class APIResponse(BaseModel):
 
 # Lifespan management
 from .infrastructure_manager import InfrastructureManager
+from core.audit import log_action
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -152,6 +154,12 @@ app = FastAPI(
 )
 
 # Add middleware
+@app.middleware("http")
+async def opsec_middleware(request: Request, call_next):
+    if should_block(request):
+        return JSONResponse(status_code=403, content={"success": False, "message": "Forbidden", "data": {"reason": "opsec"}})
+    return await call_next(request)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ALLOW_ORIGINS,
@@ -1047,21 +1055,41 @@ async def trigger_ghost_protocol():
 async def log_template_generation(user_id: str, template_id: str, platform: str, template_type: str):
     """Log template generation"""
     logging.info(f"Template generated: user={user_id}, template={template_id}, platform={platform}, type={template_type}")
+    try:
+        await asyncio.sleep(0)
+        log_action(user_id, "template_generate", {"template_id": template_id, "platform": platform, "type": template_type})
+    except Exception:
+        pass
 
 
 async def log_campaign_creation(user_id: str, campaign_id: str, campaign_name: str):
     """Log campaign creation"""
     logging.info(f"Campaign created: user={user_id}, campaign={campaign_id}, name={campaign_name}")
+    try:
+        await asyncio.sleep(0)
+        log_action(user_id, "campaign_create", {"campaign_id": campaign_id, "name": campaign_name})
+    except Exception:
+        pass
 
 
 async def log_phishlet_analysis(user_id: str, risk_score: float):
     """Log phishlet analysis"""
     logging.info(f"Phishlet analyzed: user={user_id}, risk_score={risk_score}")
+    try:
+        await asyncio.sleep(0)
+        log_action(user_id, "phishlet_analyze", {"risk_score": risk_score})
+    except Exception:
+        pass
 
 
 async def log_template_optimization(user_id: str, optimization_id: str, template_id: str):
     """Log template optimization"""
     logging.info(f"Template optimization: user={user_id}, optimization={optimization_id}, template={template_id}")
+    try:
+        await asyncio.sleep(0)
+        log_action(user_id, "template_optimize", {"optimization_id": optimization_id, "template_id": template_id})
+    except Exception:
+        pass
 
 
 # Exception handlers
