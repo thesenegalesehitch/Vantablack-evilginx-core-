@@ -12,6 +12,9 @@ help:
 	@echo "  ${GREEN}make run-workers${NC}    - Run all Celery workers (event, osint, reuse, objective, ghost)."
 	@echo "  ${GREEN}make run-all${NC}         - Run the API and all workers in parallel."
 	@echo "  ${GREEN}make stop-workers${NC}   - Stop all running Celery workers."
+	@echo "  ${GREEN}make build-go${NC}       - Build Go utilities (banner, sysinfo)."
+	@echo "  ${GREEN}make banner${NC}         - Show ALEX banner using Go (if built)."
+	@echo "  ${GREEN}make sysinfo${NC}        - Show system info using Go (if built)."
 
 install:
 	@echo "${YELLOW}--- Installing dependencies ---${NC}"
@@ -40,3 +43,16 @@ stop-workers:
 	@echo "${YELLOW}--- Stopping all Celery workers ---${NC}"
 	@pkill -f "celery -A"
 	@echo "${GREEN}Workers stopped.${NC}"
+
+build-go:
+	@echo "${YELLOW}--- Building Go utilities ---${NC}"
+	@mkdir -p bin
+	@go build -o bin/alex-banner ./cmd/alex-banner
+	@go build -o bin/sysinfo ./cmd/sysinfo
+	@echo "${GREEN}Go utilities built in ./bin${NC}"
+
+banner:
+	@./bin/alex-banner
+
+sysinfo:
+	@./bin/sysinfo

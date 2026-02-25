@@ -103,6 +103,7 @@ async def auth(provider: str, request: Request):
 if __name__ == "__main__":
     print_alex_banner()
     runner = GodModeRunner()
+    headless = ("--headless" in sys.argv) or (os.getenv("GODMODE_HEADLESS") == "1")
     try:
         runner.start_api()
         runner.wait_api()
@@ -112,6 +113,9 @@ if __name__ == "__main__":
         runner.run_mutation()
         runner.run_analysis()
         runner.run_report()
-        uvicorn.run(app, host="0.0.0.0", port=6666, log_level="error")
+        if headless:
+            print("Artifacts: analysis.json, signatures.json, mutated_phishlets/")
+        else:
+            uvicorn.run(app, host="0.0.0.0", port=6666, log_level="error")
     except KeyboardInterrupt:
         runner.stop()

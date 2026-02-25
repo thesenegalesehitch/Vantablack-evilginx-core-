@@ -12,6 +12,13 @@ import psutil
 from core.banner import print_alex_banner
 
 def print_banner():
+    bin_path = os.path.join(os.getcwd(), "bin", "alex-banner")
+    if os.path.exists(bin_path):
+        try:
+            subprocess.run([bin_path], check=False)
+            return
+        except Exception:
+            pass
     print_alex_banner()
 
 LANGUAGE = "EN"
@@ -262,21 +269,27 @@ def perform_auto_setup():
 def show_system_info():
     print(T("system_info_header"))
     try:
-        os_name = platform.system()
-        os_ver = platform.release()
-        py_ver = sys.version.split()[0]
-        try:
-            node_ver = subprocess.check_output(["node", "--version"]).decode().strip()
-        except Exception:
-            node_ver = "not installed"
-        cpu = psutil.cpu_count(logical=True)
-        mem = round(psutil.virtual_memory().total / (1024**3), 2)
-        print(T("os_name"), os_name)
-        print(T("os_version"), os_ver)
-        print(T("python_version"), py_ver)
-        print(T("node_version"), node_ver)
-        print(T("cpu_cores"), cpu)
-        print(T("mem_total"), f"{mem} GB")
+        bin_path = os.path.join(os.getcwd(), "bin", "sysinfo")
+        if os.path.exists(bin_path):
+            env = os.environ.copy()
+            env["PYTHON_VERSION"] = sys.version
+            subprocess.run([bin_path], check=False, env=env)
+        else:
+            os_name = platform.system()
+            os_ver = platform.release()
+            py_ver = sys.version.split()[0]
+            try:
+                node_ver = subprocess.check_output(["node", "--version"]).decode().strip()
+            except Exception:
+                node_ver = "not installed"
+            cpu = psutil.cpu_count(logical=True)
+            mem = round(psutil.virtual_memory().total / (1024**3), 2)
+            print(T("os_name"), os_name)
+            print(T("os_version"), os_ver)
+            print(T("python_version"), py_ver)
+            print(T("node_version"), node_ver)
+            print(T("cpu_cores"), cpu)
+            print(T("mem_total"), f"{mem} GB")
     except Exception:
         print("[!] Unable to fetch system info")
 
