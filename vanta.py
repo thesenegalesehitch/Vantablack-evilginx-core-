@@ -18,7 +18,7 @@ LANGUAGE = "EN"
 TRANSLATIONS: Dict[str, Dict[str, str]] = {
     "EN": {
         "menu_title": "[*] VANTABLACK Interactive Menu",
-        "menu_options": "1) List Features\n2) Start Services\n3) Open API Docs\n4) Configuration\n5) Logs Access\n6) Language Switch (EN/FR)\n7) Ghost Protocol\n8) Quishing Generator\n9) Generate Report\n10) Run Network Module (Proxy)\n11) Run Templates\n12) Analyze Phishlets\n13) Auto Setup\n14) System Info\n0) Exit",
+        "menu_options": "1) List Features\n2) Start Services\n3) Open API Docs\n4) Configuration\n5) Logs Access\n6) Language Switch (EN/FR)\n7) Ghost Protocol\n8) Quishing Generator\n9) Generate Report\n10) Run Network Module (Proxy)\n11) Run Templates\n12) Analyze Phishlets\n13) Auto Setup\n14) System Info\n15) God Mode\n0) Exit",
         "prompt": "Select an option: ",
         "features_header": "[*] Available Features",
         "features": "- API Server (FastAPI)\n- Frontend Dashboard (React)\n- Template System\n- Behavioral Analysis\n- Mutation Engine\n- Reverse Engineering\n- OSINT Workers\n- Terraform Infrastructure\n- Ghost Protocol\n- War Room Dashboard",
@@ -56,10 +56,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "node_version": "Node:",
         "cpu_cores": "CPU cores:",
         "mem_total": "Memory:",
+        "godmode_start": "[*] Starting God Mode...",
+        "godmode_done": "[+] God Mode active",
     },
     "FR": {
         "menu_title": "[*] Menu Interactif VANTABLACK",
-        "menu_options": "1) Lister les fonctionnalités\n2) Démarrer les services\n3) Ouvrir la documentation API\n4) Configuration\n5) Accès aux logs\n6) Changer la langue (EN/FR)\n7) Ghost Protocol\n8) Générateur Quishing\n9) Générer le rapport\n10) Lancer le module réseau (Proxy)\n11) Exécuter les templates\n12) Analyser les phishlets\n13) Installation automatique\n14) Infos système\n0) Quitter",
+        "menu_options": "1) Lister les fonctionnalités\n2) Démarrer les services\n3) Ouvrir la documentation API\n4) Configuration\n5) Accès aux logs\n6) Changer la langue (EN/FR)\n7) Ghost Protocol\n8) Générateur Quishing\n9) Générer le rapport\n10) Lancer le module réseau (Proxy)\n11) Exécuter les templates\n12) Analyser les phishlets\n13) Installation automatique\n14) Infos système\n15) God Mode\n0) Quitter",
         "prompt": "Sélectionnez une option : ",
         "features_header": "[*] Fonctionnalités disponibles",
         "features": "- Serveur API (FastAPI)\n- Tableau de bord Frontend (React)\n- Système de templates\n- Analyse comportementale\n- Moteur de mutation\n- Ingénierie inverse\n- Workers OSINT\n- Infrastructure Terraform\n- Ghost Protocol\n- Tableau de bord War Room",
@@ -97,6 +99,8 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "node_version": "Node:",
         "cpu_cores": "CPU:",
         "mem_total": "Mémoire:",
+        "godmode_start": "[*] Démarrage du God Mode...",
+        "godmode_done": "[+] God Mode actif",
     },
 }
 
@@ -336,6 +340,10 @@ def interactive_menu():
             perform_auto_setup()
         elif choice == "14":
             show_system_info()
+        elif choice == "15":
+            print(T("godmode_start"))
+            subprocess.Popen([sys.executable, "godmode.py"])
+            print(T("godmode_done"))
         elif choice == "0":
             print(T("stopping_services"))
             manager.stop_all()
