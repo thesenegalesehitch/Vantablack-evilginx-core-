@@ -215,6 +215,37 @@ Fonctionnalités du menu :
 
 ---
 
+## 🧨 Matrix Rain (Optionnel)
+
+- Active l’animation via variable d’environnement:
+  - macOS/Linux: `export VANTA_MATRIX_RAIN=1`
+  - Windows (PowerShell): `$env:VANTA_MATRIX_RAIN=1`
+- Désactive en supprimant la variable.
+
+---
+
+## ⚙️ Utilitaires Go (Rapides, Multi-OS)
+
+- Prérequis: Go installé (1.20+).
+- Build:
+  - `make build-go`
+- Utilisation:
+  - `make banner` pour afficher ALEX en ultra-rapide
+  - `make sysinfo` pour infos système
+- Le menu utilise automatiquement `./bin/alex-banner` et `./bin/sysinfo` si présents.
+
+---
+
+## 🧪 God Mode Headless
+
+- Lancer God Mode sans portail (génère uniquement les artefacts):
+  - `python3 godmode.py --headless`
+  - ou `GODMODE_HEADLESS=1 python3 godmode.py`
+- Artefacts générés:
+  - `mutated_phishlets/`, `analysis.json`, `signatures.json`
+
+---
+
 ## 🌿 Branching Strategy
 
 - Create a dedicated branch per task.
