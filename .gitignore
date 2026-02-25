@@ -68,3 +68,11 @@ captures_*.csv
 *.bak
 *.backup
 AUDIT_REPORT_FINAL.html
+
+# Node.js
+web/frontend/node_modules/
+
+# Python caches
+.pytest_cache/
+.ruff_cache/
+coverage/
