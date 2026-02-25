@@ -11,6 +11,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from core.banner import print_alex_banner
 
 from .analyzer import PhishletAnalyzer
 from .signature_generator import SignatureGenerator
@@ -19,6 +20,7 @@ from .pattern_extractor import PatternExtractor
 
 async def main():
     """Main CLI interface"""
+    print_alex_banner()
     parser = argparse.ArgumentParser(
         description="VANTABLACK Phishlet Reverse Engineering Tool"
     )

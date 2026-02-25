@@ -11,6 +11,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from core.banner import print_alex_banner
 
 from .mutator import PhishletMutator, MutationConfig
 from .domain_generator import DomainGenerator
@@ -20,6 +21,7 @@ from .evasion_engine import EvasionEngine, EvasionLevel
 
 async def main():
     """Main CLI interface"""
+    print_alex_banner()
     parser = argparse.ArgumentParser(
         description="VANTABLACK Phishlet Mutation Engine"
     )

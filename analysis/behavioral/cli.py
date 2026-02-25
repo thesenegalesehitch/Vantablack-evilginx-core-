@@ -11,6 +11,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from core.banner import print_alex_banner
 
 from .analyzer import BehavioralAnalyzer
 from .tracker import UserTracker
@@ -20,6 +21,7 @@ from .predictor import BehaviorPredictor
 
 async def main():
     """Main CLI interface"""
+    print_alex_banner()
     parser = argparse.ArgumentParser(
         description="VANTABLACK Behavioral Analysis Tool"
     )
