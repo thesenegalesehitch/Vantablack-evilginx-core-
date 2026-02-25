@@ -23,6 +23,8 @@ It combines an intelligent phishing engine, a stealthy Go-based C2 implant, and 
 
 - Python 3.10+
 - Go 1.18+
+- Node.js >=20.0.0
+- npm >=10.0.0
 - Redis
 - Ollama with a running LLM (e.g., `llama3`)
 
