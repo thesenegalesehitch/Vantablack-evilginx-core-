@@ -264,8 +264,11 @@ healthcheck:
 # ---------------------------------------------------------------------------
 # Démo live du mode réel (6 étapes 100% réel, 0 mock)
 # ---------------------------------------------------------------------------
+# Démo contre un C2 distant (autre machine du réseau autorisé) :
+#   make demo-real ARGS="--c2 http://IP-DE-LA-MACHINE-A:8099"
+DEMO_ARGS ?=
 demo-real:
-	@$(VENV_PYTHON) demo_real_live.py
+	@$(VENV_PYTHON) demo_real_live.py $(DEMO_ARGS)
 
 # ---------------------------------------------------------------------------
 # Infrastructure WAN

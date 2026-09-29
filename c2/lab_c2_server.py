@@ -33,6 +33,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else int(os.environ.get("LABC2_PORT", "8099"))
+BIND = os.environ.get("LABC2_BIND", "127.0.0.1")   # 0.0.0.0 → visible sur le LAN/wifi
 OUT = Path("captures/lab_c2")
 OUT.mkdir(parents=True, exist_ok=True)
 
@@ -43,6 +44,7 @@ ACCEPT_AFTER_N = int(os.environ.get("LABC2_ACCEPT_AFTER_N", "3"))
 
 _lock = threading.Lock()
 _counters = {"stuffing": 0, "exfil": 0, "push": 0}
+_exfil_sessions: dict[str, int] = {}   # session_id → nb de blobs reçus
 
 
 def _append_jsonl(name: str, obj: dict) -> None:
@@ -70,7 +72,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:  # noqa: N802
         if self.path == "/health":
-            self._json(200, {"ok": True, "port": PORT, "counters": dict(_counters),
+            self._json(200, {"ok": True, "port": PORT, "bind": BIND,
+                             "counters": dict(_counters),
+                             "exfil_sessions": dict(_exfil_sessions),
                              "accept_users": sorted(ACCEPT_USERS),
                              "lock_users": sorted(LOCK_USERS),
                              "accept_after_n": ACCEPT_AFTER_N})
@@ -105,9 +109,10 @@ class Handler(BaseHTTPRequestHandler):
             self._json(code, {"result": verdict})
 
         elif self.path == "/exfil":
+            session = str(body.get("session") or "unknown")
             with _lock:
                 _counters["exfil"] += 1
-            session = str(body.get("session") or "unknown")
+                _exfil_sessions[session] = _exfil_sessions.get(session, 0) + 1
             _append_jsonl(f"exfil_{session}.jsonl", {
                 "ts": time.time(), "remote": self.client_address[0],
                 **{k: body.get(k) for k in
@@ -131,8 +136,11 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    srv = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
-    print(f"[LABC2] écoute sur http://127.0.0.1:{PORT}")
+    srv = ThreadingHTTPServer((BIND, PORT), Handler)
+    print(f"[LABC2] écoute sur http://{BIND}:{PORT}")
+    if BIND == "0.0.0.0":
+        print("[LABC2] mode LAN : joignable depuis une autre machine via "
+              "http://<ip-cette-machine>:" + str(PORT))
     print(f"[LABC2] artefacts → {OUT.resolve()}")
     print(f"[LABC2] accept={sorted(ACCEPT_USERS)} lock={sorted(LOCK_USERS)} "
           f"rate_limit_every={RATE_LIMIT_EVERY} accept_after_n={ACCEPT_AFTER_N}")
