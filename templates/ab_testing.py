@@ -10,15 +10,18 @@ Manages A/B testing campaigns for templates:
 - Performance tracking
 """
 
+import hashlib
 import json
-import random
-import time
-import statistics
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
-from collections import defaultdict
 import math
+
+from scipy import stats
+import random
+import statistics
+import time
+from collections import defaultdict
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 
 
 @dataclass
@@ -27,8 +30,8 @@ class ABTestConfig:
     test_id: str
     name: str
     description: str
-    template_variants: List[str]
-    traffic_split: List[float]
+    template_variants: list[str]
+    traffic_split: list[float]
     confidence_level: float
     min_sample_size: int
     test_duration_hours: int
@@ -40,10 +43,10 @@ class ABTestConfig:
 class ABTestResult:
     """A/B test result"""
     test_id: str
-    winner: Optional[str]
+    winner: str | None
     confidence: float
     statistical_significance: bool
-    variant_results: Dict[str, Dict[str, Any]]
+    variant_results: dict[str, dict[str, Any]]
     test_duration: timedelta
     total_samples: int
     created_at: datetime
@@ -90,8 +93,7 @@ class ABTestManager:
         if abs(sum(config.traffic_split) - 1.0) > 0.01:
             raise ValueError("Traffic split must sum to 1.0")
         
-        if config.min_sample_size < self.min_sample_size:
-            config.min_sample_size = self.min_sample_size
+        config.min_sample_size = max(config.min_sample_size, self.min_sample_size)
         
         # Store test
         self.active_tests[config.test_id] = config
@@ -115,7 +117,7 @@ class ABTestManager:
         
         return config.test_id
     
-    def assign_variant(self, test_id: str, user_id: str) -> Optional[str]:
+    def assign_variant(self, test_id: str, user_id: str) -> str | None:
         """Assign a user to a test variant"""
         if test_id not in self.active_tests:
             return None
@@ -147,13 +149,13 @@ class ABTestManager:
         return variant
     
     def record_impression(self, test_id: str, variant_id: str, user_id: str, 
-                          timestamp: datetime = None) -> None:
+                          timestamp: datetime | None = None) -> None:
         """Record an impression for a variant"""
         if test_id not in self.active_tests:
-            return None
+            return
         
         if variant_id not in self.test_results[test_id]:
-            return None
+            return
         
         # Record impression
         self.test_results[test_id][variant_id].impressions += 1
@@ -163,13 +165,13 @@ class ABTestManager:
     
     def record_conversion(self, test_id: str, variant_id: str, user_id: str, 
                          conversion_value: float = 1.0,
-                         timestamp: datetime = None) -> None:
+                         timestamp: datetime | None = None) -> None:
         """Record a conversion for a variant"""
         if test_id not in self.active_tests:
-            return None
+            return
         
         if variant_id not in self.test_results[test_id]:
-            return None
+            return
         
         # Record conversion
         self.test_results[test_id][variant_id].conversions += 1
@@ -179,13 +181,13 @@ class ABTestManager:
         self._update_derived_metrics(test_id, variant_id)
     
     def record_click(self, test_id: str, variant_id: str, user_id: str,
-                     timestamp: datetime = None) -> None:
+                     timestamp: datetime | None = None) -> None:
         """Record a click for a variant"""
         if test_id not in self.active_tests:
-            return None
+            return
         
         if variant_id not in self.test_results[test_id]:
-            return None
+            return
         
         # Record click
         self.test_results[test_id][variant_id].clicks += 1
@@ -195,13 +197,13 @@ class ABTestManager:
     
     def record_engagement_time(self, test_id: str, variant_id: str, user_id: str,
                               engagement_time: float, 
-                              timestamp: datetime = None) -> None:
+                              timestamp: datetime | None = None) -> None:
         """Record engagement time for a variant"""
         if test_id not in self.active_tests:
-            return None
+            return
         
         if variant_id not in self.test_results[test_id]:
-            return None
+            return
         
         # Update engagement time (average)
         current_avg = self.test_results[test_id][variant_id].engagement_time
@@ -223,7 +225,7 @@ class ABTestManager:
         if metrics.impressions > 0:
             metrics.bounce_rate = 1.0 - metrics.conversion_rate
     
-    def analyze_test(self, test_id: str) -> Optional[ABTestResult]:
+    def analyze_test(self, test_id: str) -> ABTestResult | None:
         """Analyze an A/B test and determine winner"""
         if test_id not in self.active_tests:
             return None
@@ -321,7 +323,7 @@ class ABTestManager:
         
         return result
     
-    def get_test_summary(self, test_id: str) -> Dict[str, Any]:
+    def get_test_summary(self, test_id: str) -> dict[str, Any]:
         """Get a summary of test performance"""
         if test_id not in self.active_tests:
             return {'error': 'Test not found'}
@@ -330,8 +332,8 @@ class ABTestManager:
         results = self.test_results[test_id]
         
         total_impressions = sum(metrics.impressions for metrics in results.values())
-        total_conversions = sum(metrics.conversions for metrics in metrics.values())
-        total_revenue = sum(metrics.revenue for metrics in metrics.values())
+        total_conversions = sum(m.conversions for m in results.values())
+        total_revenue = sum(m.revenue for m in results.values())
         
         # Calculate lift over baseline (first variant)
         baseline_variant = config.template_variants[0]
@@ -372,7 +374,7 @@ class ABTestManager:
             }
         }
     
-    def get_active_tests(self) -> List[Dict[str, Any]]:
+    def get_active_tests(self) -> list[dict[str, Any]]:
         """Get all active tests"""
         return [
             {
@@ -389,7 +391,7 @@ class ABTestManager:
             for test_id, config in self.active_tests.items()
         ]
     
-    def get_test_history(self) -> List[Dict[str, Any]]:
+    def get_test_history(self) -> list[dict[str, Any]]:
         """Get test history"""
         return [
             {
@@ -405,7 +407,7 @@ class ABTestManager:
             for result in self.test_history
         ]
     
-    def get_recommendations(self, test_id: str) -> List[Dict[str, Any]]:
+    def get_recommendations(self, test_id: str) -> list[dict[str, Any]]:
         """Get recommendations for improving a test"""
         if test_id not in self.active_tests:
             return []
@@ -469,7 +471,7 @@ class ABTestManager:
         
         return recommendations
     
-    def export_test_data(self, test_id: str, output_file: str = None) -> Dict[str, Any]:
+    def export_test_data(self, test_id: str, output_file: str | None = None) -> dict[str, Any]:
         """Export test data for analysis"""
         summary = self.get_test_summary(test_id)
         recommendations = self.get_recommendations(test_id)
@@ -490,7 +492,7 @@ class ABTestManager:
         
         return export_data
     
-    def stop_test(self, test_id: str) -> Optional[ABTestResult]:
+    def stop_test(self, test_id: str) -> ABTestResult | None:
         """Stop an active test and analyze results"""
         if test_id not in self.active_tests:
             return None
@@ -503,7 +505,7 @@ class ABTestManager:
         # Analyze test
         return self.analyze_test(test_id)
     
-    def get_performance_comparison(self, test_id: str) -> Dict[str, Any]:
+    def get_performance_comparison(self, test_id: str) -> dict[str, Any]:
         """Get detailed performance comparison between variants"""
         if test_id not in self.active_tests:
             return {'error': 'Test not found'}
@@ -547,7 +549,7 @@ class ABTestManager:
         
         return comparison
     
-    def _calculate_statistical_power(self, config: ABTestConfig, results: Dict[str, VariantMetrics]) -> float:
+    def _calculate_statistical_power(self, config: ABTestConfig, results: dict[str, VariantMetrics]) -> float:
         """Calculate statistical power of the test"""
         # Simplified power calculation
         total_samples = sum(metrics.impressions for metrics in results.values())
@@ -574,7 +576,7 @@ class ABTestManager:
         
         return max(0.0, min(1.0, power))
     
-    def create_revenue_optimization_test(self, template_variants: List[str], 
+    def create_revenue_optimization_test(self, template_variants: list[str], 
                                      revenue_per_conversion: float = 10.0) -> str:
         """Create an A/B test optimized for revenue"""
         config = ABTestConfig(
@@ -591,7 +593,7 @@ class ABTestManager:
         
         return self.create_test(config)
     
-    def create_conversion_optimization_test(self, template_variants: List[str]) -> str:
+    def create_conversion_optimization_test(self, template_variants: list[str]) -> str:
         """Create an A/B test optimized for conversion rate"""
         config = ABTestConfig(
             test_id=f"conversion_test_{int(time.time())}",

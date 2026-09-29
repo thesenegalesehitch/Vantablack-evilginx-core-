@@ -12,9 +12,10 @@ Generates domain variations for evasion:
 
 import random
 import string
-from typing import List, Dict, Set
-import idna
 from dataclasses import dataclass
+from typing import Dict, List, Set
+
+import idna
 
 
 @dataclass
@@ -69,7 +70,7 @@ class DomainGenerator:
             'm': ['n', ','],
             'n': ['m', 'b'],
             'o': ['i', 'p'],
-            'p': ['o', '[',
+            'p': ['o'],
             'q': ['w', 'a'],
             'r': ['e', 't'],
             's': ['a', 'd'],
@@ -82,7 +83,7 @@ class DomainGenerator:
             'z': ['x', 's']
         }
     
-    def generate_variations(self, domain: str, count: int = 10) -> List[str]:
+    def generate_variations(self, domain: str, count: int = 10) -> list[str]:
         """Generate domain variations using multiple techniques"""
         variations = set()
         
@@ -114,7 +115,7 @@ class DomainGenerator:
         
         return result[:count]
     
-    def generate_subdomain_variations(self, subdomain: str, count: int = 5) -> List[str]:
+    def generate_subdomain_variations(self, subdomain: str, count: int = 5) -> list[str]:
         """Generate subdomain variations"""
         variations = set()
         
@@ -149,7 +150,7 @@ class DomainGenerator:
         else:
             return '.'.join(parts[:-1]), f".{parts[-1]}"
     
-    def _generate_homograph_variations(self, base_domain: str, tld: str) -> List[str]:
+    def _generate_homograph_variations(self, base_domain: str, tld: str) -> list[str]:
         """Generate homograph (lookalike) variations"""
         variations = []
         
@@ -170,7 +171,7 @@ class DomainGenerator:
         
         return variations
     
-    def _generate_typosquatting(self, base_domain: str, tld: str) -> List[str]:
+    def _generate_typosquatting(self, base_domain: str, tld: str) -> list[str]:
         """Generate typosquatting variations"""
         variations = []
         
@@ -183,7 +184,7 @@ class DomainGenerator:
         
         return variations
     
-    def _generate_subdomain_variations(self, base_domain: str, tld: str) -> List[str]:
+    def _generate_subdomain_variations(self, base_domain: str, tld: str) -> list[str]:
         """Generate subdomain variations"""
         variations = []
         
@@ -194,7 +195,7 @@ class DomainGenerator:
         
         return variations
     
-    def _generate_tld_variations(self, base_domain: str, tld: str) -> List[str]:
+    def _generate_tld_variations(self, base_domain: str, tld: str) -> list[str]:
         """Generate TLD variations"""
         variations = []
         
@@ -204,7 +205,7 @@ class DomainGenerator:
         
         return variations
     
-    def _generate_hyphen_variations(self, base_domain: str, tld: str) -> List[str]:
+    def _generate_hyphen_variations(self, base_domain: str, tld: str) -> list[str]:
         """Generate hyphen variations"""
         variations = []
         
@@ -219,7 +220,7 @@ class DomainGenerator:
         
         return variations
     
-    def _generate_prefix_suffix(self, base_domain: str, tld: str) -> List[str]:
+    def _generate_prefix_suffix(self, base_domain: str, tld: str) -> list[str]:
         """Generate prefix and suffix variations"""
         variations = []
         
@@ -234,7 +235,7 @@ class DomainGenerator:
         
         return variations
     
-    def _generate_double_character(self, base_domain: str, tld: str) -> List[str]:
+    def _generate_double_character(self, base_domain: str, tld: str) -> list[str]:
         """Generate double character variations"""
         variations = []
         
@@ -248,7 +249,7 @@ class DomainGenerator:
         
         return variations
     
-    def _generate_missing_character(self, base_domain: str, tld: str) -> List[str]:
+    def _generate_missing_character(self, base_domain: str, tld: str) -> list[str]:
         """Generate missing character variations"""
         variations = []
         
@@ -303,7 +304,7 @@ class DomainGenerator:
         else:
             return 'low'
     
-    def generate_punycode_domains(self, domain: str, count: int = 5) -> List[str]:
+    def generate_punycode_domains(self, domain: str, count: int = 5) -> list[str]:
         """Generate punycode encoded domains"""
         variations = []
         
@@ -319,8 +320,8 @@ class DomainGenerator:
         
         return variations
     
-    def batch_generate_variations(self, domains: List[str], 
-                                variations_per_domain: int = 10) -> Dict[str, List[DomainVariation]]:
+    def batch_generate_variations(self, domains: list[str], 
+                                variations_per_domain: int = 10) -> dict[str, list[DomainVariation]]:
         """Generate variations for multiple domains"""
         results = {}
         

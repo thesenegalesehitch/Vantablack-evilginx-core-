@@ -3,290 +3,102 @@
 VANTABLACK Behavioral Analysis CLI
 ===================================
 
-Command-line interface for behavioral analysis and optimization.
+Command-line interface for behavioral analysis and ML attack vector prediction.
+
+Interface utilisée par Makefile :
+  analysis/behavioral/cli.py predict --target o365 --top 5 --output /tmp/ml_pred.json
 """
 
-import asyncio
+from __future__ import annotations
+
 import argparse
 import json
 import sys
+import time
 from pathlib import Path
-from core.banner import print_alex_banner
 
-from .analyzer import BehavioralAnalyzer
-from .tracker import UserTracker
-from .optimizer import CampaignOptimizer
-from .predictor import BehaviorPredictor
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
+from analysis.behavioral.predictor import EnsembleMetaLearner
 
 
-async def main():
-    """Main CLI interface"""
-    print_alex_banner()
-    parser = argparse.ArgumentParser(
-        description="VANTABLACK Behavioral Analysis Tool"
+def cmd_predict_vectors(args: argparse.Namespace) -> int:
+    engine = EnsembleMetaLearner()
+    result = engine.predict(
+        target=args.target,
+        top_k=args.top,
     )
-    
-    subparsers = parser.add_subparsers(dest='command', help='Available commands')
-    
-    # Analyze command
-    analyze_parser = subparsers.add_parser('analyze', help='Analyze behavioral data')
-    analyze_parser.add_argument('--sessions', required=True, help='Sessions data file (JSON)')
-    analyze_parser.add_argument('--interactions', help='Interactions data file (JSON)')
-    analyze_parser.add_argument('--conversions', help='Conversions data file (JSON)')
-    analyze_parser.add_argument('--output', '-o', help='Output file for analysis')
-    
-    # Track command
-    track_parser = subparsers.add_parser('track', help='Generate tracking script')
-    track_parser.add_argument('--endpoint', required=True, help='Tracking endpoint URL')
-    track_parser.add_argument('--session-id', help='Specific session ID')
-    track_parser.add_argument('--output', '-o', help='Output file for script')
-    
-    # Optimize command
-    optimize_parser = subparsers.add_parser('optimize', help='Generate optimization recommendations')
-    optimize_parser.add_argument('--behavioral-data', required=True, help='Behavioral data file (JSON)')
-    optimize_parser.add_argument('--page-data', help='Page data file (JSON)')
-    optimize_parser.add_argument('--email-data', help='Email data file (JSON)')
-    optimize_parser.add_argument('--output', '-o', help='Output file for recommendations')
-    
-    # Predict command
-    predict_parser = subparsers.add_parser('predict', help='Make predictions')
-    predict_parser.add_argument('--model', choices=['conversion', 'timing', 'segments'], 
-                               required=True, help='Prediction model to use')
-    predict_parser.add_argument('--data', required=True, help='Input data file (JSON)')
-    predict_parser.add_argument('--output', '-o', help='Output file for predictions')
-    predict_parser.add_argument('--train', action='store_true', help='Train model before prediction')
-    predict_parser.add_argument('--training-data', help='Training data file (JSON)')
-    
-    # AB test command
-    abtest_parser = subparsers.add_parser('abtest', help='A/B testing management')
-    abtest_parser.add_argument('--action', choices=['create', 'analyze', 'list'], 
-                              required=True, help='Action to perform')
-    abtest_parser.add_argument('--name', help='Test name')
-    abtest_parser.add_argument('--description', help='Test description')
-    abtest_parser.add_argument('--variants', help='Variants file (JSON)')
-    abtest_parser.add_argument('--test-id', help='Test ID for analysis')
-    abtest_parser.add_argument('--output', '-o', help='Output file')
-    
-    args = parser.parse_args()
-    
-    if not args.command:
-        parser.print_help()
-        sys.exit(1)
-    
-    try:
-        if args.command == 'analyze':
-            await analyze_command(args)
-        elif args.command == 'track':
-            await track_command(args)
-        elif args.command == 'optimize':
-            await optimize_command(args)
-        elif args.command == 'predict':
-            await predict_command(args)
-        elif args.command == 'abtest':
-            await abtest_command(args)
-    except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
 
-
-async def analyze_command(args):
-    """Handle analyze command"""
-    analyzer = BehavioralAnalyzer()
-    
-    # Load data
-    analyzer.load_data_from_json(
-        args.sessions,
-        args.interactions or '[]',
-        args.conversions or '[]'
-    )
-    
-    # Perform analysis
-    print("Analyzing behavioral data...")
-    metrics = analyzer.analyze_campaign_performance()
-    
-    # Generate recommendations
-    recommendations = analyzer.generate_optimization_recommendations()
-    
-    # Export report
-    report = analyzer.export_analysis_report(args.output)
-    
-    if args.output:
-        print(f"Analysis report saved to {args.output}")
-    else:
-        print(json.dumps(report, indent=2, default=str))
-
-
-async def track_command(args):
-    """Handle track command"""
-    tracker = UserTracker()
-    
-    # Generate tracking script
-    script = tracker.generate_tracking_script(args.endpoint, args.session_id)
-    
-    # Output script
-    if args.output:
-        with open(args.output, 'w') as f:
-            f.write(script)
-        print(f"Tracking script saved to {args.output}")
-    else:
-        print(script)
-
-
-async def optimize_command(args):
-    """Handle optimize command"""
-    optimizer = CampaignOptimizer()
-    
-    # Load behavioral data
-    with open(args.behavioral_data, 'r') as f:
-        behavioral_data = json.load(f)
-    
-    # Generate recommendations
-    recommendations = optimizer.generate_optimization_recommendations(behavioral_data)
-    
-    # Page optimization
-    page_suggestions = {}
-    if args.page_data:
-        with open(args.page_data, 'r') as f:
-            page_data = json.load(f)
-        page_suggestions = optimizer.optimize_landing_page(page_data, behavioral_data)
-    
-    # Email optimization
-    email_suggestions = {}
-    if args.email_data:
-        with open(args.email_data, 'r') as f:
-            email_data = json.load(f)
-        performance_data = behavioral_data.get('email_performance', {})
-        email_suggestions = optimizer.optimize_email_campaign(email_data, performance_data)
-    
-    # Compile results
-    results = {
-        'recommendations': [r.__dict__ for r in recommendations],
-        'page_optimization': page_suggestions,
-        'email_optimization': email_suggestions,
-        'optimization_score': optimizer.get_optimization_score(behavioral_data)
-    }
-    
-    # Output results
-    if args.output:
-        with open(args.output, 'w') as f:
-            json.dump(results, f, indent=2, default=str)
-        print(f"Optimization report saved to {args.output}")
-    else:
-        print(json.dumps(results, indent=2, default=str))
-
-
-async def predict_command(args):
-    """Handle predict command"""
-    predictor = BehaviorPredictor()
-    
-    # Train model if requested
-    if args.train:
-        if not args.training_data:
-            print("Error: --training-data required when using --train")
-            sys.exit(1)
-        
-        with open(args.training_data, 'r') as f:
-            training_data = json.load(f)
-        
-        print(f"Training {args.model} model...")
-        if args.model == 'conversion':
-            result = predictor.train_conversion_model(training_data)
-        elif args.model == 'timing':
-            result = predictor.train_timing_model(training_data)
-        else:
-            print("Training not supported for segments model")
-            result = {}
-        
-        print(f"Training completed: {result}")
-    
-    # Load input data
-    with open(args.data, 'r') as f:
-        input_data = json.load(f)
-    
-    # Make predictions
-    print(f"Making {args.model} predictions...")
-    
-    if args.model == 'conversion':
-        if isinstance(input_data, list):
-            predictions = [predictor.predict_conversion_probability(user) for user in input_data]
-        else:
-            predictions = predictor.predict_conversion_probability(input_data)
-    
-    elif args.model == 'timing':
-        if isinstance(input_data, list):
-            predictions = [predictor.predict_optimal_timing(user) for user in input_data]
-        else:
-            predictions = predictor.predict_optimal_timing(input_data)
-    
-    elif args.model == 'segments':
-        if not isinstance(input_data, list):
-            print("Segments model requires list of users")
-            sys.exit(1)
-        predictions = predictor.predict_user_segments(input_data)
-    
-    # Output results
-    if args.output:
-        with open(args.output, 'w') as f:
-            if args.model == 'segments':
-                json.dump([s.__dict__ for s in predictions], f, indent=2, default=str)
-            else:
-                if isinstance(predictions, list):
-                    json.dump([p.__dict__ for p in predictions], f, indent=2, default=str)
-                else:
-                    json.dump(predictions.__dict__, f, indent=2, default=str)
-        print(f"Predictions saved to {args.output}")
-    else:
-        if args.model == 'segments':
-            print(json.dumps([s.__dict__ for s in predictions], indent=2, default=str))
-        else:
-            if isinstance(predictions, list):
-                print(json.dumps([p.__dict__ for p in predictions], indent=2, default=str))
-            else:
-                print(json.dumps(predictions.__dict__, indent=2, default=str))
-
-
-async def abtest_command(args):
-    """Handle A/B testing command"""
-    optimizer = CampaignOptimizer()
-    
-    if args.action == 'create':
-        if not args.name or not args.variants:
-            print("Error: --name and --variants required for create action")
-            sys.exit(1)
-        
-        with open(args.variants, 'r') as f:
-            variants = json.load(f)
-        
-        test_id = optimizer.create_ab_test(
-            name=args.name,
-            description=args.description or '',
-            variants=variants
+    for p in result["predictions"]:
+        p["confidence"] = p.get(
+            "confidence_interval",
+            p.get("confidence", 0.0),
         )
-        
-        result = {'test_id': test_id, 'status': 'created'}
-        print(f"A/B test created with ID: {test_id}")
-    
-    elif args.action == 'analyze':
-        if not args.test_id:
-            print("Error: --test-id required for analyze action")
-            sys.exit(1)
-        
-        result = optimizer.analyze_ab_test(args.test_id)
-        print(f"A/B test analysis: {result}")
-    
-    elif args.action == 'list':
-        result = optimizer.export_optimization_report()
-        result = {'tests': result['ab_tests']}
-        print(f"Active A/B tests: {len(result['tests'])}")
-    
-    # Output results
+
+    output = {
+        "target": result["target"],
+        "predictions": result["predictions"],
+        "features_used": result.get("features_used", {}),
+        "seed_sequence": result.get("seed_sequence", []),
+        "weights": result.get("weights", {}),
+        "probability_sum": result.get("probability_sum", 1.0),
+        "ks_validation_pass_rate": result.get("ks_validation", 0.0),
+        "generated_at": time.time(),
+    }
+
     if args.output:
-        with open(args.output, 'w') as f:
-            json.dump(result, f, indent=2, default=str)
-        print(f"A/B test results saved to {args.output}")
-    else:
-        print(json.dumps(result, indent=2, default=str))
+        out_path = Path(args.output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps(output, indent=2), encoding="utf-8")
+
+    preds = output["predictions"]
+    for i, p in enumerate(preds[: args.top]):
+        vec = p["vector"]
+        prob = p["probability"]
+        ci = p.get("confidence", p.get("confidence_interval", 0.0))
+        model = p["dominant_model"]
+        print(f"  #{i + 1} {vec:<20} P={prob:.3f}  CI={ci:.3f}  model={model}")
+
+    return 0
 
 
-if __name__ == '__main__':
-    asyncio.run(main())
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="VANTABLACK Behavioral Analysis - ML Prédiction vecteurs",
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    predict_p = subparsers.add_parser(
+        "predict",
+        help="TOP-K prédictions de vecteurs d'attaque (Markov/Bayes/Poisson)",
+    )
+    predict_p.add_argument(
+        "--target",
+        "-t",
+        type=str,
+        required=True,
+        help="Cible (ex: o365, google, aws, finance...)",
+    )
+    predict_p.add_argument(
+        "--top",
+        type=int,
+        default=5,
+        help="Nombre de vecteurs à retourner (defaut: 5)",
+    )
+    predict_p.add_argument(
+        "--output",
+        "-o",
+        type=str,
+        default=None,
+        help="Fichier JSON de sortie",
+    )
+    predict_p.set_defaults(func=cmd_predict_vectors)
+
+    args = parser.parse_args()
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

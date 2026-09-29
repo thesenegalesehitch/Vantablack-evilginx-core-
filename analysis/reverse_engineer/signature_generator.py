@@ -9,12 +9,12 @@ Generates detection signatures from analyzed phishlets:
 - IOC lists for threat intelligence
 """
 
-import re
+import hashlib
 import json
-from typing import Dict, List, Any, Optional
+import re
 from dataclasses import dataclass
 from datetime import datetime
-import hashlib
+from typing import Any, Dict, List, Optional
 
 from .analyzer import PhishletStructure
 
@@ -27,7 +27,7 @@ class DetectionSignature:
     signature_type: str  # yara, snort, regex, ioc
     pattern: str
     severity: str  # low, medium, high, critical
-    tags: List[str]
+    tags: list[str]
     created_at: datetime
 
 
@@ -68,7 +68,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (
             'ioc': '{type}:{value}'
         }
     
-    def generate_all_signatures(self, phishlet: PhishletStructure) -> List[DetectionSignature]:
+    def generate_all_signatures(self, phishlet: PhishletStructure) -> list[DetectionSignature]:
         """Generate all types of signatures for a phishlet"""
         signatures = []
         
@@ -92,7 +92,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (
         
         return signatures
     
-    def _generate_yara_signature(self, phishlet: PhishletStructure) -> Optional[DetectionSignature]:
+    def _generate_yara_signature(self, phishlet: PhishletStructure) -> DetectionSignature | None:
         """Generate YARA rule for file-based detection"""
         try:
             # Create unique hash for this signature
@@ -152,7 +152,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (
             print(f"Failed to generate YARA signature: {e}")
             return None
     
-    def _generate_snort_signature(self, phishlet: PhishletStructure) -> Optional[DetectionSignature]:
+    def _generate_snort_signature(self, phishlet: PhishletStructure) -> DetectionSignature | None:
         """Generate Snort/Suricata rule for network detection"""
         try:
             # Use the most distinctive login path
@@ -192,7 +192,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (
             print(f"Failed to generate Snort signature: {e}")
             return None
     
-    def _generate_regex_signatures(self, phishlet: PhishletStructure) -> List[DetectionSignature]:
+    def _generate_regex_signatures(self, phishlet: PhishletStructure) -> list[DetectionSignature]:
         """Generate regex patterns for log analysis"""
         signatures = []
         
@@ -233,7 +233,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (
         
         return signatures
     
-    def _generate_ioc_signatures(self, phishlet: PhishletStructure) -> List[DetectionSignature]:
+    def _generate_ioc_signatures(self, phishlet: PhishletStructure) -> list[DetectionSignature]:
         """Generate Indicators of Compromise"""
         signatures = []
         
@@ -275,7 +275,7 @@ alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (
         
         return signatures
     
-    def export_signatures(self, signatures: List[DetectionSignature], 
+    def export_signatures(self, signatures: list[DetectionSignature], 
                          output_format: str = 'json') -> str:
         """Export signatures in specified format"""
         if output_format == 'json':

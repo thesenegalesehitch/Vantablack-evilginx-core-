@@ -6,16 +6,17 @@ VANTABLACK Reverse Engineering CLI
 Command-line interface for phishlet analysis and signature generation.
 """
 
-import asyncio
 import argparse
+import asyncio
 import json
 import sys
 from pathlib import Path
+
 from core.banner import print_alex_banner
 
 from .analyzer import PhishletAnalyzer
-from .signature_generator import SignatureGenerator
 from .pattern_extractor import PatternExtractor
+from .signature_generator import SignatureGenerator
 
 
 async def main():

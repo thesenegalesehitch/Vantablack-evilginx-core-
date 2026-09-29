@@ -12,11 +12,14 @@ Generates optimized phishing templates:
 
 import json
 import random
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
-from datetime import datetime
-from jinja2 import Environment, Template, select_autoescape
+import time
 import re
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
+
+from jinja2 import Environment, Template, select_autoescape
+
 from .mirror import mirror
 
 
@@ -28,8 +31,8 @@ class TemplateConfig:
     personalization_level: str  # low, medium, high
     responsive: bool
     optimization_level: str  # basic, advanced, maximum
-    compliance_checks: List[str]
-    custom_variables: Dict[str, Any]
+    compliance_checks: list[str]
+    custom_variables: dict[str, Any]
 
 
 @dataclass
@@ -45,7 +48,7 @@ class GeneratedTemplate:
     performance_score: float
     compliance_score: float
     created_at: datetime
-    variables_used: List[str]
+    variables_used: list[str]
 
 
 class TemplateGenerator:
@@ -369,7 +372,7 @@ input:focus {
             variables_used=list(variables.keys())
         )
     
-    def _generate_template_variables(self, config: TemplateConfig) -> Dict[str, Any]:
+    def _generate_template_variables(self, config: TemplateConfig) -> dict[str, Any]:
         """Generate template variables based on configuration"""
         base_variables = {
             'lang': 'en',
@@ -535,7 +538,7 @@ input:focus {
         
         return font_families.get(config.target_platform.lower(), 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif')
     
-    def _get_background_color(self, config: Config) -> str:
+    def _get_background_color(self, config: TemplateConfig) -> str:
         """Get background color based on platform"""
         colors = {
             'twitter': '#1DA1F2',
@@ -547,7 +550,7 @@ input:focus {
         
         return colors.get(config.target_platform.lower(), '#ffffff')
     
-    def _get_text_color(self, config: Config) -> str:
+    def _get_text_color(self, config: TemplateConfig) -> str:
         """Get text color based on platform"""
         text_colors = {
             'twitter': '#ffffff',
@@ -559,7 +562,7 @@ input:focus {
         
         return text_colors.get(config.target_platform.lower(), '#333333')
     
-    def _get_primary_color(self, config: Config) -> str:
+    def _get_primary_color(self, config: TemplateConfig) -> str:
         """Get primary color based on platform"""
         primary_colors = {
             'twitter': '#1DA1F2',
@@ -571,7 +574,7 @@ input:focus {
         
         return primary_colors.get(config.target_platform.lower(), '#007bff')
     
-    def _get_primary_hover_color(self, config: Config) -> str:
+    def _get_primary_hover_color(self, config: TemplateConfig) -> str:
         """Get primary hover color based on platform"""
         hover_colors = {
             'twitter': '#1a91da',
@@ -635,16 +638,12 @@ input:focus {
         
         # Check for custom compliance requirements
         for check in config.compliance_checks:
-            if check == 'gdpr' and 'privacy' not in html.lower():
-                score -= 0.1
-            elif check == 'accessibility' and 'aria-' not in html:
-                score -= 0.1
-            elif check == 'performance' and 'async' not in html:
+            if check == 'gdpr' and 'privacy' not in html.lower() or check == 'accessibility' and 'aria-' not in html or check == 'performance' and 'async' not in html:
                 score -= 0.1
         
         return max(score, 0.0)
     
-    def batch_generate_templates(self, configs: List[TemplateConfig]) -> List[GeneratedTemplate]:
+    def batch_generate_templates(self, configs: list[TemplateConfig]) -> list[GeneratedTemplate]:
         """Generate multiple templates"""
         templates = []
         
@@ -723,7 +722,7 @@ input:focus {
         return content
     
     def get_template_variations(self, base_template: GeneratedTemplate, 
-                             variations: List[str] = None) -> List[GeneratedTemplate]:
+                             variations: list[str] | None = None) -> list[GeneratedTemplate]:
         """Generate variations of a template for A/B testing"""
         if variations is None:
             variations = ['headline', 'colors', 'layout', 'form_style']
@@ -795,7 +794,7 @@ input:focus {
         platform_alternatives = alternatives.get(platform.lower(), [])
         return random.choice(platform_alternatives) if platform_alternatives else "Sign in to continue"
     
-    def _generate_color_variations(self, platform: str) -> Dict[str, str]:
+    def _generate_color_variations(self, platform: str) -> dict[str, str]:
         """Generate color variations for A/B testing"""
         color_schemes = {
             'twitter': {
@@ -827,7 +826,7 @@ input:focus {
         
         return color_schemes.get(platform.lower(), {})
     
-    def _generate_layout_variations(self) -> Dict[str, str]:
+    def _generate_layout_variations(self) -> dict[str, str]:
         """Generate layout variations for A/B testing"""
         return {
             'form_max_width': '480px',
@@ -836,7 +835,7 @@ input:focus {
             'box_shadow': '0 2px 4px rgba(0, 0, 0, 0.1)'
         }
     
-    def _generate_form_style_variations(self) -> Dict[str, str]:
+    def _generate_form_style_variations(self) -> dict[str, str]:
         """Generate form style variations for A/B testing"""
         return {
             'border_color': '#ccc',

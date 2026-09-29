@@ -1,7 +1,7 @@
+import os
+import random
 import sys
 import time
-import random
-import os
 
 GREEN = "\033[92m"
 RESET = "\033[0m"

@@ -11,14 +11,15 @@ Tracks user interactions in real-time:
 - Session management
 """
 
+import hashlib
 import json
 import time
 import uuid
-from datetime import datetime
-from typing import Dict, List, Any, Optional, Callable
-from dataclasses import dataclass, asdict
 from collections import defaultdict
-import hashlib
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
@@ -28,7 +29,7 @@ class TrackingEvent:
     session_id: str
     event_type: str
     timestamp: datetime
-    data: Dict[str, Any]
+    data: dict[str, Any]
     user_agent: str
     ip_address: str
 
@@ -44,10 +45,10 @@ class UserFingerprint:
     language: str
     platform: str
     cookies_enabled: bool
-    plugins: List[str]
+    plugins: list[str]
     canvas_fingerprint: str
     webgl_fingerprint: str
-    fonts: List[str]
+    fonts: list[str]
 
 
 class UserTracker:
@@ -90,7 +91,7 @@ class UserTracker:
         """Generate unique session ID"""
         return str(uuid.uuid4())
     
-    def generate_fingerprint(self, request_data: Dict[str, Any]) -> UserFingerprint:
+    def generate_fingerprint(self, request_data: dict[str, Any]) -> UserFingerprint:
         """Generate device fingerprint from request data"""
         # Extract fingerprint components
         user_agent = request_data.get('user_agent', '')
@@ -128,7 +129,7 @@ class UserTracker:
         return fingerprint
     
     def track_event(self, event_type: str, session_id: str, 
-                   data: Dict[str, Any], user_agent: str = '', 
+                   data: dict[str, Any], user_agent: str = '', 
                    ip_address: str = '') -> str:
         """Track a user event"""
         event_id = str(uuid.uuid4())
@@ -237,7 +238,7 @@ class UserTracker:
         return self.track_event('keystroke', session_id, data, user_agent, ip_address)
     
     def track_form_submission(self, session_id: str, form_id: str, 
-                            form_data: Dict[str, Any], success: bool, 
+                            form_data: dict[str, Any], success: bool, 
                             user_agent: str = '', ip_address: str = '') -> str:
         """Track form submission"""
         data = {
@@ -262,7 +263,7 @@ class UserTracker:
         return self.track_event('performance', session_id, data, user_agent, ip_address)
     
     def track_error(self, session_id: str, error_type: str, 
-                   error_message: str, error_context: Dict[str, Any], 
+                   error_message: str, error_context: dict[str, Any], 
                    user_agent: str = '', ip_address: str = '') -> str:
         """Track error events"""
         data = {
@@ -278,7 +279,7 @@ class UserTracker:
         """Add event handler for specific event type"""
         self.event_handlers[event_type].append(handler)
     
-    def get_session_events(self, session_id: str, event_type: str = None) -> List[TrackingEvent]:
+    def get_session_events(self, session_id: str, event_type: str | None = None) -> list[TrackingEvent]:
         """Get all events for a session"""
         if event_type:
             return self.sessions[session_id].get(event_type, [])
@@ -288,7 +289,7 @@ class UserTracker:
                 all_events.extend(events)
             return sorted(all_events, key=lambda x: x.timestamp)
     
-    def get_session_summary(self, session_id: str) -> Dict[str, Any]:
+    def get_session_summary(self, session_id: str) -> dict[str, Any]:
         """Get session summary statistics"""
         session_events = self.get_session_events(session_id)
         
@@ -332,7 +333,7 @@ class UserTracker:
         }
     
     def generate_tracking_script(self, tracking_endpoint: str, 
-                               session_id: str = None) -> str:
+                               session_id: str | None = None) -> str:
         """Generate JavaScript tracking script"""
         script = f"""
 (function() {{
@@ -468,13 +469,13 @@ class UserTracker:
 """
         return script
     
-    def export_data(self, output_file: str = None) -> Dict[str, Any]:
+    def export_data(self, output_file: str | None = None) -> dict[str, Any]:
         """Export all tracking data"""
         export_data = {
             'events': [asdict(event) for event in self.events],
             'sessions': {
                 session_id: self.get_session_summary(session_id)
-                for session_id in self.sessions.keys()
+                for session_id in self.sessions
             },
             'fingerprints': {
                 fp_id: asdict(fp) for fp_id, fp in self.fingerprints.items()

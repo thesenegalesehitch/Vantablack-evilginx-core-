@@ -9,9 +9,9 @@ Intelligent template management with A/B testing:
 - Template marketplace integration
 """
 
-from .generator import TemplateGenerator
 from .ab_testing import ABTestManager
-from .optimizer import TemplateOptimizer
+from .generator import TemplateGenerator
 from .marketplace import TemplateMarketplace
+from .optimizer import TemplateOptimizer
 
-__all__ = ["TemplateGenerator", "ABTestManager", "TemplateOptimizer", "TemplateMarketplace"]
+__all__ = ["ABTestManager", "TemplateGenerator", "TemplateMarketplace", "TemplateOptimizer"]

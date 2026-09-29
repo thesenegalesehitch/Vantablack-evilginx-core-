@@ -1,5 +1,6 @@
-from core.event_bus import app
 import logging
+
+from core.event_bus import app
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

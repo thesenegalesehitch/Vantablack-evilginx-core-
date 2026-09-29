@@ -11,13 +11,14 @@ Event hook system for plugin integration:
 """
 
 import asyncio
-import logging
-from typing import Dict, List, Any, Optional, Callable, Union
-from datetime import datetime
-from dataclasses import dataclass
-from enum import Enum
 import inspect
+import logging
 import traceback
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
 
 class HookPriority(Enum):
@@ -39,10 +40,10 @@ class HookRegistration:
     enabled: bool
     registration_time: datetime
     execution_count: int = 0
-    last_execution: Optional[datetime] = None
+    last_execution: datetime | None = None
     average_execution_time: float = 0.0
     error_count: int = 0
-    last_error: Optional[str] = None
+    last_error: str | None = None
 
 
 @dataclass
@@ -53,7 +54,7 @@ class HookResult:
     success: bool
     result: Any
     execution_time: float
-    error_message: Optional[str] = None
+    error_message: str | None = None
     timestamp: datetime = None
     
     def __post_init__(self):
@@ -65,8 +66,8 @@ class HookSystem:
     """Event hook system for plugins"""
     
     def __init__(self):
-        self.hooks: Dict[str, List[HookRegistration]] = {}
-        self.global_hooks: List[HookRegistration] = []
+        self.hooks: dict[str, list[HookRegistration]] = {}
+        self.global_hooks: list[HookRegistration] = []
         self.logger = logging.getLogger(__name__)
         
         # Execution statistics
@@ -80,7 +81,7 @@ class HookSystem:
         }
         
         # Hook execution history
-        self.execution_history: List[HookResult] = []
+        self.execution_history: list[HookResult] = []
         self.max_history_size = 1000
         
         # Built-in hooks
@@ -157,7 +158,7 @@ class HookSystem:
         }
     
     def register_hook(self, hook_name: str, plugin_instance: Any, 
-                     callback: Callable = None, priority: HookPriority = HookPriority.NORMAL) -> bool:
+                     callback: Callable | None = None, priority: HookPriority = HookPriority.NORMAL) -> bool:
         """Register a hook callback"""
         try:
             # If callback not provided, look for method with hook name
@@ -203,7 +204,7 @@ class HookSystem:
             self.logger.error(f"Failed to register hook {hook_name}: {e}")
             return False
     
-    def unregister_hook(self, hook_name: str, plugin_instance: Any, callback: Callable = None) -> bool:
+    def unregister_hook(self, hook_name: str, plugin_instance: Any, callback: Callable | None = None) -> bool:
         """Unregister a hook callback"""
         try:
             if hook_name not in self.hooks:
@@ -265,7 +266,7 @@ class HookSystem:
         
         return False
     
-    async def execute_hook(self, hook_name: str, *args, **kwargs) -> List[Any]:
+    async def execute_hook(self, hook_name: str, *args, **kwargs) -> list[Any]:
         """Execute all registered callbacks for a hook"""
         results = []
         
@@ -352,7 +353,7 @@ class HookSystem:
         
         return results
     
-    async def execute_hook_filtered(self, hook_name: str, filter_func: Callable, *args, **kwargs) -> List[Any]:
+    async def execute_hook_filtered(self, hook_name: str, filter_func: Callable, *args, **kwargs) -> list[Any]:
         """Execute hooks with filtering"""
         results = []
         
@@ -416,7 +417,7 @@ class HookSystem:
         if len(self.execution_history) > self.max_history_size:
             self.execution_history = self.execution_history[-self.max_history_size:]
     
-    def get_hook_registrations(self, hook_name: str = None) -> List[Dict[str, Any]]:
+    def get_hook_registrations(self, hook_name: str | None = None) -> list[dict[str, Any]]:
         """Get hook registration information"""
         registrations = []
         
@@ -445,8 +446,8 @@ class HookSystem:
         
         return registrations
     
-    def get_execution_history(self, hook_name: str = None, plugin_id: str = None, 
-                            limit: int = 100) -> List[Dict[str, Any]]:
+    def get_execution_history(self, hook_name: str | None = None, plugin_id: str | None = None, 
+                            limit: int = 100) -> list[dict[str, Any]]:
         """Get hook execution history"""
         history = self.execution_history
         
@@ -476,7 +477,7 @@ class HookSystem:
             for h in history
         ]
     
-    def get_hook_stats(self) -> Dict[str, Any]:
+    def get_hook_stats(self) -> dict[str, Any]:
         """Get hook system statistics"""
         # Update statistics
         self.stats["total_hooks"] = sum(len(hooks) for hooks in self.hooks.values())
@@ -484,7 +485,7 @@ class HookSystem:
         
         return self.stats.copy()
     
-    def get_available_hooks(self) -> Dict[str, str]:
+    def get_available_hooks(self) -> dict[str, str]:
         """Get list of available built-in hooks"""
         return self.builtin_hooks.copy()
     

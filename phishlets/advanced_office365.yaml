@@ -83,12 +83,12 @@ session_cookies:
 # MFA bypass patterns
 mfa_patterns:
   sms:
-    - "\\b\\d{6}\\b"
-    - "code.*[:=]\\s*([0-9]{6})"
-    - "verification.*[:=]\\s*([0-9]{6})"
+    - '\b\d{6}\b'
+    - 'code.*[:=]\s*([0-9]{6})'
+    - 'verification.*[:=]\s*([0-9]{6})'
   email:
-    - "security code.*[:=]\\s*([0-9]{6})"
-    - "use the following code.*[:=]\\s*([0-9]{6})"
+    - 'security code.*[:=]\s*([0-9]{6})'
+    - 'use the following code.*[:=]\s*([0-9]{6})'
 
 # Advanced attack settings
 advanced:

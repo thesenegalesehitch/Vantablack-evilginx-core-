@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import os
-from typing import Dict, Any, Tuple
+from typing import Any, Dict, Tuple
 
 logger = logging.getLogger("InfraManager")
 
@@ -10,7 +10,7 @@ TERRAFORM_DIR = "terraform/templates"
 class InfrastructureManager:
     """Manages infrastructure using Terraform."""
 
-    async def _run_terraform_command(self, cwd: str, command: str) -> Tuple[bool, str]:
+    async def _run_terraform_command(self, cwd: str, command: str) -> tuple[bool, str]:
         """Runs a Terraform command in a specified directory."""
         process = await asyncio.create_subprocess_shell(
             f'terraform {command}',
@@ -40,7 +40,7 @@ class InfrastructureManager:
         success, _ = await self._run_terraform_command(template_path, "init -input=false")
         return success
 
-    async def plan_deployment(self, template_name: str, vars: Dict[str, Any]) -> Tuple[bool, str]:
+    async def plan_deployment(self, template_name: str, vars: dict[str, Any]) -> tuple[bool, str]:
         """Creates an execution plan for a Terraform deployment."""
         template_path = os.path.join(TERRAFORM_DIR, template_name)
         var_args = " ".join([f'-var="{k}={v}"' for k, v in vars.items()])
@@ -48,13 +48,13 @@ class InfrastructureManager:
         command = f'plan -input=false -out=tfplan {var_args}'
         return await self._run_terraform_command(template_path, command)
 
-    async def apply_deployment(self, template_name: str) -> Tuple[bool, str]:
+    async def apply_deployment(self, template_name: str) -> tuple[bool, str]:
         """Applies a Terraform deployment plan."""
         template_path = os.path.join(TERRAFORM_DIR, template_name)
         command = 'apply -input=false -auto-approve tfplan'
         return await self._run_terraform_command(template_path, command)
 
-    async def destroy_deployment(self, template_name: str, vars: Dict[str, Any]) -> Tuple[bool, str]:
+    async def destroy_deployment(self, template_name: str, vars: dict[str, Any]) -> tuple[bool, str]:
         """Destroys a Terraform-managed infrastructure."""
         template_path = os.path.join(TERRAFORM_DIR, template_name)
         var_args = " ".join([f'-var="{k}={v}"' for k, v in vars.items()])

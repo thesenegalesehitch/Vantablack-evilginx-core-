@@ -10,14 +10,14 @@ Advanced rate limiting system:
 - Custom rate limit policies
 """
 
-import time
 import asyncio
-from typing import Dict, List, Any, Optional, Tuple
+import json
+import logging
+import time
+from collections import defaultdict, deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from collections import defaultdict, deque
-import logging
-import json
+from typing import Any, Dict, List, Optional, Tuple
 
 
 @dataclass
@@ -41,7 +41,7 @@ class RateLimitResult:
     allowed: bool
     remaining: int
     reset_time: datetime
-    retry_after: Optional[int] = None
+    retry_after: int | None = None
     rule_name: str = ""
     current_usage: int = 0
 
@@ -51,13 +51,13 @@ class SlidingWindowRateLimiter:
     
     def __init__(self):
         # User-based rate limits: {user_id: {endpoint: deque of timestamps}}
-        self.user_limits: Dict[str, Dict[str, deque]] = defaultdict(lambda: defaultdict(deque))
+        self.user_limits: dict[str, dict[str, deque]] = defaultdict(lambda: defaultdict(deque))
         
         # Global rate limits: {endpoint: deque of timestamps}
-        self.global_limits: Dict[str, deque] = defaultdict(deque)
+        self.global_limits: dict[str, deque] = defaultdict(deque)
         
         # Rate limit rules
-        self.rules: Dict[str, RateLimitRule] = {}
+        self.rules: dict[str, RateLimitRule] = {}
         
         # Statistics
         self.stats = {
@@ -68,7 +68,7 @@ class SlidingWindowRateLimiter:
         }
         
         # Cleanup task
-        self.cleanup_task: Optional[asyncio.Task] = None
+        self.cleanup_task: asyncio.Task | None = None
         
         # Default rules
         self._setup_default_rules()
@@ -167,7 +167,7 @@ class SlidingWindowRateLimiter:
         return False
     
     async def check_limit(self, user_id: str, endpoint: str, 
-                         rule_name: str = None) -> RateLimitResult:
+                         rule_name: str | None = None) -> RateLimitResult:
         """Check if request is allowed under rate limits"""
         self.stats["total_requests"] += 1
         
@@ -207,7 +207,7 @@ class SlidingWindowRateLimiter:
             # Both allowed, return user result (more specific)
             return user_result
     
-    def _find_rule_for_endpoint(self, endpoint: str) -> Optional[RateLimitRule]:
+    def _find_rule_for_endpoint(self, endpoint: str) -> RateLimitRule | None:
         """Find the most specific rule for an endpoint"""
         # Direct match
         if endpoint in self.rules:
@@ -327,7 +327,7 @@ class SlidingWindowRateLimiter:
             current_usage=current_usage
         )
     
-    def get_user_usage(self, user_id: str, endpoint: str = None) -> Dict[str, Any]:
+    def get_user_usage(self, user_id: str, endpoint: str | None = None) -> dict[str, Any]:
         """Get current usage for a user"""
         usage_data = {}
         
@@ -350,7 +350,7 @@ class SlidingWindowRateLimiter:
         
         return usage_data
     
-    def get_global_usage(self, endpoint: str = None) -> Dict[str, Any]:
+    def get_global_usage(self, endpoint: str | None = None) -> dict[str, Any]:
         """Get current global usage"""
         usage_data = {}
         
@@ -372,7 +372,7 @@ class SlidingWindowRateLimiter:
         
         return usage_data
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get rate limiter statistics"""
         # Count active windows
         active_user_windows = sum(len(endpoints) for endpoints in self.user_limits.values())
@@ -387,7 +387,7 @@ class SlidingWindowRateLimiter:
         
         return self.stats.copy()
     
-    def reset_user_limits(self, user_id: str, endpoint: str = None):
+    def reset_user_limits(self, user_id: str, endpoint: str | None = None):
         """Reset rate limits for a user"""
         if user_id in self.user_limits:
             if endpoint:
@@ -398,7 +398,7 @@ class SlidingWindowRateLimiter:
                 del self.user_limits[user_id]
                 logging.info(f"Reset all rate limits for user {user_id}")
     
-    def reset_global_limits(self, endpoint: str = None):
+    def reset_global_limits(self, endpoint: str | None = None):
         """Reset global rate limits"""
         if endpoint:
             if endpoint in self.global_limits:
@@ -453,7 +453,7 @@ class SlidingWindowRateLimiter:
         
         return cleaned_count
     
-    def export_config(self) -> Dict[str, Any]:
+    def export_config(self) -> dict[str, Any]:
         """Export rate limiter configuration"""
         return {
             "rules": {
@@ -469,7 +469,7 @@ class SlidingWindowRateLimiter:
             "stats": self.get_stats()
         }
     
-    def import_config(self, config: Dict[str, Any]):
+    def import_config(self, config: dict[str, Any]):
         """Import rate limiter configuration"""
         if "rules" in config:
             for rule_name, rule_data in config["rules"].items():
@@ -491,7 +491,7 @@ class RateLimiter:
     
     def __init__(self):
         self.sliding_window = SlidingWindowRateLimiter()
-        self.cleanup_task: Optional[asyncio.Task] = None
+        self.cleanup_task: asyncio.Task | None = None
         
         # Start cleanup task
         self._start_cleanup_task()
@@ -511,7 +511,7 @@ class RateLimiter:
                 logging.error(f"Error in rate limiter cleanup: {e}")
     
     async def check_limit(self, user_id: str, endpoint: str, 
-                         rule_name: str = None) -> RateLimitResult:
+                         rule_name: str | None = None) -> RateLimitResult:
         """Check if request is allowed under rate limits"""
         return await self.sliding_window.check_limit(user_id, endpoint, rule_name)
     
@@ -523,31 +523,31 @@ class RateLimiter:
         """Remove a rate limit rule"""
         return self.sliding_window.remove_rule(rule_name)
     
-    def get_user_usage(self, user_id: str, endpoint: str = None) -> Dict[str, Any]:
+    def get_user_usage(self, user_id: str, endpoint: str | None = None) -> dict[str, Any]:
         """Get current usage for a user"""
         return self.sliding_window.get_user_usage(user_id, endpoint)
     
-    def get_global_usage(self, endpoint: str = None) -> Dict[str, Any]:
+    def get_global_usage(self, endpoint: str | None = None) -> dict[str, Any]:
         """Get current global usage"""
         return self.sliding_window.get_global_usage(endpoint)
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get rate limiter statistics"""
         return self.sliding_window.get_stats()
     
-    def reset_user_limits(self, user_id: str, endpoint: str = None):
+    def reset_user_limits(self, user_id: str, endpoint: str | None = None):
         """Reset rate limits for a user"""
         self.sliding_window.reset_user_limits(user_id, endpoint)
     
-    def reset_global_limits(self, endpoint: str = None):
+    def reset_global_limits(self, endpoint: str | None = None):
         """Reset global rate limits"""
         self.sliding_window.reset_global_limits(endpoint)
     
-    def export_config(self) -> Dict[str, Any]:
+    def export_config(self) -> dict[str, Any]:
         """Export rate limiter configuration"""
         return self.sliding_window.export_config()
     
-    def import_config(self, config: Dict[str, Any]):
+    def import_config(self, config: dict[str, Any]):
         """Import rate limiter configuration"""
         self.sliding_window.import_config(config)
 

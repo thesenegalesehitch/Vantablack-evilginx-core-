@@ -296,7 +296,7 @@ class GophishIntegration:
                 execution_time=0.0
             )
     
-    async import_templates(self, templates: List[Dict[str, Any]]) -> IntegrationResult:
+    async def import_templates(self, templates: List[Dict[str, Any]]) -> IntegrationResult:
         """Import templates to Gophish"""
         results = []
         

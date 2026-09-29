@@ -10,38 +10,41 @@ FastAPI-based REST API for VANTABLACK operations:
 - System monitoring
 """
 
-from fastapi import FastAPI, HTTPException, Depends, Security, status, BackgroundTasks, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, Security, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, Response
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field, validator
+
+import asyncio
+import json
+import logging
+import secrets
+import time
+import uuid
+from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Union
+
 
 class SpearPhishingRequest(BaseModel):
     name: str
     position: str
     company: str
     activity: Optional[str] = None
-from typing import Dict, List, Any, Optional, Union
-from datetime import datetime, timedelta
-import uuid
-import json
-import asyncio
-import logging
-import time
-import secrets
-from contextlib import asynccontextmanager
 
-from analysis.reverse_engineer.analyzer import PhishletAnalyzer
-from analysis.mutation.mutator import PhishletMutator
 from analysis.behavioral.analyzer import BehavioralAnalyzer
-from templates.generator import TemplateGenerator
-from templates.ab_testing import ABTestManager
-from templates.marketplace import TemplateMarketplace
-from .auth_manager import AuthManager
-from .rate_limiter import RateLimiter
+from analysis.mutation.mutator import PhishletMutator
+from analysis.reverse_engineer.analyzer import PhishletAnalyzer
 from core.config import settings
 from core.opsec import should_block
+from templates.ab_testing import ABTestManager
+from templates.generator import TemplateGenerator
+from templates.marketplace import TemplateMarketplace
+
+from .auth_manager import AuthManager
+from .rate_limiter import RateLimiter
 
 
 # Pydantic models
@@ -52,7 +55,7 @@ class TemplateRequest(BaseModel):
     personalization_level: str = Field("medium", description="Personalization level")
     optimization_level: str = Field("advanced", description="Optimization level")
     responsive: bool = Field(True, description="Responsive design")
-    custom_variables: Dict[str, Any] = Field(default_factory=dict, description="Custom variables")
+    custom_variables: dict[str, Any] = Field(default_factory=dict, description="Custom variables")
     
     @validator('platform')
     def validate_platform(cls, v):
@@ -74,7 +77,7 @@ class CampaignRequest(BaseModel):
     name: str = Field(..., description="Campaign name")
     target_platform: str = Field(..., description="Target platform")
     template_id: str = Field(..., description="Template ID to use")
-    target_domains: List[str] = Field(..., description="Target domains")
+    target_domains: list[str] = Field(..., description="Target domains")
     start_date: datetime = Field(..., description="Campaign start date")
     end_date: datetime = Field(..., description="Campaign end date")
     max_targets: int = Field(1000, description="Maximum targets")
@@ -109,14 +112,16 @@ class APIResponse(BaseModel):
     """Standard API response"""
     success: bool = Field(True, description="Request success status")
     message: str = Field("Operation completed successfully", description="Response message")
-    data: Optional[Dict[str, Any]] = Field(None, description="Response data")
+    data: dict[str, Any] | None = Field(None, description="Response data")
     timestamp: datetime = Field(default_factory=datetime.now, description="Response timestamp")
     request_id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Request ID")
 
 
 # Lifespan management
-from .infrastructure_manager import InfrastructureManager
 from core.audit import log_action
+
+from .infrastructure_manager import InfrastructureManager
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -311,7 +316,7 @@ async def generate_template(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Template generation failed: {str(e)}"
+            detail=f"Template generation failed: {e!s}"
         )
 
 
@@ -380,7 +385,7 @@ async def create_campaign(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Campaign creation failed: {str(e)}"
+            detail=f"Campaign creation failed: {e!s}"
         )
 
 
@@ -478,14 +483,14 @@ async def analyze_phishlet(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Phishlet analysis failed: {str(e)}"
+            detail=f"Phishlet analysis failed: {e!s}"
         )
 
 
 @app.post("/analysis/mutation", response_model=APIResponse)
 async def mutate_phishlet(
     phishlet_content: str,
-    mutation_config: Dict[str, Any],
+    mutation_config: dict[str, Any],
     current_user: dict = Depends(get_current_user)
 ):
     """Mutate a phishlet"""
@@ -506,7 +511,7 @@ async def mutate_phishlet(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Phishlet mutation failed: {str(e)}"
+            detail=f"Phishlet mutation failed: {e!s}"
         )
 
 
@@ -560,7 +565,7 @@ async def optimize_template(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Template optimization failed: {str(e)}"
+            detail=f"Template optimization failed: {e!s}"
         )
 
 
@@ -593,7 +598,7 @@ async def search_marketplace_templates(
     category: str = "",
     platform: str = "",
     min_rating: float = 0.0,
-    max_price: float = None,
+    max_price: float | None = None,
     featured_only: bool = False,
     limit: int = 20,
     current_user: dict = Depends(get_current_user)
@@ -649,7 +654,7 @@ async def search_marketplace_templates(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Marketplace search failed: {str(e)}"
+            detail=f"Marketplace search failed: {e!s}"
         )
 
 
@@ -679,7 +684,7 @@ async def download_marketplace_template(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Template download failed: {str(e)}"
+            detail=f"Template download failed: {e!s}"
         )
 
 
@@ -837,7 +842,7 @@ async def get_user_profile(current_user: dict = Depends(get_current_user)):
 
 @app.put("/users/profile")
 async def update_user_profile(
-    profile_data: Dict[str, Any],
+    profile_data: dict[str, Any],
     current_user: dict = Depends(get_current_user)
 ):
     """Update user profile"""
@@ -858,7 +863,7 @@ async def update_user_profile(
 # Infrastructure Endpoints
 class InfraRequest(BaseModel):
     template_name: str
-    vars: Dict[str, Any] = {}
+    vars: dict[str, Any] = {}
 
 @app.post("/infrastructure/deploy", response_model=APIResponse, dependencies=[require_scope("system:admin")])
 async def deploy_infrastructure(
@@ -907,7 +912,8 @@ async def destroy_infrastructure(
 
 
 # C2 Endpoints
-from .crypto import encrypt, decrypt
+from .crypto import decrypt, encrypt
+
 
 class C2Task(BaseModel):
     agent_id: str

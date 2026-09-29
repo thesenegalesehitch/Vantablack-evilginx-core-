@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import urllib.parse
 import os
-import webbrowser
-import time
 import sys
+import time
+import urllib.parse
+import webbrowser
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 # COLORS
 GREEN = '\033[92m'

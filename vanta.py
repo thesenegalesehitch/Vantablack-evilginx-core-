@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 import os
-import sys
-import subprocess
-import time
-import signal
 import platform
+import signal
+import subprocess
+import sys
 import threading
+import time
+from typing import Dict, List
+
 import httpx
-from typing import List, Dict
 import psutil
+
 from core.banner import print_alex_banner
+
 
 def print_banner():
     bin_path = os.path.join(os.getcwd(), "bin", "alex-banner")
@@ -22,7 +25,7 @@ def print_banner():
     print_alex_banner()
 
 LANGUAGE = "EN"
-TRANSLATIONS: Dict[str, Dict[str, str]] = {
+TRANSLATIONS: dict[str, dict[str, str]] = {
     "EN": {
         "menu_title": "[*] VANTABLACK Interactive Menu",
         "menu_options": "1) List Features\n2) Start Services\n3) Open API Docs\n4) Configuration\n5) Logs Access\n6) Language Switch (EN/FR)\n7) Ghost Protocol\n8) Quishing Generator\n9) Generate Report\n10) Run Network Module (Proxy)\n11) Run Templates\n12) Analyze Phishlets\n13) Auto Setup\n14) System Info\n15) God Mode\n0) Exit",
@@ -116,7 +119,7 @@ def T(key: str) -> str:
 
 class ProcessManager:
     def __init__(self):
-        self.processes: List[subprocess.Popen] = []
+        self.processes: list[subprocess.Popen] = []
     def add(self, p: subprocess.Popen):
         self.processes.append(p)
     def stop_all(self):
@@ -131,9 +134,6 @@ def check_dependencies():
     print("[*] Checking dependencies...")
     
     # Check Python
-    if sys.version_info < (3, 9):
-        print("[!] Python 3.9+ is required.")
-        sys.exit(1)
         
     # Check Node.js
     try:

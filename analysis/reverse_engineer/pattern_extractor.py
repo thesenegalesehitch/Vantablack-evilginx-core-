@@ -9,11 +9,12 @@ Extracts behavioral patterns from phishlets:
 - Campaign characteristics
 """
 
-import re
 import json
-from typing import Dict, List, Any, Optional, Tuple
+import re
+from collections import Counter, defaultdict
 from dataclasses import dataclass
-from collections import defaultdict, Counter
+from typing import Any, Dict, List, Optional, Tuple
+
 import networkx as nx
 
 from .analyzer import PhishletStructure
@@ -25,10 +26,10 @@ class AttackPattern:
     pattern_id: str
     name: str
     description: str
-    attack_flow: List[str]
-    techniques: List[str]
-    data_points: List[str]
-    evasion_methods: List[str]
+    attack_flow: list[str]
+    techniques: list[str]
+    data_points: list[str]
+    evasion_methods: list[str]
     confidence: float
     severity: str
 
@@ -63,7 +64,7 @@ class PatternExtractor:
             'anti_analysis': 'T1082 - System Information Discovery'
         }
     
-    def extract_patterns(self, phishlet: PhishletStructure) -> List[AttackPattern]:
+    def extract_patterns(self, phishlet: PhishletStructure) -> list[AttackPattern]:
         """Extract all attack patterns from a phishlet"""
         patterns = []
         
@@ -89,7 +90,7 @@ class PatternExtractor:
         
         return patterns
     
-    def _analyze_attack_flow(self, phishlet: PhishletStructure) -> Optional[AttackPattern]:
+    def _analyze_attack_flow(self, phishlet: PhishletStructure) -> AttackPattern | None:
         """Analyze the attack flow pattern"""
         try:
             # Build attack flow graph
@@ -144,14 +145,14 @@ class PatternExtractor:
             print(f"Failed to analyze attack flow: {e}")
             return None
     
-    def _analyze_exfiltration_pattern(self, phishlet: PhishletStructure) -> Optional[AttackPattern]:
+    def _analyze_exfiltration_pattern(self, phishlet: PhishletStructure) -> AttackPattern | None:
         """Analyze data exfiltration patterns"""
         try:
             exfil_methods = []
             data_types = []
             
             # Analyze data extraction points
-            for path, config in phishlet.data_extraction.items():
+            for config in phishlet.data_extraction.values():
                 if config.get('type') == 'json':
                     exfil_methods.append('json_api')
                 else:
@@ -193,7 +194,7 @@ class PatternExtractor:
             print(f"Failed to analyze exfiltration pattern: {e}")
             return None
     
-    def _analyze_evasion_pattern(self, phishlet: PhishletStructure) -> Optional[AttackPattern]:
+    def _analyze_evasion_pattern(self, phishlet: PhishletStructure) -> AttackPattern | None:
         """Analyze evasion and anti-detection patterns"""
         try:
             if not phishlet.anti_detection:
@@ -242,7 +243,7 @@ class PatternExtractor:
             print(f"Failed to analyze evasion pattern: {e}")
             return None
     
-    def _analyze_sophistication_pattern(self, phishlet: PhishletStructure) -> Optional[AttackPattern]:
+    def _analyze_sophistication_pattern(self, phishlet: PhishletStructure) -> AttackPattern | None:
         """Analyze overall sophistication patterns"""
         try:
             sophistication_indicators = {
@@ -281,7 +282,7 @@ class PatternExtractor:
             print(f"Failed to analyze sophistication pattern: {e}")
             return None
     
-    def batch_extract_patterns(self, phishlets: List[PhishletStructure]) -> Dict[str, Any]:
+    def batch_extract_patterns(self, phishlets: list[PhishletStructure]) -> dict[str, Any]:
         """Extract patterns from multiple phishlets and identify trends"""
         all_patterns = []
         
@@ -306,7 +307,7 @@ class PatternExtractor:
             'patterns': all_patterns
         }
     
-    def generate_mitre_report(self, patterns: List[AttackPattern]) -> Dict[str, Any]:
+    def generate_mitre_report(self, patterns: list[AttackPattern]) -> dict[str, Any]:
         """Generate MITRE ATT&CK aligned report"""
         tactics = defaultdict(list)
         techniques = defaultdict(list)

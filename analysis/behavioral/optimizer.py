@@ -10,13 +10,15 @@ Optimizes phishing campaigns based on behavioral data:
 - Real-time optimization
 """
 
+import hashlib
 import json
-import statistics
 import random
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
+import statistics
 from collections import defaultdict
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 
 
@@ -26,16 +28,16 @@ class ABTest:
     test_id: str
     name: str
     description: str
-    variants: List[Dict[str, Any]]
-    traffic_split: List[float]
+    variants: list[dict[str, Any]]
+    traffic_split: list[float]
     start_date: datetime
-    end_date: Optional[datetime]
+    end_date: datetime | None
     status: str  # running, completed, paused
     sample_size: int
     confidence_level: float
     statistical_significance: bool
-    winner: Optional[str]
-    results: Dict[str, Any]
+    winner: str | None
+    results: dict[str, Any]
 
 
 @dataclass
@@ -48,7 +50,7 @@ class OptimizationRecommendation:
     expected_lift: float
     confidence: float
     implementation_effort: str
-    test_suggestion: Optional[str]
+    test_suggestion: str | None
 
 
 class CampaignOptimizer:
@@ -76,8 +78,8 @@ class CampaignOptimizer:
         }
     
     def create_ab_test(self, name: str, description: str, 
-                      variants: List[Dict[str, Any]], 
-                      traffic_split: List[float] = None,
+                      variants: list[dict[str, Any]], 
+                      traffic_split: list[float] | None = None,
                       duration_days: int = 7) -> str:
         """Create new A/B test"""
         test_id = f"ab_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
@@ -108,7 +110,7 @@ class CampaignOptimizer:
         self.ab_tests[test_id] = ab_test
         return test_id
     
-    def assign_variant(self, test_id: str, user_id: str) -> Optional[str]:
+    def assign_variant(self, test_id: str, user_id: str) -> str | None:
         """Assign user to A/B test variant"""
         if test_id not in self.ab_tests:
             return None
@@ -175,7 +177,7 @@ class CampaignOptimizer:
         
         test.sample_size += 1
     
-    def analyze_ab_test(self, test_id: str) -> Dict[str, Any]:
+    def analyze_ab_test(self, test_id: str) -> dict[str, Any]:
         """Analyze A/B test results and determine winner"""
         if test_id not in self.ab_tests:
             return {}
@@ -234,7 +236,7 @@ class CampaignOptimizer:
             'recommendation': f"Implement variant {winner}" if winner else "No clear winner"
         }
     
-    def generate_optimization_recommendations(self, behavioral_data: Dict[str, Any]) -> List[OptimizationRecommendation]:
+    def generate_optimization_recommendations(self, behavioral_data: dict[str, Any]) -> list[OptimizationRecommendation]:
         """Generate optimization recommendations based on behavioral data"""
         recommendations = []
         
@@ -324,8 +326,8 @@ class CampaignOptimizer:
         self.recommendations = recommendations
         return recommendations
     
-    def optimize_landing_page(self, page_data: Dict[str, Any], 
-                            behavioral_data: Dict[str, Any]) -> Dict[str, Any]:
+    def optimize_landing_page(self, page_data: dict[str, Any], 
+                            behavioral_data: dict[str, Any]) -> dict[str, Any]:
         """Generate landing page optimization suggestions"""
         suggestions = {
             'headline': [],
@@ -385,8 +387,8 @@ class CampaignOptimizer:
         
         return suggestions
     
-    def optimize_email_campaign(self, email_data: Dict[str, Any], 
-                             performance_data: Dict[str, Any]) -> Dict[str, Any]:
+    def optimize_email_campaign(self, email_data: dict[str, Any], 
+                             performance_data: dict[str, Any]) -> dict[str, Any]:
         """Generate email campaign optimization suggestions"""
         suggestions = {
             'subject_line': [],
@@ -449,7 +451,7 @@ class CampaignOptimizer:
         
         return suggestions
     
-    def get_optimization_score(self, campaign_data: Dict[str, Any]) -> float:
+    def get_optimization_score(self, campaign_data: dict[str, Any]) -> float:
         """Calculate overall optimization score"""
         scores = []
         
@@ -475,7 +477,7 @@ class CampaignOptimizer:
         
         return statistics.mean(scores)
     
-    def export_optimization_report(self, output_file: str = None) -> Dict[str, Any]:
+    def export_optimization_report(self, output_file: str | None = None) -> dict[str, Any]:
         """Export comprehensive optimization report"""
         report = {
             'report_timestamp': datetime.now().isoformat(),

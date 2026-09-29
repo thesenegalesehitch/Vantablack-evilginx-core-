@@ -13,12 +13,13 @@ Analyzes victim behavior patterns to optimize campaigns:
 
 import json
 import statistics
+from collections import Counter, defaultdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
-from collections import defaultdict, Counter
-import pandas as pd
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
+import pandas as pd
 
 
 @dataclass
@@ -31,7 +32,7 @@ class UserSession:
     browser: str
     os: str
     ip_address: str
-    location: Dict[str, str]
+    location: dict[str, str]
     user_agent: str
     screen_resolution: str
     language: str
@@ -45,7 +46,7 @@ class InteractionEvent:
     event_type: str  # click, scroll, type, submit, etc.
     element_id: str
     timestamp: datetime
-    coordinates: Tuple[int, int]
+    coordinates: tuple[int, int]
     scroll_depth: float
     time_on_page: float
     referrer: str
@@ -56,10 +57,10 @@ class ConversionEvent:
     """Conversion/credential submission event"""
     session_id: str
     timestamp: datetime
-    form_data: Dict[str, Any]
+    form_data: dict[str, Any]
     submission_time: float
-    field_interactions: List[str]
-    errors_encountered: List[str]
+    field_interactions: list[str]
+    errors_encountered: list[str]
     success: bool
 
 
@@ -72,12 +73,12 @@ class BehavioralMetrics:
     avg_session_duration: float
     avg_time_to_conversion: float
     bounce_rate: float
-    top_devices: List[Tuple[str, float]]
-    top_browsers: List[Tuple[str, float]]
-    top_locations: List[Tuple[str, float]]
-    peak_hours: List[Tuple[int, float]]
-    conversion_funnel: Dict[str, float]
-    behavioral_segments: Dict[str, Any]
+    top_devices: list[tuple[str, float]]
+    top_browsers: list[tuple[str, float]]
+    top_locations: list[tuple[str, float]]
+    peak_hours: list[tuple[int, float]]
+    conversion_funnel: dict[str, float]
+    behavioral_segments: dict[str, Any]
 
 
 class BehavioralAnalyzer:
@@ -113,17 +114,17 @@ class BehavioralAnalyzer:
         """Add conversion event"""
         self.conversions.append(conversion)
     
-    def analyze_campaign_performance(self, campaign_id: str = None) -> BehavioralMetrics:
+    def analyze_campaign_performance(self, campaign_id: str | None = None) -> BehavioralMetrics:
         """Comprehensive campaign performance analysis"""
         if not self.sessions:
             return BehavioralMetrics(0, 0, 0.0, 0.0, 0.0, 1.0, [], [], [], [], {}, {})
         
         # Basic metrics
         total_sessions = len(self.sessions)
-        unique_users = len(set(s.user_id for s in self.sessions))
+        unique_users = len({s.user_id for s in self.sessions})
         
         # Conversion analysis
-        conversion_sessions = set(c.session_id for c in self.conversions if c.success)
+        conversion_sessions = {c.session_id for c in self.conversions if c.success}
         conversion_rate = len(conversion_sessions) / total_sessions
         
         # Session duration analysis
@@ -175,7 +176,7 @@ class BehavioralAnalyzer:
             behavioral_segments=behavioral_segments
         )
     
-    def _calculate_session_durations(self) -> List[float]:
+    def _calculate_session_durations(self) -> list[float]:
         """Calculate session durations"""
         durations = []
         
@@ -194,35 +195,35 @@ class BehavioralAnalyzer:
         
         return durations
     
-    def _analyze_device_patterns(self) -> Dict[str, float]:
+    def _analyze_device_patterns(self) -> dict[str, float]:
         """Analyze device usage patterns"""
         device_counts = Counter(s.device_type for s in self.sessions)
         total = sum(device_counts.values())
         
         return {device: count/total for device, count in device_counts.items()}
     
-    def _analyze_browser_patterns(self) -> Dict[str, float]:
+    def _analyze_browser_patterns(self) -> dict[str, float]:
         """Analyze browser usage patterns"""
         browser_counts = Counter(s.browser for s in self.sessions)
         total = sum(browser_counts.values())
         
         return {browser: count/total for browser, count in browser_counts.items()}
     
-    def _analyze_geographic_patterns(self) -> Dict[str, float]:
+    def _analyze_geographic_patterns(self) -> dict[str, float]:
         """Analyze geographic distribution"""
         location_counts = Counter(s.location.get('country', 'Unknown') for s in self.sessions)
         total = sum(location_counts.values())
         
         return {location: count/total for location, count in location_counts.items()}
     
-    def _analyze_temporal_patterns(self) -> Dict[int, float]:
+    def _analyze_temporal_patterns(self) -> dict[int, float]:
         """Analyze hourly activity patterns"""
         hourly_counts = Counter(s.timestamp.hour for s in self.sessions)
         total = sum(hourly_counts.values())
         
         return {hour: count/total for hour, count in hourly_counts.items()}
     
-    def _analyze_conversion_funnel(self) -> Dict[str, float]:
+    def _analyze_conversion_funnel(self) -> dict[str, float]:
         """Analyze conversion funnel stages"""
         total_sessions = len(self.sessions)
         
@@ -230,14 +231,14 @@ class BehavioralAnalyzer:
         page_views = total_sessions
         
         # Stage 2: Form interaction
-        form_interactions = len(set(i.session_id for i in self.interactions 
-                                   if i.event_type in ['click', 'type', 'focus']))
+        form_interactions = len({i.session_id for i in self.interactions 
+                                   if i.event_type in ['click', 'type', 'focus']})
         
         # Stage 3: Form submission attempt
-        submission_attempts = len(set(c.session_id for c in self.conversions))
+        submission_attempts = len({c.session_id for c in self.conversions})
         
         # Stage 4: Successful conversion
-        successful_conversions = len(set(c.session_id for c in self.conversions if c.success))
+        successful_conversions = len({c.session_id for c in self.conversions if c.success})
         
         return {
             'page_views': page_views / total_sessions,
@@ -246,17 +247,17 @@ class BehavioralAnalyzer:
             'successful_conversions': successful_conversions / total_sessions
         }
     
-    def _perform_behavioral_segmentation(self) -> Dict[str, Any]:
+    def _perform_behavioral_segmentation(self) -> dict[str, Any]:
         """Perform behavioral segmentation analysis"""
         segments = {}
         
         # Segment by device type
         device_segments = {}
-        for device in set(s.device_type for s in self.sessions):
+        for device in {s.device_type for s in self.sessions}:
             device_sessions = [s for s in self.sessions if s.device_type == device]
-            device_conversions = len(set(c.session_id for c in self.conversions 
+            device_conversions = len({c.session_id for c in self.conversions 
                                        if c.success and any(s.session_id == c.session_id 
-                                                          for s in device_sessions)))
+                                                          for s in device_sessions)})
             device_segments[device] = {
                 'sessions': len(device_sessions),
                 'conversions': device_conversions,
@@ -280,9 +281,9 @@ class BehavioralAnalyzer:
         
         time_analysis = {}
         for time_period, sessions in time_segments.items():
-            conversions = len(set(c.session_id for c in self.conversions 
+            conversions = len({c.session_id for c in self.conversions 
                                 if c.success and any(s.session_id == c.session_id 
-                                                   for s in sessions)))
+                                                   for s in sessions)})
             time_analysis[time_period] = {
                 'sessions': len(sessions),
                 'conversions': conversions,
@@ -306,9 +307,9 @@ class BehavioralAnalyzer:
         
         engagement_analysis = {}
         for level, sessions in engagement_segments.items():
-            conversions = len(set(c.session_id for c in self.conversions 
+            conversions = len({c.session_id for c in self.conversions 
                                 if c.success and any(s.session_id == c.session_id 
-                                                   for s in sessions)))
+                                                   for s in sessions)})
             engagement_analysis[level] = {
                 'sessions': len(sessions),
                 'conversions': conversions,
@@ -319,7 +320,7 @@ class BehavioralAnalyzer:
         
         return segments
     
-    def identify_high_value_segments(self) -> List[Dict[str, Any]]:
+    def identify_high_value_segments(self) -> list[dict[str, Any]]:
         """Identify high-value user segments"""
         metrics = self.analyze_campaign_performance()
         segments = metrics.behavioral_segments
@@ -367,7 +368,7 @@ class BehavioralAnalyzer:
         
         return high_value_segments
     
-    def generate_optimization_recommendations(self) -> List[Dict[str, Any]]:
+    def generate_optimization_recommendations(self) -> list[dict[str, Any]]:
         """Generate campaign optimization recommendations"""
         metrics = self.analyze_campaign_performance()
         recommendations = []
@@ -428,8 +429,8 @@ class BehavioralAnalyzer:
                 'peak_rate': best_hour[1],
                 'recommendations': [
                     f'Schedule email sends around {best_hour[0]}:00',
-                    f'Increase server capacity during peak hours',
-                    f'Run A/B tests during peak activity'
+                    'Increase server capacity during peak hours',
+                    'Run A/B tests during peak activity'
                 ]
             })
         
@@ -450,7 +451,7 @@ class BehavioralAnalyzer:
         
         return recommendations
     
-    def export_analysis_report(self, output_file: str = None) -> Dict[str, Any]:
+    def export_analysis_report(self, output_file: str | None = None) -> dict[str, Any]:
         """Export comprehensive analysis report"""
         metrics = self.analyze_campaign_performance()
         high_value_segments = self.identify_high_value_segments()

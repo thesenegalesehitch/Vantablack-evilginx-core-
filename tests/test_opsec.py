@@ -1,5 +1,6 @@
 from core.opsec import is_bad_ua, is_private_or_reserved_ip
 
+
 def test_is_bad_ua_positive():
     assert is_bad_ua("curl/8.0")
     assert is_bad_ua("python-requests/2.31.0")

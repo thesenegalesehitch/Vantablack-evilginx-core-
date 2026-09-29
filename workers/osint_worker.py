@@ -1,8 +1,10 @@
-from core.event_bus import app, publish_event
 import logging
+import re
+
 import httpx
 from bs4 import BeautifulSoup
-import re
+
+from core.event_bus import app, publish_event
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -49,7 +51,9 @@ def find_emails_from_domain(domain: str):
         return []
 
 import json
+
 from core.llm_client import generate_text
+
 
 @app.task(name='vantablack.osint.generate_spear_phishing_email')
 async def generate_spear_phishing_email(target_info: dict):

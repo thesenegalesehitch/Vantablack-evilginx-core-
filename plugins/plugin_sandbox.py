@@ -10,22 +10,24 @@ Plugin sandbox for secure execution:
 - Monitoring and auditing
 """
 
+import json
+import logging
 import os
-import sys
 import resource
+import shutil
 import signal
 import subprocess
+import sys
 import tempfile
-import shutil
-import logging
-import psutil
-from typing import Dict, List, Any, Optional, Callable
-from datetime import datetime, timedelta
-from dataclasses import dataclass, asdict
-from enum import Enum
 import threading
 import time
-import json
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
+import psutil
 
 
 class SandboxPolicy(Enum):
@@ -45,13 +47,13 @@ class SandboxLimits:
     max_network_connections: int = 10
     max_file_descriptors: int = 100
     max_processes: int = 5
-    allowed_modules: List[str] = None
-    blocked_modules: List[str] = None
-    allowed_paths: List[str] = None
-    blocked_paths: List[str] = None
+    allowed_modules: list[str] = None
+    blocked_modules: list[str] = None
+    allowed_paths: list[str] = None
+    blocked_paths: list[str] = None
     network_access: bool = False
     file_system_access: bool = True
-    system_calls: List[str] = None
+    system_calls: list[str] = None
     
     def __post_init__(self):
         if self.allowed_modules is None:
@@ -75,11 +77,11 @@ class SandboxSession:
     limits: SandboxLimits
     created_at: datetime
     last_activity: datetime
-    process_id: Optional[int] = None
-    temp_dir: Optional[str] = None
+    process_id: int | None = None
+    temp_dir: str | None = None
     status: str = "created"
-    resource_usage: Dict[str, Any] = None
-    violations: List[Dict[str, Any]] = None
+    resource_usage: dict[str, Any] = None
+    violations: list[dict[str, Any]] = None
     execution_time: float = 0.0
     
     def __post_init__(self):
@@ -94,8 +96,8 @@ class PluginSandbox:
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self.sessions: Dict[str, SandboxSession] = {}
-        self.active_processes: Dict[int, SandboxSession] = {}
+        self.sessions: dict[str, SandboxSession] = {}
+        self.active_processes: dict[int, SandboxSession] = {}
         self.monitoring_thread = None
         self.monitoring_active = False
         
@@ -236,7 +238,7 @@ class PluginSandbox:
         except Exception as e:
             self.logger.error(f"Error checking session limits: {e}")
     
-    def _record_violation(self, session: SandboxSession, violation_type: str, details: Dict[str, Any]):
+    def _record_violation(self, session: SandboxSession, violation_type: str, details: dict[str, Any]):
         """Record security violation"""
         violation = {
             "type": violation_type,
@@ -305,7 +307,7 @@ class PluginSandbox:
         return session_id
     
     async def execute_in_sandbox(self, session_id: str, code: str, 
-                                globals_dict: Dict[str, Any] = None) -> Any:
+                                globals_dict: dict[str, Any] | None = None) -> Any:
         """Execute code in sandbox"""
         if session_id not in self.sessions:
             raise ValueError("Session not found")
@@ -359,11 +361,11 @@ class PluginSandbox:
             
             # Add allowed modules
             import datetime
-            import time
             import json
+            import logging
             import math
             import random
-            import logging
+            import time
             
             safe_modules = {
                 'datetime': datetime,
@@ -400,7 +402,7 @@ class PluginSandbox:
                     "execution_time": execution_time
                 })
                 
-                raise e
+                raise
             
             finally:
                 session.status = "completed"
@@ -413,7 +415,7 @@ class PluginSandbox:
             raise
     
     def execute_command_in_sandbox(self, session_id: str, command: str, 
-                                  args: List[str] = None, env: Dict[str, str] = None) -> Dict[str, Any]:
+                                  args: list[str] | None = None, env: dict[str, str] | None = None) -> dict[str, Any]:
         """Execute command in sandbox"""
         if session_id not in self.sessions:
             raise ValueError("Session not found")
@@ -537,7 +539,7 @@ class PluginSandbox:
             total_time = self.stats["average_execution_time"] * (self.stats["total_sessions"] - 1) + execution_time
             self.stats["average_execution_time"] = total_time / self.stats["total_sessions"]
     
-    def get_session_info(self, session_id: str) -> Optional[Dict[str, Any]]:
+    def get_session_info(self, session_id: str) -> dict[str, Any] | None:
         """Get session information"""
         if session_id not in self.sessions:
             return None
@@ -558,7 +560,7 @@ class PluginSandbox:
             "limits": asdict(session.limits)
         }
     
-    def list_sessions(self, plugin_id: str = None, status: str = None) -> List[Dict[str, Any]]:
+    def list_sessions(self, plugin_id: str | None = None, status: str | None = None) -> list[dict[str, Any]]:
         """List sandbox sessions"""
         sessions = []
         
@@ -632,7 +634,7 @@ class PluginSandbox:
         
         return len(expired_sessions)
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get sandbox statistics"""
         self.stats["active_sessions"] = len([s for s in self.sessions.values() if s.status == "running"])
         return self.stats.copy()

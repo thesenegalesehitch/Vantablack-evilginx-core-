@@ -1,8 +1,10 @@
-from core.event_bus import app, publish_event
-from core.config import settings
-import logging
 import json
+import logging
+
 import redis
+
+from core.config import settings
+from core.event_bus import app, publish_event
 
 logger = logging.getLogger("ObjectiveWorker")
 

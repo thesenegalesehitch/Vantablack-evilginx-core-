@@ -1,5 +1,6 @@
 from core.config import settings
 
+
 def test_settings_core_fields():
     assert isinstance(settings.SECRET_KEY, str)
     assert isinstance(settings.REDIS_URL, str)

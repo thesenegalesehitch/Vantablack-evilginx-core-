@@ -23,13 +23,13 @@ def _last_hash() -> str:
     except Exception:
         return "0" * 64
 
-def _compute_hash(prev_hash: str, payload: Dict[str, Any]) -> str:
+def _compute_hash(prev_hash: str, payload: dict[str, Any]) -> str:
     h = hashlib.sha256()
     h.update(prev_hash.encode())
     h.update(json.dumps(payload, sort_keys=True).encode())
     return h.hexdigest()
 
-def log_action(user_id: str, action: str, data: Dict[str, Any]):
+def log_action(user_id: str, action: str, data: dict[str, Any]):
     ts = datetime.utcnow().isoformat()
     prev = _last_hash()
     payload = {"ts": ts, "user_id": user_id, "action": action, "data": data}

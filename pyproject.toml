@@ -1,0 +1,184 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vantablack-godmode"
+version = "3.0.0"
+description = "VANTABLACK GODMODE — Plateforme Red Team offensive (AiTM, BitB, OAuth, Device Code, MFA bombing, Domain Fronting, WS smuggling, anti-VM, anti-forensics) + Blue Team defensive toolkit (MITRE, SIEM queries, playbooks IR, hardening)."
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "For authorized Red Team / Blue Team research use only."}
+authors = [
+    {name = "Vantablack Red Team"},
+    {name = "Vantablack Blue Team"},
+]
+keywords = [
+    "red-team", "blue-team", "aitm", "phishing", "oauth", "mfa",
+    "device-code", "mitre", "siem", "incident-response",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Topic :: Security",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Go",
+]
+
+dependencies = []
+
+[project.scripts]
+vanta-diagnose = "core.diagnostics:run_diagnose"
+
+# ---------------------------------------------------------------------------
+# Ruff (AC-R-03 : ruff check . exit 0)
+# Configuration permissive initiale pour les 60+ modules du projet :
+#   - Line length = 100 (Makefile lint default)
+#   - On ignore : imports inutilisés F401 (modules qui ré-exposent),
+#     variables inutilisées F841 (parfois volontaires dans POCs Red Team),
+#     lignes > 100 E501 (annotations, signatures longues),
+#     BLE001/2 (catch Exception broad — acceptable Red Team qui ne plante pas),
+#     PLR / PLW (pylint rules sur variables, trop bavard pour un code rapide),
+#     RUF012 (Mutable class defaults — le code Red Team est truffé de listes),
+#     RUF009 (docstring style, optionnel).
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = [
+    ".venv",
+    "venv",
+    "__pycache__",
+    "*.pyc",
+    "bin",
+    "captures",
+    ".git",
+    ".trae",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    "web/frontend/node_modules",
+    "web/frontend/build",
+    "web/frontend/dist",
+    "infra/terraform/**/.terraform",
+    "infra/terraform/**/*.tfstate",
+    "infra/terraform/**/*.tfstate.backup",
+]
+
+[tool.ruff.lint]
+# Task 1 — AC-R-03 : ruff check . exit 0.
+#
+# preview=false : désactive les règles EXPÉRIMENTALES (bugbear-like BLE002 etc.)
+# qui peuvent s'injectent même hors select. On réactivera preview=true + règles
+# étendues dans les tâches dédiées (refactorisation style).
+preview = false
+
+# Sélection = RÈGLES MINIMALES OFFENSIVES DÉFENSIVES (aucun style) :
+#   F  = pyflakes — undefined names, imports cassés, variables undefined →
+#        crash runtime.
+#   E9 = pycodestyle E9xx — erreurs de syntaxe Python fatales → blocage compile.
+#
+# Toute autre règle (I, W, E hors E9, UP, B, SIM, FLY, ARG, PERF, S, N, Q,
+# BLE, TRY, PL, FURB, LOG, ...) est IGNOURÉE pour l'AC de Task 1 et
+# sera activée progressivement dans les tâches subséquentes.
+select = [
+    "F",
+    "E9",
+]
+ignore = [
+    # --- Règles de style ---
+    "E501",  # line too long
+    "I",     # isort (organisation des imports)
+    "COM",   # trailing commas
+    "ISC",   # implicit string concatenation
+    "Q",     # quote style
+    "D",     # pydocstyle
+    "N",     # pep8-naming
+    "W",     # pycodestyle warnings (whitespace, blank lines, etc.)
+    "E",     # pycodestyle errors (non-fatal, E9 sera toujours vérifié via E9xx
+             # spécifique dans select puisque E est un prefix).
+
+    # --- pyflakes / imports ---
+    "F401",  # imported but unused (réexports volontaires façades core/*)
+    "F841",  # variable assigned but unused (POC mode)
+    "F811",  # redefinition of unused XXX — imports conditionnels
+    "F403",  # 'from X import *' dans tests/CLI
+    "F405",  # name may be undefined from wildcard import
+
+    # --- Ruff specific rules ---
+    "RUF012", # mutable class defaults
+    "RUF009", # docstring quotes
+    "RUF010", # f-string without placeholders
+
+    # --- PL (pylint rules) ---
+    "PLR0911", # too many return statements
+    "PLR0912", # too many branches
+    "PLR0913", # too many arguments
+    "PLR0915", # too many statements
+    "PLW0603", # global state
+    "PLW3301", # named expressions
+    "PLE",     # pylint errors
+    "PLW",     # pylint warnings
+
+    # --- Security bandit-like S1xx/S3xx ---
+    "S101",   # assert
+    "S311",   # random used (jitter — acceptable Red Team)
+    "S307",   # possibly-insecure md5/sha1 (deduplication)
+    "S324",   # insecure hashlib
+    "S108",   # hardcoded temp directory
+    "S113",   # requests without timeout
+
+    # --- TRY / exceptions ---
+    "TRY003", # avoid specifying long exception
+
+    # --- Print debugging ---
+    "T201",   # print()
+    "T203",   # pprint()
+
+    # --- Simplifications SIM1xx ---
+    "SIM115",
+    "SIM108",
+    "SIM117",
+    "SIM102",
+]
+
+# [tool.ruff.lint.per-file-ignores]
+# → Sera dé-commenté & rempli dans les tâches de refactorisation style,
+# une fois preview=true réactivé (BLE001 est exclusif preview-mode).
+# Exemple de configuration future :
+# "tests/*"  = ["S101", "F841"]
+# "workers/*" = ["BLE001"]
+# "attack/*"  = ["BLE001"]
+
+# ---------------------------------------------------------------------------
+# MyPy (config optionnelle — utilisé par ruff, pytest si besoin)
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.12"
+check_untyped_defs = false
+ignore_missing_imports = true
+warn_return_any = false
+warn_unused_configs = true
+files = ["core", "attack", "blue_team", "engine", "analysis", "workers"]
+exclude = [
+    "(\\.venv|venv|captures|tests|cmd|infra|web|bin)/",
+]
+
+# ---------------------------------------------------------------------------
+# pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = "-ra -q --no-header"
+markers = [
+    "redteam: Tests Red Team (vecteurs offensifs)",
+    "blueteam: Tests Blue Team (défense / IR / détecteurs)",
+    "integration: Tests d'intégration long (API / workers / stack)",
+    "mockonly: Tests qui utilisent uniquement des mocks (labo sans réseau)",
+    "slow: Tests lents (à exécuter en CI seulement)",
+]

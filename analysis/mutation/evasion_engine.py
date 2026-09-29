@@ -9,13 +9,14 @@ Comprehensive evasion system for bypassing security controls:
 - Anti-forensics techniques
 """
 
+import hashlib
+import json
 import random
 import time
-import json
-import hashlib
-from typing import Dict, List, Any, Optional, Callable
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 
 class EvasionLevel(Enum):
@@ -80,7 +81,7 @@ class EvasionEngine:
             ]
         }
     
-    def _initialize_techniques(self) -> Dict[str, EvasionTechnique]:
+    def _initialize_techniques(self) -> dict[str, EvasionTechnique]:
         """Initialize all available evasion techniques"""
         return {
             'user_agent_rotation': EvasionTechnique(
@@ -165,13 +166,13 @@ class EvasionEngine:
             )
         }
     
-    def configure_evasion(self, level: EvasionLevel) -> List[str]:
+    def configure_evasion(self, level: EvasionLevel) -> list[str]:
         """Configure evasion techniques for specified level"""
         strategy = self.strategies[level]
         self.active_techniques = strategy
         return strategy
     
-    def execute_evasion(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def execute_evasion(self, context: dict[str, Any]) -> dict[str, Any]:
         """Execute all active evasion techniques"""
         results = {}
         
@@ -223,7 +224,7 @@ class EvasionEngine:
         
         return results
     
-    def _user_agent_rotation(self, context: Dict[str, Any]) -> Dict[str, str]:
+    def _user_agent_rotation(self, context: dict[str, Any]) -> dict[str, str]:
         """Rotate user agent"""
         user_agents = [
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -236,13 +237,13 @@ class EvasionEngine:
         selected_ua = random.choice(user_agents)
         return {'User-Agent': selected_ua}
     
-    def _basic_timing(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def _basic_timing(self, context: dict[str, Any]) -> dict[str, Any]:
         """Add basic timing variation"""
         delay = random.uniform(0.5, 2.0)
         time.sleep(delay)
         return {'delay': delay}
     
-    def _simple_headers(self, context: Dict[str, Any]) -> Dict[str, str]:
+    def _simple_headers(self, context: dict[str, Any]) -> dict[str, str]:
         """Add simple headers"""
         headers = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -254,7 +255,7 @@ class EvasionEngine:
         }
         return headers
     
-    def _advanced_timing(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def _advanced_timing(self, context: dict[str, Any]) -> dict[str, Any]:
         """Advanced timing patterns"""
         # Mimic human reading time
         base_delay = random.uniform(1.0, 3.0)
@@ -271,7 +272,7 @@ class EvasionEngine:
             'total_delay': total_delay
         }
     
-    def _header_manipulation(self, context: Dict[str, Any]) -> Dict[str, str]:
+    def _header_manipulation(self, context: dict[str, Any]) -> dict[str, str]:
         """Advanced header manipulation"""
         headers = {}
         
@@ -295,7 +296,7 @@ class EvasionEngine:
         
         return headers
     
-    def _behavioral_randomization(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def _behavioral_randomization(self, context: dict[str, Any]) -> dict[str, Any]:
         """Randomize behavior patterns"""
         behaviors = {
             'mouse_movement': random.uniform(0.1, 2.0),
@@ -307,7 +308,7 @@ class EvasionEngine:
         
         return behaviors
     
-    def _fingerprint_evasion(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def _fingerprint_evasion(self, context: dict[str, Any]) -> dict[str, Any]:
         """Spoof browser fingerprint"""
         fingerprint = {
             'screen_resolution': f"{random.choice([1920, 1366, 1440])}x{random.choice([1080, 768, 900])}",
@@ -325,7 +326,7 @@ class EvasionEngine:
         
         return fingerprint
     
-    def _crypto_obfuscation(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def _crypto_obfuscation(self, context: dict[str, Any]) -> dict[str, Any]:
         """Cryptographic obfuscation techniques"""
         # Generate random keys for obfuscation
         key = hashlib.sha256(f"{time.time()}{random.random()}".encode()).hexdigest()
@@ -339,7 +340,7 @@ class EvasionEngine:
         
         return obfuscation_config
     
-    def _anti_forensics(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def _anti_forensics(self, context: dict[str, Any]) -> dict[str, Any]:
         """Anti-forensics techniques"""
         techniques = {
             'clear_logs': True,
@@ -352,7 +353,7 @@ class EvasionEngine:
         
         return techniques
     
-    def _environment_checking(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def _environment_checking(self, context: dict[str, Any]) -> dict[str, Any]:
         """Check for analysis environments"""
         checks = {
             'vm_detection': True,
@@ -413,7 +414,7 @@ class EvasionEngine:
         else:
             return "low"
     
-    def export_configuration(self) -> Dict[str, Any]:
+    def export_configuration(self) -> dict[str, Any]:
         """Export current evasion configuration"""
         return {
             'active_techniques': self.active_techniques,

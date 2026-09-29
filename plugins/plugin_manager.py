@@ -10,20 +10,22 @@ Plugin management system:
 - Plugin marketplace integration
 """
 
-import os
-import json
-import yaml
+import hashlib
 import importlib
 import inspect
+import json
 import logging
-from typing import Dict, List, Any, Optional, Type, Callable
-from datetime import datetime
-from dataclasses import dataclass, asdict
-from enum import Enum
-import hashlib
-import zipfile
-import tempfile
+import os
 import shutil
+import tempfile
+import zipfile
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional, Type
+
+import yaml
 
 
 class PluginStatus(Enum):
@@ -61,28 +63,28 @@ class PluginMetadata:
     license: str
     plugin_type: PluginType
     category: str
-    tags: List[str]
-    dependencies: List[str]
+    tags: list[str]
+    dependencies: list[str]
     python_version: str
     vantablack_version: str
     install_date: datetime
     last_updated: datetime
     file_hash: str
-    config_schema: Dict[str, Any]
-    hooks: List[str]
-    api_endpoints: List[str]
-    permissions: List[str]
+    config_schema: dict[str, Any]
+    hooks: list[str]
+    api_endpoints: list[str]
+    permissions: list[str]
 
 
 @dataclass
 class PluginConfig:
     """Plugin configuration"""
     plugin_id: str
-    config_data: Dict[str, Any]
+    config_data: dict[str, Any]
     is_enabled: bool
     auto_start: bool
     priority: int
-    resource_limits: Dict[str, Any]
+    resource_limits: dict[str, Any]
 
 
 @dataclass
@@ -93,7 +95,7 @@ class PluginInstance:
     module: Any
     instance: Any
     status: PluginStatus
-    error_message: Optional[str]
+    error_message: str | None
     load_time: datetime
     last_activity: datetime
 
@@ -104,8 +106,8 @@ class PluginManager:
     def __init__(self, plugin_dir: str = "plugins", config_dir: str = "config/plugins"):
         self.plugin_dir = plugin_dir
         self.config_dir = config_dir
-        self.plugins: Dict[str, PluginInstance] = {}
-        self.plugin_dependencies: Dict[str, List[str]] = {}
+        self.plugins: dict[str, PluginInstance] = {}
+        self.plugin_dependencies: dict[str, list[str]] = {}
         self.hook_system = None
         self.plugin_api = None
         self.sandbox = None
@@ -264,7 +266,7 @@ class PluginManager:
         
         logging.info(f"Plugin loaded: {metadata.name} v{metadata.version}")
     
-    def _validate_manifest(self, manifest: Dict[str, Any]):
+    def _validate_manifest(self, manifest: dict[str, Any]):
         """Validate plugin manifest"""
         required_fields = ["plugin_id", "name", "version", "description", "author", "type"]
         
@@ -389,7 +391,7 @@ class PluginManager:
             except Exception as e:
                 # Remove plugin directory if loading failed
                 shutil.rmtree(target_dir)
-                raise e
+                raise
     
     async def uninstall_plugin(self, plugin_id: str) -> bool:
         """Uninstall plugin"""
@@ -536,7 +538,7 @@ class PluginManager:
             logging.error(f"Failed to update plugin {plugin_id}: {e}")
             return False
     
-    def get_plugin_info(self, plugin_id: str) -> Optional[Dict[str, Any]]:
+    def get_plugin_info(self, plugin_id: str) -> dict[str, Any] | None:
         """Get plugin information"""
         if plugin_id not in self.plugins:
             return None
@@ -553,7 +555,7 @@ class PluginManager:
         }
     
     def list_plugins(self, status: PluginStatus = None, 
-                    plugin_type: PluginType = None) -> List[Dict[str, Any]]:
+                    plugin_type: PluginType = None) -> list[dict[str, Any]]:
         """List plugins with optional filters"""
         plugins = []
         
@@ -578,7 +580,7 @@ class PluginManager:
         
         return plugins
     
-    def get_plugin_config(self, plugin_id: str) -> Optional[Dict[str, Any]]:
+    def get_plugin_config(self, plugin_id: str) -> dict[str, Any] | None:
         """Get plugin configuration"""
         if plugin_id not in self.plugins:
             return None
@@ -586,7 +588,7 @@ class PluginManager:
         plugin_instance = self.plugins[plugin_id]
         return plugin_instance.config.config_data
     
-    async def update_plugin_config(self, plugin_id: str, config_data: Dict[str, Any]) -> bool:
+    async def update_plugin_config(self, plugin_id: str, config_data: dict[str, Any]) -> bool:
         """Update plugin configuration"""
         if plugin_id not in self.plugins:
             return False
@@ -613,7 +615,7 @@ class PluginManager:
             logging.error(f"Failed to update plugin config {plugin_id}: {e}")
             return False
     
-    def _validate_config(self, config: Dict[str, Any], schema: Dict[str, Any]):
+    def _validate_config(self, config: dict[str, Any], schema: dict[str, Any]):
         """Validate configuration against schema"""
         # Simple validation (can be enhanced with jsonschema)
         for field, field_schema in schema.items():
@@ -625,7 +627,7 @@ class PluginManager:
                 if field_type and not isinstance(config[field], eval(field_type)):
                     raise ValueError(f"Invalid type for field {field}")
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get plugin system statistics"""
         self.stats["total_plugins"] = len(self.plugins)
         self.stats["active_plugins"] = sum(1 for p in self.plugins.values() if p.status == PluginStatus.ACTIVE)
@@ -633,7 +635,7 @@ class PluginManager:
         
         return self.stats.copy()
     
-    async def execute_hook(self, hook_name: str, *args, **kwargs) -> List[Any]:
+    async def execute_hook(self, hook_name: str, *args, **kwargs) -> list[Any]:
         """Execute plugin hook"""
         if not self.hook_system:
             return []

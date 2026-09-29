@@ -13,12 +13,13 @@ WebSocket server for real-time updates:
 import asyncio
 import json
 import logging
-from typing import Dict, List, Any, Set, Optional
-from datetime import datetime
 import uuid
-from fastapi import WebSocket, WebSocketDisconnect
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
+from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional, Set
+
+from fastapi import WebSocket, WebSocketDisconnect
 
 
 class EventType(Enum):
@@ -37,10 +38,10 @@ class EventType(Enum):
 class WebSocketMessage:
     """WebSocket message structure"""
     event_type: EventType
-    data: Dict[str, Any]
+    data: dict[str, Any]
     timestamp: datetime
-    user_id: Optional[str] = None
-    session_id: Optional[str] = None
+    user_id: str | None = None
+    session_id: str | None = None
     message_id: str = None
     
     def __post_init__(self):
@@ -53,22 +54,22 @@ class WebSocketManager:
     
     def __init__(self):
         # Active connections by user
-        self.active_connections: Dict[str, List[WebSocket]] = {}
+        self.active_connections: dict[str, list[WebSocket]] = {}
         
         # Connection metadata
-        self.connection_metadata: Dict[str, Dict[str, Any]] = {}
+        self.connection_metadata: dict[str, dict[str, Any]] = {}
         
         # Room subscriptions
-        self.room_subscriptions: Dict[str, Set[str]] = {}
+        self.room_subscriptions: dict[str, set[str]] = {}
         
         # Event handlers
-        self.event_handlers: Dict[EventType, List[callable]] = {}
+        self.event_handlers: dict[EventType, list[callable]] = {}
         
         # Message queue for broadcasting
         self.message_queue: asyncio.Queue = asyncio.Queue()
         
         # Broadcast task
-        self.broadcast_task: Optional[asyncio.Task] = None
+        self.broadcast_task: asyncio.Task | None = None
         
         # Statistics
         self.stats = {
@@ -79,7 +80,7 @@ class WebSocketManager:
             "rooms_active": 0
         }
     
-    async def connect(self, websocket: WebSocket, user_id: str, session_id: str = None):
+    async def connect(self, websocket: WebSocket, user_id: str, session_id: str | None = None):
         """Accept and register WebSocket connection"""
         await websocket.accept()
         
@@ -270,7 +271,7 @@ class WebSocketManager:
                 timestamp=datetime.now()
             ))
     
-    async def handle_message(self, websocket: WebSocket, user_id: str, session_id: str, message_data: Dict[str, Any]):
+    async def handle_message(self, websocket: WebSocket, user_id: str, session_id: str, message_data: dict[str, Any]):
         """Handle incoming WebSocket message"""
         self.stats["messages_received"] += 1
         
@@ -302,7 +303,7 @@ class WebSocketManager:
             # Handle custom message types
             await self._handle_custom_message(user_id, session_id, message_data)
     
-    async def _handle_custom_message(self, user_id: str, session_id: str, message_data: Dict[str, Any]):
+    async def _handle_custom_message(self, user_id: str, session_id: str, message_data: dict[str, Any]):
         """Handle custom message types"""
         # This can be extended to handle custom message types
         logging.info(f"Custom message from user {user_id}: {message_data}")
@@ -331,8 +332,8 @@ class WebSocketManager:
         
         self.event_handlers[event_type].append(handler)
     
-    async def emit_event(self, event_type: EventType, data: Dict[str, Any], 
-                        user_id: str = None, room: str = None):
+    async def emit_event(self, event_type: EventType, data: dict[str, Any], 
+                        user_id: str | None = None, room: str | None = None):
         """Emit event to subscribers"""
         message = WebSocketMessage(
             event_type=event_type,
@@ -357,7 +358,7 @@ class WebSocketManager:
         else:
             await self.broadcast(message)
     
-    def get_connection_stats(self) -> Dict[str, Any]:
+    def get_connection_stats(self) -> dict[str, Any]:
         """Get connection statistics"""
         self.stats["active_connections"] = sum(len(connections) for connections in self.active_connections.values())
         self.stats["rooms_active"] = len(self.room_subscriptions)
@@ -368,7 +369,7 @@ class WebSocketManager:
             "rooms": {room: len(subscribers) for room, subscribers in self.room_subscriptions.items()}
         }
     
-    def get_user_connections(self, user_id: str) -> List[Dict[str, Any]]:
+    def get_user_connections(self, user_id: str) -> list[dict[str, Any]]:
         """Get user connection details"""
         connections = []
         
@@ -467,7 +468,7 @@ websocket_event_handler = WebSocketEventHandler(websocket_manager)
 
 
 # Helper functions for common WebSocket operations
-async def notify_campaign_update(campaign_id: str, update_data: Dict[str, Any]):
+async def notify_campaign_update(campaign_id: str, update_data: dict[str, Any]):
     """Notify campaign subscribers of updates"""
     await websocket_manager.emit_event(
         EventType.CAMPAIGN_UPDATE,
@@ -476,7 +477,7 @@ async def notify_campaign_update(campaign_id: str, update_data: Dict[str, Any]):
     )
 
 
-async def notify_analytics_update(user_id: str, analytics_data: Dict[str, Any]):
+async def notify_analytics_update(user_id: str, analytics_data: dict[str, Any]):
     """Notify user of analytics updates"""
     await websocket_manager.emit_event(
         EventType.ANALYTICS_UPDATE,
@@ -485,7 +486,7 @@ async def notify_analytics_update(user_id: str, analytics_data: Dict[str, Any]):
     )
 
 
-async def notify_system_alert(alert_data: Dict[str, Any]):
+async def notify_system_alert(alert_data: dict[str, Any]):
     """Notify system alert to admins"""
     await websocket_manager.emit_event(
         EventType.SYSTEM_ALERT,
@@ -493,7 +494,7 @@ async def notify_system_alert(alert_data: Dict[str, Any]):
     )
 
 
-async def notify_template_update(template_id: str, update_data: Dict[str, Any]):
+async def notify_template_update(template_id: str, update_data: dict[str, Any]):
     """Notify template subscribers of updates"""
     await websocket_manager.emit_event(
         EventType.TEMPLATE_UPDATE,
@@ -502,7 +503,7 @@ async def notify_template_update(template_id: str, update_data: Dict[str, Any]):
     )
 
 
-async def notify_optimization_update(optimization_id: str, update_data: Dict[str, Any], user_id: str = None):
+async def notify_optimization_update(optimization_id: str, update_data: dict[str, Any], user_id: str | None = None):
     """Notify optimization subscribers of updates"""
     await websocket_manager.emit_event(
         EventType.OPTIMIZATION_UPDATE,
@@ -513,7 +514,7 @@ async def notify_optimization_update(optimization_id: str, update_data: Dict[str
 
 
 # WebSocket endpoint handler
-async def websocket_endpoint(websocket: WebSocket, user_id: str, session_id: str = None):
+async def websocket_endpoint(websocket: WebSocket, user_id: str, session_id: str | None = None):
     """Main WebSocket endpoint handler"""
     try:
         # Connect

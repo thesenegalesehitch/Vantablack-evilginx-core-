@@ -12,12 +12,13 @@ Optimizes templates for better performance:
 
 import random
 import time
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from statistics import mean, median
-from .generator import TemplateGenerator, GeneratedTemplate, TemplateConfig
-from .ab_testing import ABTestManager, ABTestConfig, VariantMetrics
+from typing import Any, Dict, List, Optional, Tuple
+
+from .ab_testing import ABTestConfig, ABTestManager, VariantMetrics
+from .generator import GeneratedTemplate, TemplateConfig, TemplateGenerator
 
 
 @dataclass
@@ -28,8 +29,8 @@ class OptimizationConfig:
     max_variants: int
     test_duration_hours: int
     personalization_level: str
-    optimization_techniques: List[str]
-    budget_constraints: Dict[str, Any]
+    optimization_techniques: list[str]
+    budget_constraints: dict[str, Any]
 
 
 @dataclass
@@ -38,9 +39,9 @@ class OptimizationResult:
     optimization_id: str
     original_template: GeneratedTemplate
     optimized_template: GeneratedTemplate
-    improvement_metrics: Dict[str, float]
-    ab_test_results: Optional[Dict[str, Any]]
-    optimization_techniques_applied: List[str]
+    improvement_metrics: dict[str, float]
+    ab_test_results: dict[str, Any] | None
+    optimization_techniques_applied: list[str]
     performance_gain: float
     created_at: datetime
 
@@ -159,7 +160,7 @@ class TemplateOptimizer:
         )
     
     def _generate_optimization_variations(self, template: GeneratedTemplate, 
-                                      config: OptimizationConfig) -> List[GeneratedTemplate]:
+                                      config: OptimizationConfig) -> list[GeneratedTemplate]:
         """Generate variations for optimization testing"""
         variations = [template]
         
@@ -196,7 +197,7 @@ class TemplateOptimizer:
         
         return variations[:config.max_variants]
     
-    def _simulate_test_data(self, test_id: str, variations: List[GeneratedTemplate], 
+    def _simulate_test_data(self, test_id: str, variations: list[GeneratedTemplate], 
                            config: OptimizationConfig) -> None:
         """Simulate test data for demonstration purposes"""
         import random
@@ -243,7 +244,7 @@ class TemplateOptimizer:
         
         return goal_mapping.get(goal, 'conversion_rate')
     
-    def _get_template_metrics(self, template: GeneratedTemplate) -> Dict[str, float]:
+    def _get_template_metrics(self, template: GeneratedTemplate) -> dict[str, float]:
         """Get performance metrics for a template"""
         return {
             'conversion_rate': template.performance_score * 0.1,  # Simplified calculation
@@ -618,7 +619,7 @@ class TemplateOptimizer:
         social_proof_headlines = social_proof_headlines.get(platform.lower(), ['Sign in'])
         return random.choice(social_proof_headlines)
     
-    def _generate_trust_colors(self, platform: str) -> Dict[str, str]:
+    def _generate_trust_colors(self, platform: str) -> dict[str, str]:
         """Generate trust-based color schemes"""
         trust_colors = {
             'twitter': {
@@ -655,7 +656,7 @@ class TemplateOptimizer:
         
         return trust_colors.get(platform.lower(), trust_colors['google'])
     
-    def _generate_contrast_colors(self, platform: str) -> Dict[str, str]:
+    def _generate_contrast_colors(self, platform: str) -> dict[str, str]:
         """Generate contrast-based color schemes"""
         contrast_colors = {
             'twitter': {
@@ -692,7 +693,7 @@ class TemplateOptimizer:
         
         return contrast_colors.get(platform.lower(), contrast_colors['google'])
     
-    def _generate_emotional_colors(self, platform: str) -> Dict[str, str]:
+    def _generate_emotional_colors(self, platform: str) -> dict[str, str]:
         """Generate emotional color schemes"""
         emotional_colors = {
             'twitter': {
@@ -729,7 +730,7 @@ class TemplateOptimizer:
         
         return emotional_colors.get(platform.lower(), emotional_colors['google'])
     
-    def _generate_brand_colors(self, platform: str) -> Dict[str, str]:
+    def _generate_brand_colors(self, platform: str) -> dict[str, str]:
         """Generate brand-consistent color schemes"""
         brand_colors = {
             'twitter': {
@@ -766,7 +767,7 @@ class TemplateOptimizer:
         
         return brand_colors.get(platform.lower(), brand_colors['google'])
     
-    def _generate_random_variations(self) -> Dict[str, Any]:
+    def _generate_random_variations(self) -> dict[str, Any]:
         """Generate random template variations"""
         variations = {}
         
@@ -814,7 +815,7 @@ class TemplateOptimizer:
         
         return self.optimize_template(base_template, config)
     
-    def get_optimization_report(self, optimization_id: str) -> Dict[str, Any]:
+    def get_optimization_report(self, optimization_id: str) -> dict[str, Any]:
         """Get detailed optimization report"""
         # Find optimization result
         for result in self.optimization_history:
@@ -833,7 +834,7 @@ class TemplateOptimizer:
         
         return {'error': 'Optimization not found'}
     
-    def _get_improvement_recommendations(self, result: OptimizationResult) -> List[Dict[str, Any]]:
+    def _get_improvement_recommendations(self, result: OptimizationResult) -> list[dict[str, Any]]:
         """Generate improvement recommendations"""
         recommendations = []
         

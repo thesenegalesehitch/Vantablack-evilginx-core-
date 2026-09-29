@@ -11,10 +11,10 @@ Comprehensive plugin system for extensibility:
 - API extensions
 """
 
-from .plugin_manager import PluginManager
-from .plugin_loader import PluginLoader
 from .hook_system import HookSystem
 from .plugin_api import PluginAPI
+from .plugin_loader import PluginLoader
+from .plugin_manager import PluginManager
 from .plugin_sandbox import PluginSandbox
 
-__all__ = ["PluginManager", "PluginLoader", "HookSystem", "PluginAPI", "PluginSandbox"]
+__all__ = ["HookSystem", "PluginAPI", "PluginLoader", "PluginManager", "PluginSandbox"]

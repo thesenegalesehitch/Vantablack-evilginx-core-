@@ -13,16 +13,17 @@ Command line interface for template management:
 import argparse
 import json
 import sys
-from pathlib import Path
-from typing import Dict, List, Any, Optional
-from datetime import datetime
 import time
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from .generator import TemplateGenerator, TemplateConfig
 from core.banner import print_alex_banner
-from .ab_testing import ABTestManager, ABTestConfig
-from .optimizer import TemplateOptimizer, OptimizationConfig
-from .marketplace import TemplateMarketplace, TemplateCategory, TemplateStatus
+
+from .ab_testing import ABTestConfig, ABTestManager
+from .generator import TemplateConfig, TemplateGenerator
+from .marketplace import TemplateCategory, TemplateMarketplace, TemplateStatus
+from .optimizer import OptimizationConfig, TemplateOptimizer
 
 
 class TemplateCLI:
@@ -34,7 +35,7 @@ class TemplateCLI:
         self.optimizer = TemplateOptimizer()
         self.marketplace = TemplateMarketplace()
     
-    def run(self, args: List[str] = None) -> int:
+    def run(self, args: list[str] | None = None) -> int:
         """Main CLI entry point"""
         parser = argparse.ArgumentParser(
             description="VANTABLACK Template System CLI",
@@ -330,7 +331,7 @@ Examples:
             
             # Show test summary
             summary = self.ab_tester.get_test_summary(test_id)
-            print(f"\nTest Summary:")
+            print("\nTest Summary:")
             print(f"  Name: {summary['config']['name']}")
             print(f"  Variants: {', '.join(summary['config']['template_variants'])}")
             print(f"  Traffic split: {', '.join(f'{x:.1%}' for x in summary['config']['traffic_split'])}")
@@ -389,13 +390,13 @@ Examples:
         )
         
         print(f"  ✓ Template submitted: {template_id}")
-        print(f"  ✓ Status: Pending approval")
+        print("  ✓ Status: Pending approval")
         
         return 0
     
     def _handle_marketplace_search(self, args: argparse.Namespace) -> int:
         """Handle marketplace search"""
-        print(f"Searching marketplace...")
+        print("Searching marketplace...")
         
         # Build search parameters
         category = TemplateCategory(args.category) if args.category else None
@@ -462,7 +463,7 @@ Examples:
             print(f"  ✓ Downloaded to: {template_path}")
             return 0
         else:
-            print(f"  ✗ Template not found or not available")
+            print("  ✗ Template not found or not available")
             return 1
     
     def _handle_marketplace_review(self, args: argparse.Namespace) -> int:
@@ -483,7 +484,7 @@ Examples:
             print(f"  ✓ Review added: {review_id}")
             return 0
         else:
-            print(f"  ✗ Failed to add review")
+            print("  ✗ Failed to add review")
             return 1
     
     def _handle_marketplace_stats(self, args: argparse.Namespace) -> int:
@@ -500,12 +501,12 @@ Examples:
         print(f"  Average rating: {stats.average_rating:.2f}")
         
         if stats.top_categories:
-            print(f"\nTop Categories:")
+            print("\nTop Categories:")
             for cat in stats.top_categories:
                 print(f"  {cat['category']}: {cat['count']} templates")
         
         if stats.recent_activity:
-            print(f"\nRecent Activity:")
+            print("\nRecent Activity:")
             for activity in stats.recent_activity[:5]:
                 print(f"  {activity['type']}: {activity.get('name', activity.get('template_id', 'Unknown'))}")
         
@@ -535,10 +536,10 @@ Examples:
         success = self.marketplace.approve_template(args.template, args.reviewer, args.notes or "")
         
         if success:
-            print(f"  ✓ Template approved")
+            print("  ✓ Template approved")
             return 0
         else:
-            print(f"  ✗ Failed to approve template")
+            print("  ✗ Failed to approve template")
             return 1
     
     def _handle_admin_reject(self, args: argparse.Namespace) -> int:
@@ -548,10 +549,10 @@ Examples:
         success = self.marketplace.reject_template(args.template, args.reviewer, args.reason or "")
         
         if success:
-            print(f"  ✓ Template rejected")
+            print("  ✓ Template rejected")
             return 0
         else:
-            print(f"  ✗ Failed to reject template")
+            print("  ✗ Failed to reject template")
             return 1
     
     def _handle_admin_feature(self, args: argparse.Namespace) -> int:

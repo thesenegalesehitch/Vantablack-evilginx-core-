@@ -10,16 +10,17 @@ Comprehensive authentication and authorization system:
 - Security policies
 """
 
-import jwt
-import bcrypt
-import secrets
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
-from enum import Enum
-import logging
 import hashlib
 import json
+import logging
+import secrets
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+
+import bcrypt
+import jwt
 import redis.asyncio as redis
 from fastapi.concurrency import run_in_threadpool
 
@@ -42,9 +43,13 @@ SCOPES = {
     "objectives:write": "Create and manage objectives.",
 }
 
+# Type pour annotations : Permission = nom de scope (ex: "c2:read")
+# PEP 695 type alias syntax, Python 3.12+
+type Permission = str
+
 # Map roles to their allowed scopes
 ROLES_PERMISSIONS = {
-    UserRole.ADMIN: [s for s in SCOPES.keys()],
+    UserRole.ADMIN: [s for s in SCOPES],
     UserRole.OPERATOR: ["c2:read", "c2:write", "phishing:read", "phishing:write", "objectives:read", "objectives:write"],
     UserRole.VIEWER: ["c2:read", "phishing:read", "objectives:read"],
 }
@@ -58,14 +63,14 @@ class User:
     email: str
     password_hash: str
     role: UserRole
-    permissions: List[str]
+    permissions: list[str]
     is_active: bool
     created_at: datetime
-    last_login: Optional[datetime]
-    api_keys: List[str]
-    sessions: List[str]
+    last_login: datetime | None
+    api_keys: list[str]
+    sessions: list[str]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["role"] = self.role.value
         d["permissions"] = self.permissions
@@ -74,7 +79,7 @@ class User:
         return d
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "User":
+    def from_dict(cls, data: dict[str, Any]) -> "User":
         return cls(
             user_id=data["user_id"],
             username=data["username"],
@@ -102,7 +107,7 @@ class Session:
     user_agent: str
     is_active: bool
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["created_at"] = self.created_at.isoformat()
         d["expires_at"] = self.expires_at.isoformat()
@@ -110,7 +115,7 @@ class Session:
         return d
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Session":
+    def from_dict(cls, data: dict[str, Any]) -> "Session":
         return cls(
             session_id=data["session_id"],
             user_id=data["user_id"],
@@ -130,13 +135,13 @@ class APIKey:
     user_id: str
     key_hash: str
     name: str
-    permissions: List[str]
+    permissions: list[str]
     created_at: datetime
-    expires_at: Optional[datetime]
-    last_used: Optional[datetime]
+    expires_at: datetime | None
+    last_used: datetime | None
     is_active: bool
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["permissions"] = self.permissions
         d["created_at"] = self.created_at.isoformat()
@@ -145,7 +150,7 @@ class APIKey:
         return d
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "APIKey":
+    def from_dict(cls, data: dict[str, Any]) -> "APIKey":
         return cls(
             key_id=data["key_id"],
             user_id=data["user_id"],
@@ -162,8 +167,8 @@ class APIKey:
 class AuthManager:
     """Authentication and authorization manager"""
     
-    def __init__(self, secret_key: str = None, redis_url: str = "redis://localhost"):
-        from ..config import settings # TODO: Move to top-level import
+    def __init__(self, secret_key: str | None = None, redis_url: str = "redis://localhost"):
+        from ..config import settings  # TODO: Move to top-level import
 
         self.secret_key = secret_key or secrets.token_urlsafe(32)
         self.algorithm = "HS256"
@@ -207,7 +212,7 @@ class AuthManager:
         """Verify password against hash in a thread pool"""
         return await run_in_threadpool(bcrypt.checkpw, password.encode('utf-8'), password_hash.encode('utf-8'))
     
-    def _generate_jwt_token(self, user: User, expires_delta: timedelta = None) -> str:
+    def _generate_jwt_token(self, user: User, expires_delta: timedelta | None = None) -> str:
         """Generate JWT token for user"""
         if expires_delta:
             expire = datetime.utcnow() + expires_delta
@@ -273,7 +278,7 @@ class AuthManager:
     
     async def authenticate_user(self, username: str, password: str, 
                               ip_address: str = "127.0.0.1",
-                              user_agent: str = "Unknown") -> Optional[Dict[str, Any]]:
+                              user_agent: str = "Unknown") -> dict[str, Any] | None:
         """Authenticate user with username/password against Redis"""
         await self._initialize_default_admin()
         
@@ -337,7 +342,7 @@ class AuthManager:
             "session_id": session_id
         }
     
-    async def verify_token(self, token: str) -> Optional[Dict[str, Any]]:
+    async def verify_token(self, token: str) -> dict[str, Any] | None:
         """Verify JWT token and return user info from Redis"""
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
@@ -371,7 +376,7 @@ class AuthManager:
             logging.warning(f"Invalid token: {e}")
             return None
     
-    async def verify_api_key(self, api_key: str) -> Optional[Dict[str, Any]]:
+    async def verify_api_key(self, api_key: str) -> dict[str, Any] | None:
         """Verify API key against Redis and return user info"""
         key_hash = self._hash_api_key(api_key)
         
@@ -415,8 +420,8 @@ class AuthManager:
         }
     
     async def create_api_key(self, user_id: str, name: str, 
-                           permissions: List[Permission] = None,
-                           expires_in_days: int = None) -> str:
+                           permissions: list[Permission] | None = None,
+                           expires_in_days: int | None = None) -> str:
         """Create API key for user and store in Redis"""
         user_data = await self.redis.hgetall(f"user:{user_id}")
         if not user_data:
@@ -486,13 +491,13 @@ class AuthManager:
         logging.info(f"API key revoked: {key_id} for user {user_id}")
         return True
     
-    async def check_permission(self, user_info: Dict[str, Any], 
+    async def check_permission(self, user_info: dict[str, Any], 
                             required_permission: Permission) -> bool:
         """Check if user has required permission"""
         user_permissions = user_info.get("permissions", [])
         return required_permission.value in user_permissions
     
-    async def check_role(self, user_info: Dict[str, Any], required_role: UserRole) -> bool:
+    async def check_role(self, user_info: dict[str, Any], required_role: UserRole) -> bool:
         """Check if user has required role or higher"""
         user_role = UserRole(user_info.get("role", "viewer"))
         
@@ -595,7 +600,7 @@ class AuthManager:
         
         return len(expired_keys)
     
-    def get_user_info(self, user_id: str) -> Optional[Dict[str, Any]]:
+    def get_user_info(self, user_id: str) -> dict[str, Any] | None:
         """Get user information"""
         user = self.users.get(user_id)
         if not user:
@@ -614,7 +619,7 @@ class AuthManager:
             "sessions_count": len(user.sessions)
         }
     
-    def get_user_api_keys(self, user_id: str) -> List[Dict[str, Any]]:
+    def get_user_api_keys(self, user_id: str) -> list[dict[str, Any]]:
         """Get user API keys"""
         user = self.users.get(user_id)
         if not user:
@@ -636,7 +641,7 @@ class AuthManager:
         
         return api_keys
     
-    def get_user_sessions(self, user_id: str) -> List[Dict[str, Any]]:
+    def get_user_sessions(self, user_id: str) -> list[dict[str, Any]]:
         """Get user sessions"""
         user = self.users.get(user_id)
         if not user:
@@ -658,7 +663,7 @@ class AuthManager:
         
         return sessions
     
-    def get_system_stats(self) -> Dict[str, Any]:
+    def get_system_stats(self) -> dict[str, Any]:
         """Get system authentication statistics"""
         total_users = len(self.users)
         active_users = sum(1 for user in self.users.values() if user.is_active)
@@ -690,19 +695,19 @@ class AuthManager:
 
 
 # Dependency functions for FastAPI
-async def get_current_user(token: str) -> Optional[Dict[str, Any]]:
+async def get_current_user(token: str) -> dict[str, Any] | None:
     """Get current user from token"""
     auth_manager = AuthManager()
     return await auth_manager.verify_token(token)
 
 
-async def require_permission(user_info: Dict[str, Any], permission: Permission) -> bool:
+async def require_permission(user_info: dict[str, Any], permission: Permission) -> bool:
     """Require specific permission"""
     auth_manager = AuthManager()
     return await auth_manager.check_permission(user_info, permission)
 
 
-async def require_role(user_info: Dict[str, Any], role: UserRole) -> bool:
+async def require_role(user_info: dict[str, Any], role: UserRole) -> bool:
     """Require specific role or higher"""
     auth_manager = AuthManager()
     return await auth_manager.check_role(user_info, role)

@@ -10,15 +10,15 @@ Community-driven template marketplace:
 - Download and integration
 """
 
+import hashlib
 import json
-import uuid
+import os
 import time
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, asdict
+import uuid
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-import hashlib
-import os
+from typing import Any, Dict, List, Optional, Tuple
 
 
 class TemplateStatus(Enum):
@@ -55,7 +55,7 @@ class MarketplaceTemplate:
     css_content: str
     js_content: str
     preview_image: str
-    tags: List[str]
+    tags: list[str]
     status: TemplateStatus
     rating: float
     download_count: int
@@ -68,7 +68,7 @@ class MarketplaceTemplate:
     price: float
     is_premium: bool
     featured: bool
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 @dataclass
@@ -79,8 +79,8 @@ class TemplateReview:
     reviewer: str
     rating: int  # 1-5
     comment: str
-    pros: List[str]
-    cons: List[str]
+    pros: list[str]
+    cons: list[str]
     created_at: datetime
     helpful_count: int
 
@@ -94,8 +94,8 @@ class MarketplaceStats:
     total_downloads: int
     total_authors: int
     average_rating: float
-    top_categories: List[Dict[str, Any]]
-    recent_activity: List[Dict[str, Any]]
+    top_categories: list[dict[str, Any]]
+    recent_activity: list[dict[str, Any]]
 
 
 class TemplateMarketplace:
@@ -181,7 +181,7 @@ class TemplateMarketplace:
     
     def submit_template(self, name: str, description: str, author: str, author_email: str,
                        category: TemplateCategory, target_platform: str, html_content: str,
-                       css_content: str, js_content: str, tags: List[str],
+                       css_content: str, js_content: str, tags: list[str],
                        license: str = "MIT", price: float = 0.0, is_premium: bool = False) -> str:
         """Submit a new template to the marketplace"""
         template_id = str(uuid.uuid4())
@@ -308,7 +308,7 @@ class TemplateMarketplace:
         
         return True
     
-    def download_template(self, template_id: str, downloader: str) -> Optional[Dict[str, Any]]:
+    def download_template(self, template_id: str, downloader: str) -> dict[str, Any] | None:
         """Download a template"""
         if template_id not in self.templates:
             return None
@@ -349,7 +349,7 @@ class TemplateMarketplace:
         }
     
     def add_review(self, template_id: str, reviewer: str, rating: int, comment: str,
-                  pros: List[str] = None, cons: List[str] = None) -> str:
+                  pros: list[str] | None = None, cons: list[str] | None = None) -> str:
         """Add a review for a template"""
         if template_id not in self.templates:
             return None
@@ -389,9 +389,9 @@ class TemplateMarketplace:
         return review_id
     
     def search_templates(self, query: str = "", category: TemplateCategory = None,
-                        platform: str = "", tags: List[str] = None,
-                        min_rating: float = 0.0, max_price: float = None,
-                        featured_only: bool = False, limit: int = 50) -> List[MarketplaceTemplate]:
+                        platform: str = "", tags: list[str] | None = None,
+                        min_rating: float = 0.0, max_price: float | None = None,
+                        featured_only: bool = False, limit: int = 50) -> list[MarketplaceTemplate]:
         """Search templates with filters"""
         results = []
         
@@ -439,7 +439,7 @@ class TemplateMarketplace:
         
         return results[:limit]
     
-    def get_template_details(self, template_id: str) -> Optional[Dict[str, Any]]:
+    def get_template_details(self, template_id: str) -> dict[str, Any] | None:
         """Get detailed template information"""
         if template_id not in self.templates:
             return None
@@ -462,7 +462,7 @@ class TemplateMarketplace:
             'similar_templates': self._get_similar_templates(template_id)
         }
     
-    def _get_similar_templates(self, template_id: str, limit: int = 5) -> List[Dict[str, Any]]:
+    def _get_similar_templates(self, template_id: str, limit: int = 5) -> list[dict[str, Any]]:
         """Get similar templates"""
         if template_id not in self.templates:
             return []
@@ -509,7 +509,7 @@ class TemplateMarketplace:
         return similar[:limit]
     
     def get_popular_templates(self, category: TemplateCategory = None, 
-                            platform: str = "", limit: int = 10) -> List[Dict[str, Any]]:
+                            platform: str = "", limit: int = 10) -> list[dict[str, Any]]:
         """Get popular templates"""
         templates = self.search_templates(category=category, platform=platform, limit=100)
         
@@ -532,7 +532,7 @@ class TemplateMarketplace:
             for t in templates[:limit]
         ]
     
-    def get_featured_templates(self, limit: int = 10) -> List[Dict[str, Any]]:
+    def get_featured_templates(self, limit: int = 10) -> list[dict[str, Any]]:
         """Get featured templates"""
         featured = [t for t in self.templates.values() 
                    if t.status == TemplateStatus.APPROVED and t.featured]
@@ -556,7 +556,7 @@ class TemplateMarketplace:
             for t in featured[:limit]
         ]
     
-    def get_author_templates(self, author: str) -> List[Dict[str, Any]]:
+    def get_author_templates(self, author: str) -> list[dict[str, Any]]:
         """Get templates by author"""
         author_templates = [t for t in self.templates.values() if t.author == author]
         
@@ -587,7 +587,7 @@ class TemplateMarketplace:
         pending_templates = len([t for t in self.templates.values() 
                                 if t.status == TemplateStatus.PENDING])
         total_downloads = sum(t.download_count for t in self.templates.values())
-        total_authors = len(set(t.author for t in self.templates.values()))
+        total_authors = len({t.author for t in self.templates.values()})
         
         # Calculate average rating
         approved_templates = [t for t in self.templates.values() 
@@ -656,7 +656,7 @@ class TemplateMarketplace:
         
         template.updated_at = datetime.now()
     
-    def _serialize_template(self, template: MarketplaceTemplate) -> Dict[str, Any]:
+    def _serialize_template(self, template: MarketplaceTemplate) -> dict[str, Any]:
         """Serialize template for storage"""
         data = asdict(template)
         data['category'] = template.category.value
@@ -665,7 +665,7 @@ class TemplateMarketplace:
         data['updated_at'] = template.updated_at.isoformat()
         return data
     
-    def _deserialize_template(self, data: Dict[str, Any]) -> MarketplaceTemplate:
+    def _deserialize_template(self, data: dict[str, Any]) -> MarketplaceTemplate:
         """Deserialize template from storage"""
         data['category'] = TemplateCategory(data['category'])
         data['status'] = TemplateStatus(data['status'])
@@ -673,13 +673,13 @@ class TemplateMarketplace:
         data['updated_at'] = datetime.fromisoformat(data['updated_at'])
         return MarketplaceTemplate(**data)
     
-    def _serialize_review(self, review: TemplateReview) -> Dict[str, Any]:
+    def _serialize_review(self, review: TemplateReview) -> dict[str, Any]:
         """Serialize review for storage"""
         data = asdict(review)
         data['created_at'] = review.created_at.isoformat()
         return data
     
-    def _deserialize_review(self, data: Dict[str, Any]) -> TemplateReview:
+    def _deserialize_review(self, data: dict[str, Any]) -> TemplateReview:
         """Deserialize review from storage"""
         data['created_at'] = datetime.fromisoformat(data['created_at'])
         return TemplateReview(**data)
@@ -698,7 +698,7 @@ class TemplateMarketplace:
         
         return True
     
-    def get_pending_templates(self) -> List[Dict[str, Any]]:
+    def get_pending_templates(self) -> list[dict[str, Any]]:
         """Get templates pending approval"""
         pending = [t for t in self.templates.values() if t.status == TemplateStatus.PENDING]
         
@@ -718,7 +718,7 @@ class TemplateMarketplace:
             for t in pending
         ]
     
-    def get_flagged_templates(self) -> List[Dict[str, Any]]:
+    def get_flagged_templates(self) -> list[dict[str, Any]]:
         """Get flagged templates needing review"""
         flagged = [t for t in self.templates.values() if t.status == TemplateStatus.FLAGGED]
         
@@ -737,7 +737,7 @@ class TemplateMarketplace:
             for t in flagged
         ]
     
-    def export_template_package(self, template_id: str) -> Optional[Dict[str, Any]]:
+    def export_template_package(self, template_id: str) -> dict[str, Any] | None:
         """Export template as a package"""
         if template_id not in self.templates:
             return None
@@ -775,8 +775,8 @@ class TemplateMarketplace:
         
         return package
     
-    def import_template_package(self, package_data: Dict[str, Any], 
-                               importer: str) -> Optional[str]:
+    def import_template_package(self, package_data: dict[str, Any], 
+                               importer: str) -> str | None:
         """Import a template package"""
         try:
             package_info = package_data['package_info']

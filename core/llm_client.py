@@ -1,12 +1,14 @@
-import httpx
 import json
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
+
+import httpx
+
 from .config import settings
 
 logger = logging.getLogger("LLMClient")
 
-async def generate_text(prompt: str, model: str = None) -> str:
+async def generate_text(prompt: str, model: str | None = None) -> str:
     """
     Generates text using a local LLM via Ollama.
 

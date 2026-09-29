@@ -7,7 +7,7 @@ Generates detection signatures and extracts behavioral patterns.
 """
 
 from .analyzer import PhishletAnalyzer
-from .signature_generator import SignatureGenerator
 from .pattern_extractor import PatternExtractor
+from .signature_generator import SignatureGenerator
 
-__all__ = ["PhishletAnalyzer", "SignatureGenerator", "PatternExtractor"]
+__all__ = ["PatternExtractor", "PhishletAnalyzer", "SignatureGenerator"]

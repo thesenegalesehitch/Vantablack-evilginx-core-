@@ -10,14 +10,15 @@ Analyzes Evilginx phishlets to extract:
 - Anti-detection mechanisms
 """
 
-import yaml
-import json
-import re
 import asyncio
-from typing import Dict, List, Any, Optional
+import json
+import logging
+import re
 from dataclasses import dataclass
 from pathlib import Path
-import logging
+from typing import Any, Dict, List, Optional
+
+import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +28,12 @@ class PhishletStructure:
     """Structure of an analyzed phishlet"""
     name: str
     target_domain: str
-    auth_subdomains: List[str]
-    login_paths: List[str]
-    post_data_paths: List[str]
-    javascript_patterns: List[str]
-    anti_detection: List[str]
-    data_extraction: Dict[str, Any]
+    auth_subdomains: list[str]
+    login_paths: list[str]
+    post_data_paths: list[str]
+    javascript_patterns: list[str]
+    anti_detection: list[str]
+    data_extraction: dict[str, Any]
     risk_score: float
 
 
@@ -118,7 +119,7 @@ class PhishletAnalyzer:
             logger.error(f"Failed to analyze phishlet {phishlet_path}: {e}")
             raise
     
-    def _extract_auth_subdomains(self, phishlet_data: Dict) -> List[str]:
+    def _extract_auth_subdomains(self, phishlet_data: dict) -> list[str]:
         """Extract authentication subdomains from phishlet config"""
         subdomains = []
         
@@ -135,7 +136,7 @@ class PhishletAnalyzer:
         
         return list(set(subdomains))
     
-    def _extract_login_paths(self, phishlet_data: Dict) -> List[str]:
+    def _extract_login_paths(self, phishlet_data: dict) -> list[str]:
         """Extract login/authentication paths"""
         paths = []
         
@@ -148,7 +149,7 @@ class PhishletAnalyzer:
         
         return list(set(paths))
     
-    def _extract_post_paths(self, phishlet_data: Dict) -> List[str]:
+    def _extract_post_paths(self, phishlet_data: dict) -> list[str]:
         """Extract paths that handle POST requests"""
         paths = []
         
@@ -158,7 +159,7 @@ class PhishletAnalyzer:
         
         return list(set(paths))
     
-    async def _analyze_javascript(self, phishlet_path: Path) -> List[str]:
+    async def _analyze_javascript(self, phishlet_path: Path) -> list[str]:
         """Analyze JavaScript files for patterns"""
         patterns = []
         
@@ -186,7 +187,7 @@ class PhishletAnalyzer:
         
         return patterns
     
-    def _detect_anti_detection(self, phishlet_data: Dict) -> List[str]:
+    def _detect_anti_detection(self, phishlet_data: dict) -> list[str]:
         """Detect anti-detection mechanisms"""
         mechanisms = []
         
@@ -208,7 +209,7 @@ class PhishletAnalyzer:
         
         return mechanisms
     
-    def _extract_data_points(self, phishlet_data: Dict) -> Dict[str, Any]:
+    def _extract_data_points(self, phishlet_data: dict) -> dict[str, Any]:
         """Extract data extraction points"""
         extraction_points = {}
         
@@ -231,19 +232,19 @@ class PhishletAnalyzer:
         
         return extraction_points
     
-    def _extract_json_fields(self, rule: Dict) -> List[str]:
+    def _extract_json_fields(self, rule: dict) -> list[str]:
         """Extract JSON field names from POST data"""
         # This would need to be implemented based on actual POST data samples
         return ['username', 'password', 'csrf_token']
     
-    def _extract_form_fields(self, rule: Dict) -> List[str]:
+    def _extract_form_fields(self, rule: dict) -> list[str]:
         """Extract form field names from POST data"""
         # This would need to be implemented based on actual POST data samples
         return ['login', 'passwd', 'csrf']
     
-    def _calculate_risk_score(self, subdomains: List[str], 
-                            paths: List[str], 
-                            anti_detection: List[str]) -> float:
+    def _calculate_risk_score(self, subdomains: list[str], 
+                            paths: list[str], 
+                            anti_detection: list[str]) -> float:
         """Calculate risk score based on complexity and sophistication"""
         score = 0.0
         
@@ -259,7 +260,7 @@ class PhishletAnalyzer:
         # Cap at 10.0
         return min(score, 10.0)
     
-    async def batch_analyze(self, phishlet_dir: str) -> List[PhishletStructure]:
+    async def batch_analyze(self, phishlet_dir: str) -> list[PhishletStructure]:
         """Analyze all phishlets in a directory"""
         results = []
         

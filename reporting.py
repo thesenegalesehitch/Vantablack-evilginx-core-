@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-import json
 import datetime
+import json
 import os
 import random
+
 
 # Mock Data for Report
 def generate_audit_report(output_file="AUDIT_REPORT_FINAL.html"):

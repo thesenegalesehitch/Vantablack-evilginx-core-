@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-import os
-import sys
-import shutil
-import time
 import glob
+import os
+import shutil
+import sys
+import time
 
 # Colors for maximum impact
 RED = '\033[91m'

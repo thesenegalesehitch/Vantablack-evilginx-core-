@@ -1,7 +1,9 @@
 # api/crypto.py
 import base64
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 import os
+
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
 
 def encrypt(data: bytes, key: bytes) -> str:
     """Encrypts data using AES-GCM and returns a base64 encoded string."""

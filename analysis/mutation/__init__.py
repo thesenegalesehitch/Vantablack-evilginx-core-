@@ -10,9 +10,9 @@ Advanced phishlet mutation system for bypassing detection:
 - Template randomization
 """
 
-from .mutator import PhishletMutator
 from .domain_generator import DomainGenerator
-from .obfuscator import JavaScriptObfuscator
 from .evasion_engine import EvasionEngine
+from .mutator import PhishletMutator
+from .obfuscator import JavaScriptObfuscator
 
-__all__ = ["PhishletMutator", "DomainGenerator", "JavaScriptObfuscator", "EvasionEngine"]
+__all__ = ["DomainGenerator", "EvasionEngine", "JavaScriptObfuscator", "PhishletMutator"]

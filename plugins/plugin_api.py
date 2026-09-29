@@ -11,14 +11,14 @@ Plugin API for plugin developers:
 - Data storage
 """
 
-import logging
-import json
-import os
-from typing import Dict, List, Any, Optional, Union
-from datetime import datetime
-from dataclasses import dataclass
 import asyncio
+import json
+import logging
+import os
+from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
 
 @dataclass
@@ -29,8 +29,8 @@ class APIEndpoint:
     handler: callable
     plugin_id: str
     description: str
-    permissions: List[str]
-    rate_limit: Optional[int] = None
+    permissions: list[str]
+    rate_limit: int | None = None
 
 
 class PluginAPI:
@@ -41,16 +41,16 @@ class PluginAPI:
         self.logger = logging.getLogger("plugin_api")
         
         # API endpoints registry
-        self.endpoints: Dict[str, APIEndpoint] = {}
+        self.endpoints: dict[str, APIEndpoint] = {}
         
         # Plugin data storage
-        self.data_storage: Dict[str, Dict[str, Any]] = {}
+        self.data_storage: dict[str, dict[str, Any]] = {}
         
         # Plugin configuration
-        self.config_cache: Dict[str, Dict[str, Any]] = {}
+        self.config_cache: dict[str, dict[str, Any]] = {}
         
         # Resource limits
-        self.resource_limits: Dict[str, Dict[str, Any]] = {}
+        self.resource_limits: dict[str, dict[str, Any]] = {}
         
         # API statistics
         self.stats = {
@@ -61,11 +61,11 @@ class PluginAPI:
             "config_operations": 0
         }
     
-    def get_plugin_info(self, plugin_id: str) -> Optional[Dict[str, Any]]:
+    def get_plugin_info(self, plugin_id: str) -> dict[str, Any] | None:
         """Get plugin information"""
         return self.plugin_manager.get_plugin_info(plugin_id)
     
-    def get_plugin_config(self, plugin_id: str) -> Dict[str, Any]:
+    def get_plugin_config(self, plugin_id: str) -> dict[str, Any]:
         """Get plugin configuration"""
         if plugin_id not in self.config_cache:
             config = self.plugin_manager.get_plugin_config(plugin_id)
@@ -73,7 +73,7 @@ class PluginAPI:
         
         return self.config_cache[plugin_id].copy()
     
-    async def update_plugin_config(self, plugin_id: str, config_data: Dict[str, Any]) -> bool:
+    async def update_plugin_config(self, plugin_id: str, config_data: dict[str, Any]) -> bool:
         """Update plugin configuration"""
         success = await self.plugin_manager.update_plugin_config(plugin_id, config_data)
         
@@ -120,7 +120,7 @@ class PluginAPI:
             self.logger.error(f"Failed to delete data for plugin {plugin_id}: {e}")
             return False
     
-    def get_all_data(self, plugin_id: str) -> Dict[str, Any]:
+    def get_all_data(self, plugin_id: str) -> dict[str, Any]:
         """Get all plugin data"""
         return self.data_storage.get(plugin_id, {}).copy()
     
@@ -137,7 +137,7 @@ class PluginAPI:
             self.logger.error(f"Failed to clear data for plugin {plugin_id}: {e}")
             return False
     
-    def persist_data(self, plugin_id: str, file_path: str = None) -> bool:
+    def persist_data(self, plugin_id: str, file_path: str | None = None) -> bool:
         """Persist plugin data to file"""
         try:
             if plugin_id not in self.data_storage:
@@ -160,7 +160,7 @@ class PluginAPI:
             self.logger.error(f"Failed to persist data for plugin {plugin_id}: {e}")
             return False
     
-    def load_data(self, plugin_id: str, file_path: str = None) -> bool:
+    def load_data(self, plugin_id: str, file_path: str | None = None) -> bool:
         """Load plugin data from file"""
         try:
             if file_path is None:
@@ -184,7 +184,7 @@ class PluginAPI:
             self.logger.error(f"Failed to load data for plugin {plugin_id}: {e}")
             return False
     
-    def register_endpoint(self, plugin_id: str, endpoint_config: Dict[str, Any], plugin_instance):
+    def register_endpoint(self, plugin_id: str, endpoint_config: dict[str, Any], plugin_instance):
         """Register API endpoint"""
         try:
             endpoint = APIEndpoint(
@@ -224,13 +224,13 @@ class PluginAPI:
             self.logger.error(f"Failed to unregister endpoint for plugin {plugin_id}: {e}")
             return False
     
-    async def execute_hook(self, hook_name: str, *args, **kwargs) -> List[Any]:
+    async def execute_hook(self, hook_name: str, *args, **kwargs) -> list[Any]:
         """Execute plugin hook"""
         if self.plugin_manager.hook_system:
             return await self.plugin_manager.hook_system.execute_hook(hook_name, *args, **kwargs)
         return []
     
-    def emit_event(self, event_type: str, data: Dict[str, Any], target_plugin_id: str = None):
+    def emit_event(self, event_type: str, data: dict[str, Any], target_plugin_id: str | None = None):
         """Emit event to plugins"""
         # This would integrate with the event system
         self.logger.info(f"Event emitted: {event_type} -> {target_plugin_id or 'all'}")
@@ -244,7 +244,7 @@ class PluginAPI:
         if not logger.handlers:
             handler = logging.StreamHandler()
             formatter = logging.Formatter(
-                f'[{asctime}] [{levelname}] [plugin:{plugin_id}] {message}',
+                '[{asctime}] [{levelname}] [plugin:' + str(plugin_id) + '] {message}',
                 style='{'
             )
             handler.setFormatter(formatter)
@@ -262,7 +262,7 @@ class PluginAPI:
         permissions = plugin_info.get("metadata", {}).get("permissions", [])
         return permission in permissions
     
-    def get_resource_limits(self, plugin_id: str) -> Dict[str, Any]:
+    def get_resource_limits(self, plugin_id: str) -> dict[str, Any]:
         """Get resource limits for plugin"""
         if plugin_id not in self.resource_limits:
             plugin_info = self.get_plugin_info(plugin_id)
@@ -296,9 +296,7 @@ class PluginAPI:
         limit = limits[resource]
         
         # Different limit types
-        if isinstance(limit, int) and isinstance(current_value, int):
-            return current_value <= limit
-        elif isinstance(limit, float) and isinstance(current_value, float):
+        if isinstance(limit, int) and isinstance(current_value, int) or isinstance(limit, float) and isinstance(current_value, float):
             return current_value <= limit
         elif isinstance(limit, str) and isinstance(current_value, str):
             return len(current_value) <= int(limit)
@@ -345,7 +343,7 @@ class PluginAPI:
             self.logger.error(f"Failed to create file for plugin {plugin_id}: {e}")
             return False
     
-    def read_plugin_file(self, plugin_id: str, file_path: str) -> Optional[str]:
+    def read_plugin_file(self, plugin_id: str, file_path: str) -> str | None:
         """Read file from plugin directory"""
         try:
             full_path = os.path.join(self.get_plugin_directory(plugin_id), file_path)
@@ -375,7 +373,7 @@ class PluginAPI:
             self.logger.error(f"Failed to delete file for plugin {plugin_id}: {e}")
             return False
     
-    def list_plugin_files(self, plugin_id: str, directory: str = "") -> List[str]:
+    def list_plugin_files(self, plugin_id: str, directory: str = "") -> list[str]:
         """List files in plugin directory"""
         try:
             full_path = os.path.join(self.get_plugin_directory(plugin_id), directory)
@@ -394,13 +392,13 @@ class PluginAPI:
             self.logger.error(f"Failed to list files for plugin {plugin_id}: {e}")
             return []
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get API statistics"""
         self.stats["registered_endpoints"] = len(self.endpoints)
         self.stats["active_plugins"] = len(self.data_storage)
         return self.stats.copy()
     
-    def cleanup(self, plugin_id: str = None):
+    def cleanup(self, plugin_id: str | None = None):
         """Cleanup API resources"""
         if plugin_id:
             # Cleanup specific plugin
@@ -436,7 +434,7 @@ class PluginAPI:
 class PluginBase:
     """Base class for plugins"""
     
-    def __init__(self, api: PluginAPI, config: Dict[str, Any]):
+    def __init__(self, api: PluginAPI, config: dict[str, Any]):
         self.api = api
         self.config = config
         self.plugin_id = config.get("plugin_id", "unknown")
@@ -468,7 +466,7 @@ class PluginBase:
         # Emit stop event
         await self.api.execute_hook("plugin.after_stop", self.plugin_id)
     
-    async def on_config_change(self, new_config: Dict[str, Any]):
+    async def on_config_change(self, new_config: dict[str, Any]):
         """Handle configuration change"""
         self.logger.info(f"Configuration changed for plugin: {self.plugin_id}")
         self.config.update(new_config)
@@ -476,7 +474,7 @@ class PluginBase:
         # Emit config change event
         await self.api.execute_hook("plugin.config_changed", self.plugin_id, new_config)
     
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get plugin status"""
         return {
             "plugin_id": self.plugin_id,
@@ -485,7 +483,7 @@ class PluginBase:
             "uptime": (datetime.now() - self.start_time).total_seconds() if self.start_time else 0
         }
     
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         """Plugin health check"""
         return {
             "healthy": self.is_running,
@@ -495,8 +493,8 @@ class PluginBase:
 
 
 # Plugin decorators
-def plugin_endpoint(path: str, method: str = "GET", permissions: List[str] = None, 
-                   rate_limit: int = None, description: str = ""):
+def plugin_endpoint(path: str, method: str = "GET", permissions: list[str] | None = None, 
+                   rate_limit: int | None = None, description: str = ""):
     """Decorator for plugin API endpoints"""
     def decorator(func):
         func.__endpoint_config__ = {

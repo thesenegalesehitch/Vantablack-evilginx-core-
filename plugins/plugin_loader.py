@@ -10,31 +10,31 @@ Dynamic plugin loading system:
 - Security checks
 """
 
-import os
-import sys
+import asyncio
 import importlib
 import importlib.util
 import inspect
+import json
 import logging
+import os
+import sys
 import threading
-import asyncio
-from typing import Dict, List, Any, Optional, Type, Callable
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-import json
+from typing import Any, Dict, List, Optional, Type
+
 import yaml
-from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
 
 class PluginLoadError(Exception):
     """Plugin loading error"""
-    pass
 
 
 class PluginValidationError(Exception):
     """Plugin validation error"""
-    pass
 
 
 class PluginWatcher(FileSystemEventHandler):
@@ -79,9 +79,9 @@ class PluginLoader:
     def __init__(self, plugin_manager):
         self.plugin_manager = plugin_manager
         self.logger = logging.getLogger(__name__)
-        self.loaded_modules: Dict[str, Any] = {}
-        self.module_cache: Dict[str, Any] = {}
-        self.dependency_graph: Dict[str, List[str]] = {}
+        self.loaded_modules: dict[str, Any] = {}
+        self.module_cache: dict[str, Any] = {}
+        self.dependency_graph: dict[str, list[str]] = {}
         self.observer = None
         self.watcher = None
         
@@ -141,7 +141,7 @@ class PluginLoader:
             self.logger.error(f"Failed to load plugin module {plugin_id}: {e}")
             raise PluginLoadError(f"Failed to load plugin module: {e}")
     
-    def _find_main_file(self, plugin_path: str) -> Optional[str]:
+    def _find_main_file(self, plugin_path: str) -> str | None:
         """Find main plugin file"""
         main_files = ["main.py", "__init__.py", "plugin.py"]
         
@@ -233,7 +233,7 @@ class PluginLoader:
                 del sys.modules[plugin_id]
             
             # Remove submodules
-            modules_to_remove = [name for name in sys.modules.keys() if name.startswith(plugin_id + '.')]
+            modules_to_remove = [name for name in sys.modules if name.startswith(plugin_id + '.')]
             for module_name in modules_to_remove:
                 del sys.modules[module_name]
             
@@ -285,7 +285,7 @@ class PluginLoader:
                 del sys.modules[plugin_id]
             
             # Remove submodules
-            modules_to_remove = [name for name in sys.modules.keys() if name.startswith(plugin_id + '.')]
+            modules_to_remove = [name for name in sys.modules if name.startswith(plugin_id + '.')]
             for module_name in modules_to_remove:
                 del sys.modules[module_name]
             
@@ -299,7 +299,7 @@ class PluginLoader:
             self.logger.error(f"Failed to unload plugin module {plugin_id}: {e}")
             return False
     
-    def resolve_dependencies(self, plugin_id: str, dependencies: List[str]) -> List[str]:
+    def resolve_dependencies(self, plugin_id: str, dependencies: list[str]) -> list[str]:
         """Resolve plugin dependencies"""
         resolved = []
         unresolved = dependencies.copy()
@@ -376,7 +376,7 @@ class PluginLoader:
             self.logger.error(f"Security validation failed: {e}")
             return False
     
-    def get_module_info(self, plugin_id: str) -> Optional[Dict[str, Any]]:
+    def get_module_info(self, plugin_id: str) -> dict[str, Any] | None:
         """Get module information"""
         if plugin_id not in self.loaded_modules:
             return None
@@ -395,11 +395,11 @@ class PluginLoader:
             "load_time": datetime.now().isoformat()
         }
     
-    def get_dependency_graph(self) -> Dict[str, List[str]]:
+    def get_dependency_graph(self) -> dict[str, list[str]]:
         """Get plugin dependency graph"""
         return self.dependency_graph.copy()
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get loader statistics"""
         return self.stats.copy()
     

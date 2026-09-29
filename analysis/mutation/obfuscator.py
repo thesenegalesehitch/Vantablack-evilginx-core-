@@ -10,12 +10,12 @@ Generates obfuscated JavaScript for evasion:
 - Anti-analysis
 """
 
-import random
-import string
 import base64
 import hashlib
-from typing import List, Dict, Any
+import random
 import re
+import string
+from typing import Any, Dict, List
 
 
 class JavaScriptObfuscator:
@@ -48,7 +48,7 @@ class JavaScriptObfuscator:
             self._function_renaming
         ]
     
-    def generate_evasion_script(self, techniques: List[str] = None) -> str:
+    def generate_evasion_script(self, techniques: list[str] | None = None) -> str:
         """Generate complete evasion script"""
         if techniques is None:
             # Randomly select techniques
@@ -412,7 +412,7 @@ class JavaScriptObfuscator:
 })();
 """
     
-    def generate_network_check(self) -> allowed_domains: List[str] = None) -> str:
+    def generate_network_check(self, allowed_domains: list[str] | None = None) -> str:
         """Generate network connectivity check"""
         if allowed_domains is None:
             allowed_domains = ['google.com', 'facebook.com', 'microsoft.com']

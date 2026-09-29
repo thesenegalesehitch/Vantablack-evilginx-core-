@@ -12,13 +12,16 @@ Real-time monitoring specifically for Twitter campaigns:
 
 import asyncio
 import json
+import random
 import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Callable
-from dataclasses import dataclass, asdict
 from collections import defaultdict, deque
-import websockets
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
 import aiohttp
+import websockets
 
 
 @dataclass
@@ -30,7 +33,7 @@ class TwitterAlert:
     message: str
     timestamp: datetime
     campaign_id: str
-    metrics: Dict[str, Any]
+    metrics: dict[str, Any]
     recommended_action: str
 
 
@@ -100,7 +103,7 @@ class TwitterMonitor:
             ]
         }
     
-    async def start_monitoring(self, campaign_id: str, config: Dict[str, Any]) -> None:
+    async def start_monitoring(self, campaign_id: str, config: dict[str, Any]) -> None:
         """Start monitoring a Twitter campaign"""
         self.active_campaigns[campaign_id] = {
             'config': config,
@@ -145,7 +148,7 @@ class TwitterMonitor:
                     campaign_id,
                     'technical',
                     'high',
-                    f"Monitoring error: {str(e)}",
+                    f"Monitoring error: {e!s}",
                     {'error': str(e)}
                 )
                 await asyncio.sleep(60)  # Wait longer on error
@@ -181,7 +184,7 @@ class TwitterMonitor:
         
         self.metrics_history[campaign_id].append(combined_metrics)
     
-    async def _collect_from_logs(self, campaign_id: str) -> Dict[str, int]:
+    async def _collect_from_logs(self, campaign_id: str) -> dict[str, int]:
         """Collect metrics from log files"""
         metrics = defaultdict(int)
         
@@ -202,7 +205,7 @@ class TwitterMonitor:
         
         return dict(metrics)
     
-    async def _collect_from_api(self, campaign_id: str) -> Dict[str, int]:
+    async def _collect_from_api(self, campaign_id: str) -> dict[str, int]:
         """Collect metrics from API endpoints"""
         metrics = defaultdict(int)
         
@@ -221,7 +224,7 @@ class TwitterMonitor:
         
         return dict(metrics)
     
-    async def _collect_from_external(self, campaign_id: str) -> Dict[str, Any]:
+    async def _collect_from_external(self, campaign_id: str) -> dict[str, Any]:
         """Collect metrics from external sources"""
         metrics = {}
         
@@ -304,7 +307,7 @@ class TwitterMonitor:
             )
     
     async def _create_alert(self, campaign_id: str, category: str, severity: str, 
-                           message: str, metrics_data: Dict[str, Any]) -> None:
+                           message: str, metrics_data: dict[str, Any]) -> None:
         """Create and handle an alert"""
         alert = TwitterAlert(
             alert_id=f"alert_{int(time.time())}_{campaign_id}",
@@ -331,7 +334,7 @@ class TwitterMonitor:
             print(f"ALERT [{severity.upper()}] {campaign_id}: {message}")
     
     def _get_recommended_action(self, category: str, severity: str, 
-                               metrics_data: Dict[str, Any]) -> str:
+                               metrics_data: dict[str, Any]) -> str:
         """Get recommended action for alert"""
         actions = {
             'detection': {
@@ -366,7 +369,7 @@ class TwitterMonitor:
         """Add alert handler for specific category"""
         self.alert_handlers[category].append(handler)
     
-    async def get_campaign_summary(self, campaign_id: str) -> Dict[str, Any]:
+    async def get_campaign_summary(self, campaign_id: str) -> dict[str, Any]:
         """Get campaign summary with metrics and alerts"""
         if campaign_id not in self.active_campaigns:
             return {'error': 'Campaign not found'}
@@ -418,7 +421,7 @@ class TwitterMonitor:
         }
     
     async def export_monitoring_data(self, campaign_id: str, 
-                                   output_file: str = None) -> Dict[str, Any]:
+                                   output_file: str | None = None) -> dict[str, Any]:
         """Export monitoring data for analysis"""
         summary = await self.get_campaign_summary(campaign_id)
         

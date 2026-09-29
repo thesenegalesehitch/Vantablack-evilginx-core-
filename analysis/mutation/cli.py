@@ -6,17 +6,18 @@ VANTABLACK Mutation CLI
 Command-line interface for phishlet mutation and evasion.
 """
 
-import asyncio
 import argparse
+import asyncio
 import json
 import sys
 from pathlib import Path
+
 from core.banner import print_alex_banner
 
-from .mutator import PhishletMutator, MutationConfig
 from .domain_generator import DomainGenerator
-from .obfuscator import JavaScriptObfuscator
 from .evasion_engine import EvasionEngine, EvasionLevel
+from .mutator import MutationConfig, PhishletMutator
+from .obfuscator import JavaScriptObfuscator
 
 
 async def main():

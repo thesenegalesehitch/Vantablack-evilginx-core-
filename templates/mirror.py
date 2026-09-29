@@ -1,6 +1,8 @@
+from typing import List, Optional, Tuple
+
 import httpx
 from bs4 import BeautifulSoup
-from typing import Tuple, List, Optional
+
 
 def _fetch(url: str) -> str:
     with httpx.Client(timeout=5.0, headers={"User-Agent": "Mozilla/5.0"}) as client:
@@ -8,7 +10,7 @@ def _fetch(url: str) -> str:
         r.raise_for_status()
         return r.text
 
-def _fetch_css_links(soup: BeautifulSoup, base_url: str) -> List[str]:
+def _fetch_css_links(soup: BeautifulSoup, base_url: str) -> list[str]:
     links = []
     for link in soup.find_all("link", rel="stylesheet"):
         href = link.get("href")
@@ -24,7 +26,7 @@ def _fetch_css_links(soup: BeautifulSoup, base_url: str) -> List[str]:
                     links.append(base_url + href)
     return links
 
-def mirror(url: str, form_action: Optional[str] = None) -> Tuple[str, str]:
+def mirror(url: str, form_action: str | None = None) -> tuple[str, str]:
     html = _fetch(url)
     soup = BeautifulSoup(html, "html.parser")
     if form_action:

@@ -8,11 +8,35 @@ Advanced victim behavior analysis and campaign optimization:
 - Campaign performance analytics
 - Conversion rate optimization
 - A/B testing analytics
+- Attack vector prediction (Markov, Bayes, Poisson, Ensemble)
 """
 
 from .analyzer import BehavioralAnalyzer
-from .tracker import UserTracker
 from .optimizer import CampaignOptimizer
-from .predictor import BehaviorPredictor
+from .predictor import (
+    ATTACK_STATES,
+    BehaviorPredictor,
+    BivariatePoissonTimingModel,
+    EnsembleMetaLearner,
+    EnsemblePrediction,
+    MarkovChainAttackPredictor,
+    NaiveBayesAttackClassifier,
+    PredictionResult,
+    UserSegment,
+)
+from .tracker import UserTracker
 
-__all__ = ["BehavioralAnalyzer", "UserTracker", "CampaignOptimizer", "BehaviorPredictor"]
+__all__ = [
+    "ATTACK_STATES",
+    "BehaviorPredictor",
+    "BehavioralAnalyzer",
+    "BivariatePoissonTimingModel",
+    "CampaignOptimizer",
+    "EnsembleMetaLearner",
+    "EnsemblePrediction",
+    "MarkovChainAttackPredictor",
+    "NaiveBayesAttackClassifier",
+    "PredictionResult",
+    "UserSegment",
+    "UserTracker",
+]

