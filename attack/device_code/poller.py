@@ -141,6 +141,82 @@ class DeviceCodePoller:
         computed = base * multiplier
         return min(computed, 30.0)
 
+    async def _poll_real(self) -> dict[str, Any] | None:
+        """Un cycle de polling RÉEL contre le provider (Microsoft).
+
+        Retourne le dict token si autorisé, None sinon (pending/slow_down).
+        Lève RuntimeError en cas d'erreur protocolaire définitive.
+        """
+        import httpx
+
+        tenant = getattr(self, "tenant", "consumers")
+        url = f"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
+        resp = await asyncio.to_thread(
+            httpx.post,
+            url,
+            data={
+                "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+                "client_id": self.flow.client_id,
+                "device_code": self.flow.device_code,
+            },
+            timeout=15,
+        )
+        d = resp.json()
+        if resp.status_code == 200 and "access_token" in d:
+            return d
+        err = d.get("error", "")
+        if err in ("authorization_pending", "slow_down"):
+            return None
+        if err == "expired_token":
+            self.flow.state = "expired"
+            return None
+        raise RuntimeError(f"Device code polling erreur: {err or resp.status_code}")
+
+    async def poll_real(self, max_wait_s: int = 900) -> DeviceCodeFlow:
+        """Boucle de polling RÉELLE (protocol RFC 8628) jusqu'à autorisation.
+
+        La victime doit entrer self.flow.user_code sur self.flow.verification_uri.
+        Dès que Microsoft retourne un access_token, le flow passe 'authorized'
+        et self.flow.result contient access_token + refresh_token RÉELS.
+        """
+        self._stop_event = asyncio.Event()
+        start = datetime.utcnow()
+        while not self._stop_event.is_set():
+            if (datetime.utcnow() - start).total_seconds() >= max_wait_s:
+                self.flow.state = "expired"
+                return self.flow
+            if self.flow.is_expired():
+                self.flow.state = "expired"
+                return self.flow
+            try:
+                result = await self._poll_real()
+            except RuntimeError as exc:
+                logger.error("[DEVICE_CODE][REAL] %s", exc)
+                self.flow.state = "error"
+                return self.flow
+            if result is not None:
+                self.flow.state = "authorized"
+                self.flow.result = {
+                    **result,
+                    "expires_at": (
+                        datetime.utcnow()
+                        + timedelta(seconds=int(result.get("expires_in", 3600)))
+                    ).isoformat() + "Z",
+                }
+                logger.warning(
+                    "[DEVICE_CODE][REAL] flow AUTORISÉ — access_token obtenu "
+                    "(scope=%s)", self.flow.scope,
+                )
+                if self.on_authorized:
+                    await self.on_authorized(self.flow.result)
+                return self.flow
+            try:
+                await asyncio.wait_for(self._stop_event.wait(),
+                                       timeout=float(self.flow.interval))
+            except asyncio.TimeoutError:
+                pass
+        return self.flow
+
     async def _authorize_flow(self) -> None:
         """Passe le flow en authorized, génère le token et appelle le hook."""
         self.flow.state = "authorized"

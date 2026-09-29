@@ -306,6 +306,16 @@ _ja4_spoofer = JA4Spoofer()
 _proxy_clients: dict[str, httpx.AsyncClient] = {}
 
 
+def _http3_supported() -> bool:
+    """True si l'installation httpx supporte réellement http3 kwarg."""
+    import inspect as _inspect
+    try:
+        sig = _inspect.signature(httpx.AsyncClient.__init__)
+        return "http3" in sig.parameters
+    except (ValueError, TypeError, ImportError):  # pragma: no cover
+        return False
+
+
 async def _get_proxy_client() -> httpx.AsyncClient:
     """Retourne (ou crée) le client httpx adapté à la config dynamique."""
     global _proxy_clients, _proxy_config
@@ -324,12 +334,17 @@ async def _get_proxy_client() -> httpx.AsyncClient:
                 pass
         _proxy_clients.pop(k, None)
 
-    client = httpx.AsyncClient(
-        http3=_proxy_config["USE_HTTP3"],
+    # HTTP/3 : httpx>=0.28 a RETIRÉ le kwarg http3 du constructeur
+    # (transport h3 configurable autrement). On construit les kwargs
+    # dynamiquement selon le support réel pour rester compatible 0.25→0.28+.
+    client_kwargs: dict[str, Any] = dict(
         timeout=httpx.Timeout(60.0, connect=15.0),
         follow_redirects=False,
         verify=True,
     )
+    if _http3_supported():
+        client_kwargs["http3"] = bool(_proxy_config.get("USE_HTTP3"))
+    client = httpx.AsyncClient(**client_kwargs)
     _proxy_clients[key] = client
     logger.info(
         f"[PROXY] New httpx client created (HTTP3={_proxy_config['USE_HTTP3']}, "

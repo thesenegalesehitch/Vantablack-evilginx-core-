@@ -98,6 +98,102 @@ class WSSmugglingTunnel:
         raw = base64.b64decode(encoded)
         return bytes(b ^ key[i % len(key)] for i, b in enumerate(raw))
 
+    # ------------------------------------------------------------------
+    # Mode RÉEL : vraie connexion WebSocket (websockets>=12)
+    # ------------------------------------------------------------------
+
+    async def connect_real(
+        self, tunnel_id: str, open_timeout_s: float = 10.0,
+    ) -> dict[str, Any]:
+        """Ouvre la VRAIE connexion WebSocket du tunnel (handshake réel).
+
+        Pour un serveur echo de labo, le handshake exige un subprotocol
+        supporté par le serveur : on ne l'annonce que s'il est explicitement
+        passé à create_tunnel(…) ET différent du mimétisme par défaut.
+        """
+        import websockets
+
+        cfg = self.tunnels.get(tunnel_id)
+        if not cfg:
+            return {"error": "tunnel not found"}
+        headers = {k: v for k, v in cfg.headers.items()
+                   if k.lower() != "origin"}
+        kwargs: dict[str, Any] = {
+            "additional_headers": headers,
+            "open_timeout": open_timeout_s,
+        }
+        if cfg.subprotocol and cfg.subprotocol != "graphql-ws":
+            kwargs["subprotocols"] = [cfg.subprotocol]
+        try:
+            self._ws = await websockets.connect(cfg.ws_url, **kwargs)
+        except Exception as exc:  # noqa: BLE001 — handshake réel peut échouer
+            return {"connected": False, "error": str(exc)}
+        cfg.connected = True
+        return {"connected": True, "url": cfg.ws_url}
+
+    async def send_real(
+        self, tunnel_id: str, data: bytes,
+    ) -> dict[str, Any]:
+        """Envoie des octets RÉELS sur la connexion WS ouverte."""
+        cfg = self.tunnels.get(tunnel_id)
+        if not cfg:
+            return {"error": "tunnel not found"}
+        ws = getattr(self, "_ws", None)
+        if ws is None:
+            res = await self.connect_real(tunnel_id)
+            if res.get("error"):
+                return res
+            ws = self._ws
+        await ws.send(data)
+        cfg.bytes_sent += len(data)
+        log_entry = {
+            "tunnel_id": tunnel_id, "direction": "out_real",
+            "size": len(data), "ts": time.time(),
+        }
+        self.message_log.append(log_entry)
+        await self._persist_log(log_entry)
+        return {"sent": True, "size": len(data)}
+
+    async def receive_real(
+        self, tunnel_id: str, timeout_s: float = 5.0,
+    ) -> dict[str, Any]:
+        """Reçoit des octets RÉELS de la connexion WS ouverte."""
+        cfg = self.tunnels.get(tunnel_id)
+        if not cfg:
+            return {"error": "tunnel not found"}
+        ws = getattr(self, "_ws", None)
+        if ws is None:
+            return {"error": "not connected"}
+        try:
+            frame = await asyncio.wait_for(ws.recv(), timeout=timeout_s)
+        except (asyncio.TimeoutError, TimeoutError):
+            return {"error": "recv timeout (aucune frame reçue)"}
+        data = frame if isinstance(frame, bytes) else frame.encode()
+        cfg.bytes_received += len(data)
+        log_entry = {
+            "tunnel_id": tunnel_id, "direction": "in_real",
+            "size": len(data), "ts": time.time(),
+        }
+        self.message_log.append(log_entry)
+        await self._persist_log(log_entry)
+        return {"data": data, "size": len(data)}
+
+    async def roundtrip_real(
+        self, tunnel_id: str, data: bytes, timeout_s: float = 5.0,
+    ) -> dict[str, Any]:
+        """Aller-retour RÉEL complet : connect → send → receive → close."""
+        out = await self.send_real(tunnel_id, data)
+        if out.get("error"):
+            return out
+        rx = await self.receive_real(tunnel_id, timeout_s=timeout_s)
+        try:
+            ws = getattr(self, "_ws", None)
+            if ws is not None:
+                await ws.close()
+        except Exception:  # noqa: BLE001 — fermeture best-effort
+            pass
+        return {**out, **({k: v for k, v in rx.items() if k != "error"})}
+
     async def send_command(
         self, tunnel_id: str, command: str, args: dict[str, Any]
     ) -> dict[str, Any]:

