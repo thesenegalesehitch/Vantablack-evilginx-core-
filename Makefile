@@ -1,5 +1,5 @@
 .PHONY: help install diagnose lint test run-api run-workers run-all stop-workers \
-	build-go banner sysinfo godmode healthcheck \
+	build-go banner sysinfo godmode healthcheck demo-real \
 	plan-redirector deploy-redirector destroy-redirector wg-peer-template
 
 # ---------------------------------------------------------------------------
@@ -260,6 +260,12 @@ godmode:
 healthcheck:
 	@[ -x ./bin/healthcheck ] && ./bin/healthcheck \
 		|| echo "${YELLOW}⚠️  ./bin/healthcheck absent → make build-go (Go requis)${NC}"
+
+# ---------------------------------------------------------------------------
+# Démo live du mode réel (6 étapes 100% réel, 0 mock)
+# ---------------------------------------------------------------------------
+demo-real:
+	@$(VENV_PYTHON) demo_real_live.py
 
 # ---------------------------------------------------------------------------
 # Infrastructure WAN

@@ -896,6 +896,20 @@ Quand tu es satisfait de l'attaque (artefacts en main) :
 .venv/bin/python -m pytest test_real_mode.py -v
 ```
 
+#### 🎬 Démo live devant public (recommandée pour une présentation)
+
+```bash
+make demo-real
+```
+
+Une seule commande, exit code honnête : pré-checks d'environnement en ouverture
+(python, dépendances, répertoires), puis 6 étapes 100% réelles avec verdict par
+ligne — C2 réel, stuffing (4 POST, verdicts HTTP individuels), exfil chiffré
+avec SHA-256 croisé émetteur/récepteur, MFA bombing avec stop-on-accept,
+tunnel WS, post-ex locale (known_hosts + presse-papier réellement volé).
+Stabilité vérifiée : 3 exécutions consécutives → 6/6 à chaque fois.
+Preuves : `captures/demo_live/` + `captures/lab_c2/`.
+
 Elle démarre elle-même ses serveurs réels (C2 de labo, reverse proxy AiTM,
 echo WebSocket) et valide 6 chemins 100% réels. Résultat attendu :
 `6 passed` (~12s, internet requis pour Device Code et le relay AiTM).
