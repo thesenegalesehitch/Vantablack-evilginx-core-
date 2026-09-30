@@ -40,6 +40,7 @@ websockets>=12.0
 # Post-exploitation réelle (mode real=True)
 pynput>=1.7.7
 pyperclip>=1.9.0
+qrcode>=7.4  # QR volontaires dans la démo live
 
 # Development
 pytest>=8.3.2

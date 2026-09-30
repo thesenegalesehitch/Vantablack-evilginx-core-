@@ -321,3 +321,111 @@ def test_real_ws_tunnel_roundtrip():
     finally:
         proc.terminate()
         proc.wait(timeout=5)
+
+
+# ---------------------------------------------------------------------------
+# 7) Dashboard de projection + SSE + volontaires + détections + token
+# ---------------------------------------------------------------------------
+
+def _start_lab_c2(port: int, env_extra: dict[str, str] | None = None):
+    env = dict(os.environ,
+               LABC2_PORT=str(port),
+               LABC2_ACCEPT_USERS="alice@corp.local,bob@corp.local",
+               LABC2_LOCK_USERS="locked@corp.local",
+               LABC2_ACCEPT_AFTER_N="3")
+    if env_extra:
+        env.update(env_extra)
+    proc = subprocess.Popen([sys.executable, "c2/lab_c2_server.py", str(port)],
+                            env=env, stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    base = f"http://127.0.0.1:{port}"
+    for _ in range(50):
+        try:
+            if urllib.request.urlopen(f"{base}/health", timeout=1).status == 200:
+                return proc, base
+        except Exception:  # noqa: BLE001 — pas encore prêt
+            time.sleep(0.1)
+    proc.terminate()
+    pytest.fail("lab_c2_server (v2) n'a pas démarré")
+
+
+def test_real_dashboard_and_projection_stack():
+    """Le socle de projection jour J : dashboard HTML, flux SSE, enrollment
+    volontaires avec consentement, détections Blue Team, bannière announce,
+    auth par token."""
+    token = "demo-secret-token"
+    proc, base = _start_lab_c2(_free_port(), {"LABC2_TOKEN": token})
+    auth = {"Authorization": f"Bearer {token}"}
+
+    def post(path: str, payload: dict, headers: dict | None = None):
+        return httpx.post(f"{base}{path}", json=payload,
+                          headers=headers or {}, timeout=10)
+
+    try:
+        # 1) Dashboard HTML servi (le public n'a besoin de rien d'autre)
+        html = httpx.get(f"{base}/dashboard", timeout=10)
+        assert html.status_code == 200
+        assert "VANTABLACK" in html.text and "EventSource" in html.text
+        # Page des volontaires (QR téléphone)
+        join = httpx.get(f"{base}/join", timeout=10)
+        assert join.status_code == 200 and "consentement" in join.text
+
+        # 2) Sans token : ingestion refusée ; avec token : acceptée
+        r = post("/ingest", {"user": "alice@corp.local",
+                             "password": "Spring2026!"})
+        assert r.status_code == 401
+        r = post("/ingest", {"user": "alice@corp.local",
+                             "password": "Spring2026!"}, auth)
+        assert r.status_code == 200 and r.json()["result"] == "success"
+
+        # 3) Volontaire s'inscrit (POST /enroll public, consentement requis)
+        r = post("/enroll", {"pseudo": "marie_lyon",
+                             "email": "m@example.com", "consent": True})
+        assert r.status_code == 200
+        lab_user = r.json()["lab_user"]
+        assert lab_user.endswith("@demo.lab")
+        r = post("/enroll", {"pseudo": "marie_lyon",
+                             "email": "m@example.com", "consent": True})
+        assert r.status_code == 409, "pseudo déjà pris"
+        r = post("/enroll", {"pseudo": "x", "email": "x@e.com",
+                             "consent": False})
+        assert r.status_code == 400, "sans consentement : refusé"
+        # L'identité de labo est acceptée par le C2 sans configuration
+        r = post("/ingest", {"user": lab_user, "password": "Demo-2026!"},
+                 auth)
+        assert r.status_code == 200, "identité volontaire compromise"
+
+        # 4) SSE : l'historique est diffusé en streaming (résilience wifi).
+        #    /events est un flux infini : on valide la première ligne
+        #    (l'événement le plus ancien) puis on ferme.
+        body = urllib.request.urlopen(f"{base}/events", timeout=5)
+        first_chunk = body.readline().decode()
+        assert first_chunk.startswith("data: ")
+        assert "kind" in first_chunk
+        body.close()
+
+        # 5) Détections Blue Team : brute-force (5+ req même source) + exfil
+        for i in range(6):
+            post("/ingest", {"user": f"spray{i}@corp.local",
+                             "password": f"P{i}!"}, auth)
+        post("/exfil", {"session": "sess1", "size": 42, "sha256": "x",
+                        "nonce_b64": "AA==", "ct_b64": "BB=="}, auth)
+        # Push storm : 3 pushes même utilisateur
+        for _ in range(3):
+            post("/push", {"user": "victim@corp.local"}, auth)
+        hp = urllib.request.urlopen(f"{base}/health", timeout=5)
+        health = json.loads(hp.read())
+        assert health["detections"]["attacks"] >= 7
+        assert health["detections"]["compromised"] >= 2
+        assert health["detections"]["push_storm"] >= 1
+        assert health["exfil_sessions"]["sess1"] == 1
+        assert health["volunteers"] == 1
+
+        # 6) Bannière announce sur l'écran de projection (token requis)
+        r = post("/announce", {"text": "DÉCHIFFREMENT EN DIRECT"}, auth)
+        assert r.status_code == 200
+        r = post("/announce", {"text": "sans token"})
+        assert r.status_code == 401
+    finally:
+        proc.terminate()
+        proc.wait(timeout=5)
